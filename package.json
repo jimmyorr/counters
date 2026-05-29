@@ -1,0 +1,19 @@
+{
+  "name": "score-counter",
+  "version": "1.0.0",
+  "description": "Minimalist premium score keeping webapp",
+  "main": "index.html",
+  "scripts": {
+    "dev": "npx -y serve .",
+    "start": "npx -y serve ."
+  },
+  "keywords": [
+    "score",
+    "counter",
+    "keeper",
+    "webapp",
+    "vanilla"
+  ],
+  "author": "Jimmy Orr",
+  "license": "MIT"
+}

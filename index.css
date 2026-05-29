@@ -1,0 +1,1672 @@
+/* ==========================================================================
+   COUNTERS MODERN CSS DESIGN SYSTEM
+   Vanilla CSS with rich aesthetics, harmony color schemes, responsive layouts,
+   and dynamic micro-interactions.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Typography & Theme Design Tokens
+   -------------------------------------------------------------------------- */
+:root {
+  /* Fonts */
+  --font-primary: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-secondary: 'Inter', -apple-system, sans-serif;
+
+  /* Animation Timings */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+  --trans-fast: 0.15s var(--ease-smooth);
+  --trans-normal: 0.25s var(--ease-smooth);
+  --trans-spring: 0.4s var(--ease-spring);
+
+  /* Layout dimensions */
+  --header-height: 64px;
+  --nav-height: 68px;
+  --max-app-width: 500px;
+}
+
+/* Light Theme Variables */
+:root.light-mode {
+  color-scheme: light;
+  --bg-primary: #f2f3f7;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e9ebee;
+  --text-primary: #191b22;
+  --text-secondary: #697082;
+  --text-tertiary: #9da3b4;
+  --border-light: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.15);
+  --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  --modal-backdrop: rgba(0, 0, 0, 0.35);
+  --overlay-bg: rgba(255, 255, 255, 0.85);
+  --accent-color: #3b9df8;
+  --accent-light: #e6f2fe;
+}
+
+/* Dark Theme Variables (Default) */
+:root,
+:root.dark-mode {
+  color-scheme: dark;
+  --bg-primary: #0d0e11;
+  --bg-secondary: #16171d;
+  --bg-tertiary: #21232c;
+  --text-primary: #f5f6fa;
+  --text-secondary: #9aa1b1;
+  --text-tertiary: #5d6475;
+  --border-light: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  --modal-backdrop: rgba(0, 0, 0, 0.55);
+  --overlay-bg: rgba(22, 23, 29, 0.85);
+  --accent-color: #55b1f9;
+  --accent-light: rgba(85, 177, 249, 0.15);
+}
+
+/* HSL Player Swatch Presets (Vibrant, high-contrast, premium) */
+.card-color-0 { --card-theme: hsl(224, 76%, 36%); --card-text: #ffffff; } /* Isaac Dark Blue */
+.card-color-1 { --card-theme: hsl(26, 91%, 52%); --card-text: #ffffff; }  /* Oliver Orange */
+.card-color-2 { --card-theme: hsl(336, 70%, 50%); --card-text: #ffffff; } /* Miles Dark Pink */
+.card-color-3 { --card-theme: hsl(200, 16%, 42%); --card-text: #ffffff; } /* Jimmy Slate Grey */
+.card-color-4 { --card-theme: hsl(156, 75%, 34%); --card-text: #ffffff; } /* Forest Green */
+.card-color-5 { --card-theme: hsl(45, 95%, 45%); --card-text: #ffffff; }  /* Golden Yellow */
+.card-color-6 { --card-theme: hsl(190, 85%, 38%); --card-text: #ffffff; } /* Teal Cyan */
+.card-color-7 { --card-theme: hsl(272, 60%, 46%); --card-text: #ffffff; } /* Royal Purple */
+
+/* --------------------------------------------------------------------------
+   2. Reset & Global Layout Styles
+   -------------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Limit webapp boundary to form a beautiful centered mobile frame on desktop screens */
+body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(circle at 30% 20%, rgba(85, 177, 249, 0.08) 0%, transparent 40%),
+                    radial-gradient(circle at 80% 70%, rgba(249, 133, 26, 0.06) 0%, transparent 45%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* App Viewport Boundaries */
+.app-header,
+.app-main,
+.app-nav,
+dialog {
+  width: 100%;
+  max-width: var(--max-app-width);
+}
+
+body > .app-header,
+body > .app-main,
+body > .app-nav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Scrollbars styling */
+@supports (scrollbar-color: auto) {
+  * {
+    scrollbar-color: var(--text-tertiary) transparent;
+    scrollbar-width: thin;
+  }
+}
+
+/* Legacy scrollbar fallback for WebKit browsers */
+@supports not (scrollbar-color: auto) {
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--text-tertiary);
+    border-radius: 3px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. Header Navigation Styling
+   -------------------------------------------------------------------------- */
+.app-header {
+  top: 0;
+  height: var(--header-height);
+  background-color: rgba(var(--bg-primary), 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-light);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 16px;
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px 12px;
+  background-color: var(--bg-tertiary);
+  border-radius: 20px;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid var(--border-light);
+  transition: all var(--trans-fast);
+}
+
+.header-left:hover {
+  background-color: var(--border-light);
+}
+
+.leader-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color);
+}
+
+.header-center {
+  text-align: center;
+}
+
+.app-title {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text-primary);
+}
+
+.header-right {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.header-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.header-btn:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.header-btn:active {
+  transform: scale(0.92);
+}
+
+/* --------------------------------------------------------------------------
+   4. Main Content Area & Tab Control
+   -------------------------------------------------------------------------- */
+.app-main {
+  top: var(--header-height);
+  bottom: var(--nav-height);
+  overflow-y: auto;
+  padding: 16px;
+  scroll-behavior: smooth;
+  z-index: 10;
+}
+
+.tab-content {
+  display: none;
+  height: 100%;
+  animation: fadeIn var(--trans-normal);
+}
+
+.tab-content.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --------------------------------------------------------------------------
+   5. Counters List Screen Layouts (List vs Grid)
+   -------------------------------------------------------------------------- */
+.counters-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  transition: all var(--trans-normal);
+}
+
+/* Grid Layout Styling Override */
+html[data-layout="grid"] .counters-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 1fr;
+  height: 100%;
+  gap: 12px;
+}
+
+/* Individual Player Cards */
+.player-card {
+  position: relative;
+  background-color: var(--card-theme, var(--bg-secondary));
+  color: var(--card-text, var(--text-primary));
+  border-radius: 16px;
+  height: auto;
+  flex: 1;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform var(--trans-spring), box-shadow var(--trans-normal);
+}
+
+/* Adjust card height slightly in grid mode */
+html[data-layout="grid"] .player-card {
+  height: auto;
+}
+
+.player-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+}
+
+/* Card Header elements */
+.card-header {
+  position: relative;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  background-color: rgba(0, 0, 0, 0.12);
+  z-index: 5;
+}
+
+.card-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.65;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.card-btn:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.card-btn:active {
+  transform: scale(0.88);
+}
+
+.player-name {
+  font-family: var(--font-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* Card Score Center Display */
+.card-score-body {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.score-display {
+  font-family: var(--font-primary);
+  font-size: 46px;
+  font-weight: 400;
+  letter-spacing: -1.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform var(--trans-spring);
+}
+
+/* Grid display resizing */
+html[data-layout="grid"] .score-display {
+  font-size: 34px;
+}
+
+.player-card:active .score-display {
+  transform: scale(0.96);
+}
+
+/* Card Increment/Decrement direct active zones (Left/Right side buttons) */
+.card-direct-zone {
+  position: absolute;
+  top: 36px;
+  bottom: 0;
+  width: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 300;
+  opacity: 0;
+  background-color: rgba(255, 255, 255, 0.0);
+  cursor: pointer;
+  z-index: 4;
+  transition: all var(--trans-normal);
+}
+
+/* Grid direct zones slightly smaller */
+html[data-layout="grid"] .card-direct-zone {
+  width: 44px;
+}
+
+.card-direct-zone-minus {
+  left: 0;
+}
+
+.card-direct-zone-plus {
+  right: 0;
+}
+
+/* Hovering shows subtle plus minus signs on edges */
+.player-card:hover .card-direct-zone {
+  opacity: 0.45;
+}
+
+.card-direct-zone:hover {
+  opacity: 1 !important;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.card-direct-zone:active {
+  background-color: rgba(255, 255, 255, 0.15);
+  font-size: 28px;
+}
+
+/* Active click flash effect */
+.zone-active-flash {
+  animation: cardEdgeActive 0.3s ease-out;
+}
+
+@keyframes cardEdgeActive {
+  0% { background-color: rgba(255, 255, 255, 0.0); }
+  30% { background-color: rgba(255, 255, 255, 0.22); }
+  100% { background-color: rgba(255, 255, 255, 0.0); }
+}
+
+/* Empty State Illustration layout */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--text-secondary);
+}
+
+.empty-state.hidden {
+  display: none;
+}
+
+.empty-illustration {
+  color: var(--text-tertiary);
+  margin-bottom: 20px;
+  animation: floatIllustration 3s ease-in-out infinite;
+}
+
+@keyframes floatIllustration {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.empty-state h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  font-size: 14px;
+  margin-bottom: 24px;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+/* Buttons */
+.primary-btn {
+  background-color: var(--accent-color);
+  color: #000000;
+  border: none;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.primary-btn:hover {
+  opacity: 0.92;
+  box-shadow: 0 4px 12px var(--accent-light);
+}
+
+.primary-btn:active {
+  transform: scale(0.96);
+}
+
+.primary-btn.full-width {
+  width: 100%;
+}
+
+.secondary-btn {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+  font-family: var(--font-primary);
+  font-weight: 500;
+  font-size: 15px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.secondary-btn:hover {
+  background-color: var(--border-light);
+}
+
+/* --------------------------------------------------------------------------
+   6. Placeholders & Interactive Games (Dice, Timers)
+   -------------------------------------------------------------------------- */
+.placeholder-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--text-secondary);
+  height: 100%;
+}
+
+.placeholder-icon {
+  color: var(--accent-color);
+  margin-bottom: 24px;
+}
+
+.placeholder-container h2 {
+  font-size: 22px;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.placeholder-container p {
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 300px;
+  margin-bottom: 30px;
+}
+
+.dice-roll-btn {
+  margin-bottom: 20px;
+}
+
+.quick-dice-result {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-strong);
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.quick-dice-result.rolled {
+  transform: scale(1.15) rotate(8deg);
+}
+
+.placeholder-timer-visual {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-strong);
+  padding: 16px 36px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--card-shadow);
+}
+
+.timer-tick {
+  font-family: monospace;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--accent-color);
+}
+
+.timer-controls {
+  display: flex;
+  gap: 12px;
+}
+
+.shake-animation.active {
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-12deg) scale(1.1); }
+  40% { transform: rotate(12deg) scale(1.1); }
+  60% { transform: rotate(-8deg) scale(1.1); }
+  80% { transform: rotate(8deg) scale(1.1); }
+}
+
+/* --------------------------------------------------------------------------
+   7. Settings Screen Components
+   -------------------------------------------------------------------------- */
+.settings-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-bottom: 24px;
+}
+
+.settings-section {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: var(--card-shadow);
+}
+
+.settings-section h3 {
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--accent-color);
+  margin-bottom: 16px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.settings-row:first-child {
+  padding-top: 0;
+}
+
+.settings-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 75%;
+}
+
+.setting-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.setting-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Form switch toggle */
+.switch-toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+
+.switch-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider-round {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-strong);
+  transition: .3s;
+  border-radius: 34px;
+}
+
+.slider-round:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-primary);
+  transition: .3s var(--ease-spring);
+  border-radius: 50%;
+}
+
+input:checked + .slider-round {
+  background-color: var(--accent-color);
+  border-color: transparent;
+}
+
+input:checked + .slider-round:before {
+  transform: translateX(22px);
+  background-color: #000000;
+}
+
+/* Settings Inputs */
+.settings-select {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  cursor: pointer;
+}
+
+.settings-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.settings-input {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+}
+
+.settings-input:focus {
+  border-color: var(--accent-color);
+}
+
+/* Danger actions */
+.danger-heading {
+  color: #f85c5c !important;
+}
+
+.danger-column p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.danger-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.danger-btn {
+  background-color: #f85c5c;
+  color: #ffffff;
+  border: none;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+  flex: 1;
+}
+
+.danger-btn:hover {
+  background-color: #e54b4b;
+}
+
+.danger-btn:active {
+  transform: scale(0.97);
+}
+
+.danger-btn-outline {
+  background-color: transparent;
+  border: 1.5px solid #f85c5c;
+  color: #f85c5c;
+}
+
+.danger-btn-outline:hover {
+  background-color: rgba(248, 92, 92, 0.08);
+}
+
+.about-version {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 10px;
+}
+
+/* --------------------------------------------------------------------------
+   8. Bottom Navigation Bar Styling
+   -------------------------------------------------------------------------- */
+.app-nav {
+  bottom: 0;
+  height: var(--nav-height);
+  background-color: rgba(var(--bg-primary), 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border-light);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom, 0); /* Notch screen styling */
+  z-index: 100;
+}
+
+.nav-item {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  height: 100%;
+  transition: all var(--trans-fast);
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform var(--trans-spring);
+}
+
+.nav-text {
+  font-family: var(--font-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+
+/* Nav Item States */
+.nav-item.active {
+  color: var(--accent-color);
+}
+
+.nav-item.active .nav-icon {
+  transform: scale(1.12);
+}
+
+.nav-item:active .nav-icon {
+  transform: scale(0.9);
+}
+
+/* --------------------------------------------------------------------------
+   9. Dialogs & Modals Design System (Glassmorphic)
+   -------------------------------------------------------------------------- */
+dialog {
+  border: none;
+  background: none;
+  outline: none;
+  z-index: 200;
+}
+
+dialog:not([open]) {
+  display: none !important;
+  pointer-events: none;
+}
+
+/* Modal Backdrops styling */
+dialog::backdrop {
+  background-color: var(--modal-backdrop);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity var(--trans-normal);
+}
+
+dialog[open]::backdrop {
+  opacity: 1;
+}
+
+/* Bottom Sheet Slide Up Panels */
+.bottom-sheet-dialog {
+  position: fixed;
+  bottom: 0;
+  top: auto;
+  left: 50%;
+  transform: translate(-50%, 100%);
+  margin: 0;
+  max-width: var(--max-app-width);
+  width: 100%;
+  background-color: var(--overlay-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
+  border: 1px solid var(--border-light);
+  border-bottom: none;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+dialog[open].bottom-sheet-dialog {
+  transform: translate(-50%, 0);
+}
+
+/* Bottom Sheet Contents */
+.bottom-sheet-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 16px 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.drag-handle {
+  width: 36px;
+  height: 4px;
+  background-color: var(--text-tertiary);
+  opacity: 0.5;
+  border-radius: 2px;
+  margin-bottom: 12px;
+}
+
+.sheet-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.sheet-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  transition: all var(--trans-fast);
+}
+
+.sheet-close-btn:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.header-actions {
+  position: absolute;
+  right: 16px;
+  top: 14px;
+  display: flex;
+  gap: 8px;
+}
+
+.header-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--trans-fast);
+}
+
+.header-icon-btn.danger-color {
+  color: #f85c5c;
+}
+
+.header-icon-btn:hover {
+  background-color: var(--bg-tertiary);
+}
+
+.bottom-sheet-body {
+  overflow-y: auto;
+  padding: 16px;
+  background-color: rgba(var(--bg-primary), 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   10. Calculator Drawer Styles
+   -------------------------------------------------------------------------- */
+.calculator-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Quick Add List */
+.quick-add-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.quick-add-grid > button:nth-child(n+4) {
+  grid-column: span 1;
+}
+
+/* Special centering logic for standard layouts */
+.quick-add-grid > button {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  color: var(--accent-color);
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 600;
+  padding: 14px 0;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all var(--trans-fast);
+}
+
+.quick-add-grid > button:hover {
+  background-color: var(--accent-light);
+  border-color: var(--accent-color);
+}
+
+.quick-add-grid > button:active {
+  transform: scale(0.94);
+}
+
+.tweak-caption {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.65;
+  margin-bottom: 20px;
+}
+
+/* Calculator Active Row */
+.math-entry-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.operation-toggles {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-strong);
+  padding: 3px;
+  border-radius: 12px;
+  display: flex;
+}
+
+.op-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-primary);
+  font-size: 20px;
+  font-weight: 500;
+  padding: 6px 0;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.op-btn.active {
+  background-color: var(--accent-color);
+  color: #000000;
+  font-weight: 600;
+}
+
+.math-display-wrapper {
+  position: relative;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+}
+
+.math-op-indicator {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--accent-color);
+  margin-right: 10px;
+}
+
+.math-number-input {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+  font-size: 22px;
+  font-weight: 700;
+  width: 100%;
+  outline: none;
+  text-align: right;
+  letter-spacing: 0.5px;
+}
+
+/* Custom Numeric Pad styling */
+.calc-numpad {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.num-btn {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+  font-size: 20px;
+  font-weight: 500;
+  padding: 14px 0;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all var(--trans-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.num-btn:hover {
+  background-color: var(--border-light);
+}
+
+.num-btn:active {
+  transform: scale(0.92);
+}
+
+/* Double key zero span */
+.double-key {
+  font-size: 18px;
+}
+
+/* Operator Keys (Backspace, Clear) */
+.op-key {
+  color: var(--text-secondary);
+  font-size: 18px;
+}
+
+.op-key:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Submit Action Key */
+.submit-key {
+  background-color: var(--accent-color);
+  color: #000000;
+  border-color: transparent;
+  font-weight: 600;
+  grid-row: span 2;
+  height: 100%;
+}
+
+.submit-key:hover {
+  background-color: var(--accent-color);
+  opacity: 0.9;
+}
+
+/* --------------------------------------------------------------------------
+   11. Edit Player Details Sheet
+   -------------------------------------------------------------------------- */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Swatches palette */
+.color-palette-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.palette-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.palette-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.palette-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.palette-swatch:hover {
+  transform: scale(1.1);
+}
+
+.palette-swatch.active {
+  border-color: var(--text-primary);
+  transform: scale(1.15);
+  box-shadow: 0 0 10px var(--accent-color);
+}
+
+/* Standard edit inputs */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.2px;
+}
+
+.form-input {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-family: var(--font-primary);
+  font-size: 15px;
+  outline: none;
+  width: 100%;
+  transition: border var(--trans-fast);
+}
+
+.form-input:focus {
+  border-color: var(--accent-color);
+}
+
+.form-row {
+  display: flex;
+  gap: 14px;
+}
+
+.field-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.sheet-action-row {
+  margin-top: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   12. Display Options Dialog Drawer (Centered Menu Card)
+   -------------------------------------------------------------------------- */
+.options-menu-dialog {
+  background-color: var(--overlay-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--card-shadow);
+  width: calc(100% - 32px);
+  max-width: 380px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.92);
+  opacity: 0;
+  margin: 0;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.25s ease-out;
+  overflow: hidden;
+}
+
+dialog[open].options-menu-dialog {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+.options-dialog-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.options-dialog-header h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.options-close-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  transition: all var(--trans-fast);
+}
+
+.options-close-btn:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.options-dialog-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.options-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.options-group.border-top {
+  border-top: 1px solid var(--border-light);
+  padding-top: 16px;
+}
+
+.options-group h4 {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+}
+
+/* Option switcher toggles (List/Grid) */
+.toggle-buttons-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  padding: 10px 0;
+  border-radius: 9px;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.toggle-btn.active {
+  background-color: var(--accent-light);
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+/* Stack selectors */
+.selection-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.select-row-btn {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-family: var(--font-primary);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.select-row-btn:hover {
+  border-color: var(--accent-color);
+  color: var(--text-primary);
+}
+
+.select-row-btn.active {
+  background-color: var(--accent-light);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+/* Custom switch lists inside option modals */
+.setting-switch-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.switch-title {
+  font-size: 13.5px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   13. History Logs Drawer (Large Dialog Box)
+   -------------------------------------------------------------------------- */
+.history-log-dialog {
+  background-color: var(--overlay-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--card-shadow);
+  width: calc(100% - 32px);
+  max-width: 420px;
+  max-height: 70vh;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.92);
+  opacity: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.25s ease-out;
+  overflow: hidden;
+}
+
+dialog[open].history-log-dialog {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+.history-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.history-header h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.history-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.history-body {
+  padding: 16px;
+  overflow-y: auto;
+  background-color: rgba(var(--bg-primary), 0.2);
+  flex: 1;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* History logs list card */
+.history-item {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  padding: 12px 14px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-secondary);
+}
+
+.history-badge {
+  width: 8px;
+  height: 28px;
+  border-radius: 4px;
+  background-color: var(--history-theme, var(--accent-color));
+}
+
+.history-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.history-row-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.history-player {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.history-time {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.history-row-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.history-event {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--accent-color);
+}
+
+.history-progression {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Empty log state */
+.history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--text-tertiary);
+  gap: 10px;
+}
+
+.history-empty.hidden {
+  display: none;
+}
+
+.history-empty p {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   14. Toast Notification styling
+   -------------------------------------------------------------------------- */
+.toast-notification {
+  position: fixed;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%) translateY(0);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  padding: 8px 16px;
+  z-index: 300;
+  pointer-events: none;
+  opacity: 1;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+              opacity 0.2s ease-out;
+}
+
+.toast-notification.hidden {
+  transform: translateX(-50%) translateY(16px);
+  opacity: 0;
+}
+
+.toast-message {
+  font-family: var(--font-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* --------------------------------------------------------------------------
+   15. Responsive Styling overrides
+   -------------------------------------------------------------------------- */
+@media (min-width: 600px) {
+  body {
+    background-color: var(--bg-primary);
+  }
+  
+  .app-header,
+  .app-main,
+  .app-nav,
+  dialog {
+    border-left: 1px solid var(--border-light);
+    border-right: 1px solid var(--border-light);
+    box-shadow: 0 0 32px rgba(0, 0, 0, 0.2);
+  }
+}
