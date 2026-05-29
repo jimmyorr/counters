@@ -56,13 +56,7 @@
       if (savedCounters) {
         state.counters = JSON.parse(savedCounters);
       } else {
-        // Fallback default players to match user screenshots beautifully
-        state.counters = [
-          { id: '1', name: 'Isaac', score: 31600, color: 0, increment: 100, resetValue: 0 },
-          { id: '2', name: 'Oliver', score: 42700, color: 1, increment: 50, resetValue: 0 },
-          { id: '3', name: 'Miles', score: 40500, color: 2, increment: 10, resetValue: 0 },
-          { id: '4', name: 'Jimmy', score: 28800, color: 3, increment: 1, resetValue: 0 }
-        ];
+        state.counters = [];
         saveCounters();
       }
 
