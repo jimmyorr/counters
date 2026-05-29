@@ -63,10 +63,10 @@
 }
 
 /* HSL Player Swatch Presets (Vibrant, high-contrast, premium) */
-.card-color-0 { --card-theme: hsl(224, 76%, 36%); --card-text: #ffffff; } /* Isaac Dark Blue */
-.card-color-1 { --card-theme: hsl(26, 91%, 52%); --card-text: #ffffff; }  /* Oliver Orange */
-.card-color-2 { --card-theme: hsl(336, 70%, 50%); --card-text: #ffffff; } /* Miles Dark Pink */
-.card-color-3 { --card-theme: hsl(200, 16%, 42%); --card-text: #ffffff; } /* Jimmy Slate Grey */
+.card-color-0 { --card-theme: hsl(224, 76%, 36%); --card-text: #ffffff; } /* Deep Blue */
+.card-color-1 { --card-theme: hsl(26, 91%, 52%); --card-text: #ffffff; }  /* Bright Orange */
+.card-color-2 { --card-theme: hsl(336, 70%, 50%); --card-text: #ffffff; } /* Crimson Pink */
+.card-color-3 { --card-theme: hsl(200, 16%, 42%); --card-text: #ffffff; } /* Slate Grey */
 .card-color-4 { --card-theme: hsl(156, 75%, 34%); --card-text: #ffffff; } /* Forest Green */
 .card-color-5 { --card-theme: hsl(45, 95%, 45%); --card-text: #ffffff; }  /* Golden Yellow */
 .card-color-6 { --card-theme: hsl(190, 85%, 38%); --card-text: #ffffff; } /* Teal Cyan */

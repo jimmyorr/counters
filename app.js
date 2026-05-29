@@ -34,10 +34,10 @@
 
   // Pre-configured player palette color swatches
   const colorSwatches = [
-    { id: 0, class: 'card-color-0', hex: '#162e8a' }, // Isaac Blue
-    { id: 1, class: 'card-color-1', hex: '#e86a1a' }, // Oliver Orange
-    { id: 2, class: 'card-color-2', hex: '#ca265a' }, // Miles Pink
-    { id: 3, class: 'card-color-3', hex: '#5b6973' }, // Jimmy Grey
+    { id: 0, class: 'card-color-0', hex: '#162e8a' }, // Deep Blue
+    { id: 1, class: 'card-color-1', hex: '#e86a1a' }, // Bright Orange
+    { id: 2, class: 'card-color-2', hex: '#ca265a' }, // Crimson Pink
+    { id: 3, class: 'card-color-3', hex: '#5b6973' }, // Slate Grey
     { id: 4, class: 'card-color-4', hex: '#167648' }, // Forest Green
     { id: 5, class: 'card-color-5 { --card-theme: hsl(45, 95%, 45%); }', hex: '#e69f00' }, // Golden Yellow
     { id: 6, class: 'card-color-6', hex: '#1096a6' }, // Teal
