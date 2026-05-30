@@ -877,7 +877,7 @@ input:checked + .slider-round:before {
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--border-light);
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   align-items: center;
   padding-bottom: env(safe-area-inset-bottom, 0); /* Notch screen styling */
   z-index: 100;

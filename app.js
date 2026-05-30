@@ -437,14 +437,11 @@
       if (tabId === 'counters') viewTitle.textContent = 'Counters';
       else if (tabId === 'dice') viewTitle.textContent = 'Dice';
       else if (tabId === 'timer') viewTitle.textContent = 'Timer';
-      else if (tabId === 'settings') viewTitle.textContent = 'Settings';
     }
 
     // Dynamic render adjustments
     if (tabId === 'counters') {
       renderCountersList();
-    } else if (tabId === 'settings') {
-      loadSettingsIntoDOM();
     }
   };
 
@@ -679,6 +676,17 @@
       if (window.openOptionsDialog) window.openOptionsDialog();
     });
 
+    $('#menu-btn-open-settings')?.addEventListener('click', () => {
+      dialog.close();
+      const settingsDialog = $('#settings-dialog');
+      if (settingsDialog) {
+        loadSettingsIntoDOM();
+        settingsDialog.showModal();
+        playClickSound();
+        triggerHaptic();
+      }
+    });
+
     $('#menu-btn-reset-scores')?.addEventListener('click', () => {
       dialog.close();
       if (state.counters.length === 0) return;
@@ -889,7 +897,7 @@
   };
 
   // ------------------------------------------------------------------------
-  // 14. Settings Tab Data Binder
+  // 14. Settings Dialog Data Binder
   // ------------------------------------------------------------------------
   const loadSettingsIntoDOM = () => {
     $('#setting-sound').checked = state.settings.soundEnabled;
@@ -949,39 +957,6 @@
         saveSettings();
         populateCalculatorQuickAdds();
       }
-    });
-
-    // Reset scores dangerous triggers
-    $('#btn-danger-reset-all').addEventListener('click', () => {
-      if (state.counters.length === 0) return;
-      showConfirmDialog("Reset scores for all players to 0?", () => {
-        state.counters.forEach(player => {
-          const oldScore = player.score;
-          player.score = 0;
-          addHistoryLog(player, "Reset score", oldScore, player.score);
-        });
-        saveCounters();
-        renderCountersList();
-        showToast("All scores reset");
-        playResetSound();
-        triggerHaptic(40);
-      });
-    });
-
-    // Delete all players dangerous triggers
-    $('#btn-danger-delete-all').addEventListener('click', () => {
-      if (state.counters.length === 0) return;
-      showConfirmDialog("Are you sure you want to delete all players? This deletes all counters and configurations permanently.", () => {
-        state.counters = [];
-        state.history = [];
-        saveCounters();
-        saveHistory();
-        renderCountersList();
-        renderHistory();
-        showToast("All players deleted");
-        playResetSound();
-        triggerHaptic(60);
-      });
     });
   };
 
