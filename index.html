@@ -6,17 +6,24 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
-    
+
     <!-- Premium PWA / Native Mobile App Fullscreen Mode -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <meta name="apple-mobile-web-app-title" content="Counters" />
     <meta name="mobile-web-app-capable" content="yes" />
 
     <title>Counters</title>
-    
+
     <!-- Custom premium ultra-bold vector favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%233b9df8'/><path d='M16 8v16M8 16h16' stroke='white' stroke-width='5.5' stroke-linecap='round'/></svg>" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%233b9df8'/><path d='M16 8v16M8 16h16' stroke='white' stroke-width='5.5' stroke-linecap='round'/></svg>"
+    />
 
     <meta
       name="description"
@@ -37,8 +44,7 @@
     <!-- Pre-load script to prevent Flash of Unstyled Content (FOUC) and handle theme -->
     <script>
       (function () {
-        const savedTheme =
-          localStorage.getItem("counters-theme") || "system";
+        const savedTheme = localStorage.getItem("counters-theme") || "system";
         const root = document.documentElement;
 
         const applyTheme = (theme) => {
@@ -66,8 +72,7 @@
         applyTheme(savedTheme);
 
         // Load and apply grid layout option beforehand to prevent shifting
-        const savedLayout =
-          localStorage.getItem("counters-layout") || "list";
+        const savedLayout = localStorage.getItem("counters-layout") || "list";
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
@@ -118,8 +123,8 @@
         <button
           class="header-btn"
           id="btn-add-player"
-          title="Add Player"
-          aria-label="Add Player"
+          title="Add counter"
+          aria-label="Add counter"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -134,8 +139,8 @@
         <button
           class="header-btn"
           id="btn-open-options"
-          title="Display Options"
-          aria-label="Open Options"
+          title="Display options"
+          aria-label="Open options"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -185,7 +190,8 @@
           </div>
           <h2>No counters added yet</h2>
           <p>
-            Click the "+" icon in the top right, or the button below, to add your first counter.
+            Click the "+" icon in the top right, or the button below, to add
+            your first counter.
           </p>
           <button class="primary-btn" id="btn-empty-add-player">
             Add first counter
@@ -336,7 +342,7 @@
                   class="danger-btn danger-btn-outline"
                   id="btn-danger-delete-all"
                 >
-                  Delete all players
+                  Delete all counters
                 </button>
               </div>
             </div>
@@ -354,7 +360,7 @@
       <button
         class="nav-item active"
         data-tab-btn="counters"
-        aria-label="Counters List"
+        aria-label="Counters list"
       >
         <span class="nav-icon">
           <svg
@@ -425,7 +431,7 @@
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
-        <h2 id="calc-dialog-title" class="sheet-title">Player Name</h2>
+        <h2 id="calc-dialog-title" class="sheet-title">Name</h2>
         <button
           class="sheet-close-btn"
           commandfor="calculator-dialog"
@@ -513,7 +519,7 @@
             <button
               class="num-btn op-key"
               id="calc-btn-clear"
-              aria-label="Clear Entry"
+              aria-label="Clear entry"
             >
               C
             </button>
@@ -524,7 +530,7 @@
             <button
               class="num-btn submit-key"
               id="calc-btn-submit"
-              aria-label="Apply Math"
+              aria-label="Apply math"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -556,7 +562,7 @@
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
-        <h2 id="edit-dialog-title" class="sheet-title">Edit player</h2>
+        <h2 id="edit-dialog-title" class="sheet-title">Edit counter</h2>
         <div class="header-actions">
           <button
             class="header-icon-btn danger-color"
@@ -609,14 +615,14 @@
 
           <!-- Text details -->
           <div class="form-group">
-            <label for="edit-name">Player name</label>
+            <label for="edit-name">Name</label>
             <input
               type="text"
               id="edit-name"
               class="form-input"
               required
               autocomplete="off"
-              placeholder="Player name"
+              placeholder="Name"
             />
           </div>
 
@@ -645,7 +651,7 @@
               <span class="field-hint">Triggered on card edges</span>
             </div>
             <div class="form-group">
-              <label for="edit-reset-val">Reset target value</label>
+              <label for="edit-reset-val">Reset value</label>
               <input
                 type="number"
                 id="edit-reset-val"
@@ -653,7 +659,7 @@
                 required
                 placeholder="0"
               />
-              <span class="field-hint">Triggered on reload arrow</span>
+              <span class="field-hint">Triggered on reset</span>
             </div>
           </div>
 
@@ -794,7 +800,7 @@
               class="toggle-btn active"
               id="layout-opt-list"
               aria-label="List layout"
-              title="List View"
+              title="List view"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -811,7 +817,7 @@
               class="toggle-btn"
               id="layout-opt-grid"
               aria-label="Grid layout"
-              title="Grid View"
+              title="Grid view"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

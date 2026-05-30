@@ -682,7 +682,7 @@
     $('#menu-btn-reset-scores')?.addEventListener('click', () => {
       dialog.close();
       if (state.counters.length === 0) return;
-      showConfirmDialog("Reset scores for all players to their base target values?", () => {
+      showConfirmDialog("Reset scores for all counters to their base target values?", () => {
         state.counters.forEach(player => {
           const oldScore = player.score;
           player.score = player.resetValue || 0;
@@ -699,14 +699,14 @@
     $('#menu-btn-delete-all')?.addEventListener('click', () => {
       dialog.close();
       if (state.counters.length === 0) return;
-      showConfirmDialog("Are you sure you want to delete all players?", () => {
+      showConfirmDialog("Are you sure you want to delete all counters?", () => {
         state.counters = [];
         state.history = [];
         saveCounters();
         saveHistory();
         renderCountersList();
         renderHistory();
-        showToast("All players deleted");
+        showToast("All counters deleted");
         playResetSound();
         triggerHaptic(60);
       });
@@ -766,7 +766,7 @@
       const resetValue = parseInt($('#edit-reset-val').value || '0');
 
       if (state.activePlayerIdForEdit === 'new') {
-        // Create new player
+        // Create new counter
         const newPlayer = {
           id: Date.now().toString(),
           name,
@@ -777,10 +777,10 @@
         };
         state.counters.push(newPlayer);
         saveCounters();
-        addHistoryLog(newPlayer, "Added player", 0, score);
-        showToast(`Player "${name}" added`);
+        addHistoryLog(newPlayer, "Added counter", 0, score);
+        showToast(`Counter "${name}" added`);
       } else {
-        // Edit existing player
+        // Edit existing counter
         const player = state.counters.find(c => c.id === state.activePlayerIdForEdit);
         if (player) {
           const oldScore = player.score;
@@ -796,7 +796,7 @@
           } else {
             addHistoryLog(player, "Edited details", oldScore, score);
           }
-          showToast(`Player saved`);
+          showToast(`Counter saved`);
         }
       }
 
@@ -829,12 +829,12 @@
     });
   };
 
-  // Open Edit Dialog wrapper for adding new player
+  // Open Edit Dialog wrapper for adding new counter
   const openAddPlayerDialog = () => {
     state.activePlayerIdForEdit = 'new';
     
     // Set edit header text
-    $('#edit-dialog-title').textContent = 'Add player';
+    $('#edit-dialog-title').textContent = 'Add counter';
     $('#edit-btn-delete').style.display = 'none'; // Hide trash
     
     // Reset values to blank/defaults
@@ -858,7 +858,7 @@
     }
   };
 
-  // Open Edit Dialog wrapper for editing player details
+  // Open Edit Dialog wrapper for editing counter details
   const openEditPlayerDetails = (playerId) => {
     const player = state.counters.find(c => c.id === playerId);
     if (!player) return;
