@@ -15,7 +15,6 @@
     settings: {
       layout: 'list',
       topBarContent: 'highest',
-      pointsToWin: 0,
       autoSort: false,
       soundEnabled: true,
       hapticEnabled: true,
@@ -680,15 +679,6 @@
       if (window.openOptionsDialog) window.openOptionsDialog();
     });
 
-    $('#menu-btn-points-to-win')?.addEventListener('click', () => {
-      dialog.close();
-      const ptwDialog = $('#points-to-win-dialog');
-      $('#input-points-to-win').value = state.settings.pointsToWin || '';
-      ptwDialog?.showModal();
-      playClickSound();
-      triggerHaptic();
-    });
-
     $('#menu-btn-reset-scores')?.addEventListener('click', () => {
       dialog.close();
       if (state.counters.length === 0) return;
@@ -720,16 +710,6 @@
         playResetSound();
         triggerHaptic(60);
       });
-    });
-
-    $('#btn-save-points-to-win')?.addEventListener('click', () => {
-      state.settings.pointsToWin = parseInt($('#input-points-to-win').value) || 0;
-      saveSettings();
-      $('#points-to-win-dialog')?.close();
-      renderCountersList();
-      showToast(state.settings.pointsToWin > 0 ? `Target score set to ${state.settings.pointsToWin}` : "Target score disabled");
-      playSuccessSound();
-      triggerHaptic(20);
     });
   };
 
