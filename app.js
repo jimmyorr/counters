@@ -1362,6 +1362,76 @@
   };
 
   // ------------------------------------------------------------------------
+  // 18b. Sheet Swipe/Drag to Dismiss Logic
+  // ------------------------------------------------------------------------
+  const setupBottomSheetDragging = () => {
+    $$('.bottom-sheet-dialog').forEach(dialog => {
+      const header = dialog.querySelector('.bottom-sheet-header');
+      if (!header) return;
+
+      let startY = 0;
+      let currentY = 0;
+      let isDragging = false;
+
+      header.addEventListener('pointerdown', (e) => {
+        // Skip trigger on buttons or interactive inputs
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return;
+        
+        startY = e.clientY;
+        isDragging = true;
+        dialog.classList.add('dragging');
+        try {
+          header.setPointerCapture(e.pointerId);
+        } catch (err) {}
+      });
+
+      header.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        
+        const deltaY = e.clientY - startY;
+        // Only allow downward dragging
+        if (deltaY > 0) {
+          currentY = deltaY;
+          dialog.style.transform = `translate(-50%, ${deltaY}px)`;
+        } else {
+          currentY = 0;
+          dialog.style.transform = '';
+        }
+      });
+
+      const endDragging = (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        dialog.classList.remove('dragging');
+        
+        if (e && e.pointerId) {
+          try {
+            header.releasePointerCapture(e.pointerId);
+          } catch (err) {}
+        }
+
+        // If dragged down past threshold (100px), close with a premium native slide transition
+        if (currentY > 100) {
+          dialog.style.transform = 'translate(-50%, 100%)';
+          setTimeout(() => {
+            dialog.close();
+            dialog.style.transform = '';
+          }, 300);
+          playClickSound(450, 350, 0.05, 0.03); // light close sound
+          triggerHaptic(5);
+        } else {
+          // Snap back smoothly
+          dialog.style.transform = '';
+        }
+        currentY = 0;
+      };
+
+      header.addEventListener('pointerup', endDragging);
+      header.addEventListener('pointercancel', endDragging);
+    });
+  };
+
+  // ------------------------------------------------------------------------
   // 19. Initialization Bootstrap routine
   // ------------------------------------------------------------------------
   const init = () => {
@@ -1389,6 +1459,7 @@
     
     // Extras
     setupPlaceholdersInteractions();
+    setupBottomSheetDragging();
   };
 
   // Bootstrap when DOM ready
