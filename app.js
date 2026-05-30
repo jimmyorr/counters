@@ -313,6 +313,9 @@
 
     emptyState.classList.add('hidden');
     
+    // Reflect drag-enabled state on the wrapper for CSS cursor targeting
+    listWrapper.setAttribute('data-drag-enabled', state.settings.autoSort ? 'false' : 'true');
+    
     // Inject rendered HTML for each array item
     listWrapper.innerHTML = state.counters.map(player => {
       const swatch = colorSwatches[player.color] || colorSwatches[0];
@@ -369,6 +372,174 @@
       saveCounters();
       renderCountersList();
     }, 3000); // 3 seconds delay so cards do not jump while being actively tapped!
+  };
+
+  // ------------------------------------------------------------------------
+  // 8b. Card Drag-and-Drop Reorder (active only when auto-sort is disabled)
+  // ------------------------------------------------------------------------
+  const setupCardDragDrop = () => {
+    if (state.settings.autoSort) return; // Drag disabled when auto-sort is on
+
+    const listWrapper = $('#counters-list-wrapper');
+    if (!listWrapper) return;
+
+    let dragState = null; // Tracks active drag session
+
+    const getCardEls = () => [...listWrapper.querySelectorAll('.player-card:not(.drag-placeholder)')];
+
+    // Creates a pixel-perfect clone of the dragged card to float under pointer
+    const createGhost = (sourceCard, offsetX, offsetY) => {
+      const rect = sourceCard.getBoundingClientRect();
+      const ghost = sourceCard.cloneNode(true);
+      ghost.classList.add('drag-ghost');
+      ghost.style.width = `${rect.width}px`;
+      ghost.style.height = `${rect.height}px`;
+      ghost.style.left = `${rect.left}px`;
+      ghost.style.top = `${rect.top}px`;
+      document.body.appendChild(ghost);
+      return { ghost, offsetX, offsetY };
+    };
+
+    // Moves the ghost to follow the pointer
+    const moveGhost = (ghost, clientX, clientY, offsetX, offsetY) => {
+      ghost.style.left = `${clientX - offsetX}px`;
+      ghost.style.top = `${clientY - offsetY}px`;
+    };
+
+    // Infers which slot (before which card) the pointer is hovering over
+    const getDropTarget = (clientY) => {
+      const cards = getCardEls();
+      for (const card of cards) {
+        const rect = card.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        if (clientY < midY) return card;
+      }
+      return null; // Insert at end
+    };
+
+    // Inserts or moves the placeholder to show the drop position
+    const movePlaceholder = (placeholder, beforeCard) => {
+      if (beforeCard) {
+        listWrapper.insertBefore(placeholder, beforeCard);
+      } else {
+        listWrapper.appendChild(placeholder);
+      }
+    };
+
+    listWrapper.addEventListener('pointerdown', (e) => {
+      if (state.settings.autoSort) return;
+      const header = e.target.closest('.card-header');
+      if (!header) return;
+      // Skip if tapping a button inside the header
+      if (e.target.closest('button')) return;
+
+      const card = header.closest('.player-card');
+      if (!card) return;
+
+      // Measure pointer offset relative to card top-left
+      const rect = card.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
+
+      const { ghost } = createGhost(card, offsetX, offsetY);
+
+      // Placeholder mimics the card's dimensions
+      const placeholder = document.createElement('div');
+      placeholder.className = 'drag-placeholder';
+      placeholder.style.height = `${rect.height}px`;
+      placeholder.style.minHeight = `${rect.height}px`;
+      listWrapper.insertBefore(placeholder, card);
+
+      card.classList.add('dragging');
+
+      dragState = {
+        card,
+        ghost,
+        placeholder,
+        offsetX,
+        offsetY,
+        moved: false
+      };
+
+      // Capture pointer for smooth touch drag outside origin
+      try { listWrapper.setPointerCapture(e.pointerId); } catch (_) {}
+
+      e.preventDefault();
+    });
+
+    listWrapper.addEventListener('pointermove', (e) => {
+      if (!dragState) return;
+      dragState.moved = true;
+
+      moveGhost(dragState.ghost, e.clientX, e.clientY, dragState.offsetX, dragState.offsetY);
+
+      const before = getDropTarget(e.clientY);
+      movePlaceholder(dragState.placeholder, before);
+    });
+
+    const endDrag = (e) => {
+      if (!dragState) return;
+
+      const { card, ghost, placeholder, moved } = dragState;
+      dragState = null;
+
+      // Clean up ghost and dragging state
+      ghost.remove();
+      card.classList.remove('dragging');
+
+      if (!moved) {
+        // Treat no-movement as a cancelled drag — just remove placeholder
+        placeholder.remove();
+        return;
+      }
+
+      // Compute new order from DOM (placeholder position = drop slot)
+      const allChildren = [...listWrapper.children];
+      const placeholderIdx = allChildren.indexOf(placeholder);
+      placeholder.remove();
+
+      // Determine original index to remove from
+      const playerId = card.getAttribute('data-player-id');
+      const fromIdx = state.counters.findIndex(c => c.id === playerId);
+      if (fromIdx === -1) return;
+
+      // Count how many real cards are before the placeholder position to get target index
+      let toIdx = 0;
+      let seen = 0;
+      for (let i = 0; i < allChildren.length; i++) {
+        if (i === placeholderIdx) break;
+        const child = allChildren[i];
+        if (child !== card && child !== placeholder && child.classList.contains('player-card')) {
+          seen++;
+        }
+      }
+      toIdx = seen;
+      // Clamp
+      toIdx = Math.max(0, Math.min(toIdx, state.counters.length - 1));
+
+      if (fromIdx === toIdx) {
+        renderCountersList();
+        return;
+      }
+
+      // Reorder state array
+      const [moved_item] = state.counters.splice(fromIdx, 1);
+      state.counters.splice(toIdx, 0, moved_item);
+      saveCounters();
+      renderCountersList();
+      triggerHaptic(12);
+      playClickSound(500, 650, 0.06, 0.04);
+    };
+
+    listWrapper.addEventListener('pointerup', endDrag);
+    listWrapper.addEventListener('pointercancel', (e) => {
+      if (!dragState) return;
+      dragState.ghost.remove();
+      dragState.card.classList.remove('dragging');
+      dragState.placeholder.remove();
+      dragState = null;
+      renderCountersList();
+    });
   };
 
   // ------------------------------------------------------------------------
@@ -1435,6 +1606,7 @@
     // Extras
     setupPlaceholdersInteractions();
     setupBottomSheetDragging();
+    setupCardDragDrop();
   };
 
   // Bootstrap when DOM ready

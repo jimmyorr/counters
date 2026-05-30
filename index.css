@@ -360,6 +360,47 @@ html[data-layout="grid"] .player-card {
   z-index: 5;
 }
 
+/* Drag handle affordance — only shown when auto-sort is off */
+[data-drag-enabled="true"] .card-header {
+  cursor: grab;
+}
+
+[data-drag-enabled="true"] .card-header:active {
+  cursor: grabbing;
+}
+
+/* Card being actively dragged */
+.player-card.dragging {
+  opacity: 0.45;
+  transform: scale(0.98);
+  box-shadow: none !important;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Floating drag ghost clone */
+.drag-ghost {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  opacity: 0.92;
+  transform: rotate(1.5deg) scale(1.03);
+  transition: none;
+  will-change: transform;
+}
+
+/* Drop placeholder card */
+.drag-placeholder {
+  border-radius: 16px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 2px dashed var(--accent-color);
+  opacity: 0.5;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
 .card-btn {
   background: none;
   border: none;
