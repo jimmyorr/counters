@@ -322,7 +322,7 @@
           <div class="card-header">
             <button class="card-btn btn-player-reset" title="Reset score" aria-label="Reset score for ${player.name}">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                <path d="M5.466 13.456A6.976 6.976 0 0 1 5 12a7 7 0 1 1 7 7c-.63 0-1.238-.085-1.815-.242l-1.394 1.434A8.987 8.987 0 0 0 12 21a9 9 0 1 0-9-9c0 .646.071 1.272.2 1.874l2.266-.418zM11 7v5.414l3.293 3.293 1.414-1.414L13 11.586V7h-2z"/>
+                <path d="M5.828 7l2.536 2.536L6.95 10.95 2 6l4.95-4.95 1.414 1.414L5.828 5H13a8 8 0 1 1 0 16H4v-2h9a6 6 0 1 0 0-12H5.828z"/>
               </svg>
             </button>
             <span class="player-name">${player.name}</span>
