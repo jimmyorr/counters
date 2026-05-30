@@ -80,7 +80,38 @@
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
+}
+
+/* Allow native text selection inside input fields & textareas */
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Prevent image & button dragging ghosts to optimize native app feel */
+button,
+a,
+img,
+svg,
+.nav-item,
+.player-card {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+html,
+body {
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -243,6 +274,8 @@ body > .app-nav {
   top: var(--header-height);
   bottom: var(--nav-height);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   padding: 16px;
   scroll-behavior: smooth;
   z-index: 10;

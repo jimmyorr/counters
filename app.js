@@ -1084,6 +1084,13 @@
   // 17. Event Delegation & Interactions
   // ------------------------------------------------------------------------
   const bindDOMEvents = () => {
+    // Prevent long press context menu globally except on text inputs to feel like a native app
+    window.addEventListener('contextmenu', (e) => {
+      const tagName = e.target.tagName;
+      if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' && !e.target.isContentEditable) {
+        e.preventDefault();
+      }
+    });
     
     // Bottom Nav clicks
     $$('[data-tab-btn]').forEach(btn => {
