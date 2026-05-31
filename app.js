@@ -17,7 +17,6 @@
     };
   }
 
-
   // ------------------------------------------------------------------------
   // 1. Core Reactive State System
   // ------------------------------------------------------------------------
@@ -433,7 +432,9 @@
     let dragState = null; // Tracks active drag session
 
     const getCardEls = () => [
-      ...listWrapper.querySelectorAll(".player-card:not(.drag-placeholder):not(.dragging)"),
+      ...listWrapper.querySelectorAll(
+        ".player-card:not(.drag-placeholder):not(.dragging)",
+      ),
     ];
 
     // Creates a pixel-perfect clone of the dragged card to float under pointer
@@ -480,7 +481,8 @@
       const header = e.target.closest(".card-header");
       if (!header) return;
       // Skip if tapping a button or the player name inside the header
-      if (e.target.closest("button") || e.target.closest(".player-name")) return;
+      if (e.target.closest("button") || e.target.closest(".player-name"))
+        return;
 
       const card = header.closest(".player-card");
       if (!card) return;
@@ -832,7 +834,7 @@
 
       const oldScore = player.score;
       const signedDelta =
-          state.calcPendingOperation === "plus" ? deltaValue : -deltaValue;
+        state.calcPendingOperation === "plus" ? deltaValue : -deltaValue;
 
       player.score += signedDelta;
       saveCounters();
@@ -902,7 +904,6 @@
       triggerHaptic();
     });
 
-
     $("#menu-btn-open-settings")?.addEventListener("click", () => {
       dialog.close();
       const settingsDialog = $("#settings-dialog");
@@ -918,16 +919,16 @@
       dialog.close();
       if (state.counters.length === 0) return;
       showConfirmDialog(
-        "Reset scores for all counters to their base target values?",
+        "Reset all counters to their base target values?",
         () => {
           state.counters.forEach((player) => {
             const oldScore = player.score;
             player.score = player.resetValue || 0;
-            addHistoryLog(player, "Reset score", oldScore, player.score);
+            addHistoryLog(player, "Reset counter", oldScore, player.score);
           });
           saveCounters();
           renderCountersList();
-          showToast("All scores reset");
+          showToast("All counters reset");
           playResetSound();
           triggerHaptic(40);
         },
@@ -1099,7 +1100,7 @@
       if (!newName) return;
 
       const player = state.counters.find(
-        (c) => c.id === state.activePlayerIdForEdit
+        (c) => c.id === state.activePlayerIdForEdit,
       );
       if (player) {
         player.name = newName;
@@ -1129,7 +1130,7 @@
       const newValue = parseInt(newValueStr);
 
       const player = state.counters.find(
-        (c) => c.id === state.activePlayerIdForEdit
+        (c) => c.id === state.activePlayerIdForEdit,
       );
       if (player) {
         const oldScore = player.score;
@@ -1151,10 +1152,13 @@
   const addNewCounterStreamlined = () => {
     // Pick an unused color swatch
     const usedColors = state.counters.map((c) => c.color);
-    const unusedSwatches = colorSwatches.filter((s) => !usedColors.includes(s.id));
-    const selectedSwatch = unusedSwatches.length > 0
-      ? unusedSwatches[Math.floor(Math.random() * unusedSwatches.length)]
-      : colorSwatches[Math.floor(Math.random() * colorSwatches.length)];
+    const unusedSwatches = colorSwatches.filter(
+      (s) => !usedColors.includes(s.id),
+    );
+    const selectedSwatch =
+      unusedSwatches.length > 0
+        ? unusedSwatches[Math.floor(Math.random() * unusedSwatches.length)]
+        : colorSwatches[Math.floor(Math.random() * colorSwatches.length)];
     const colorId = selectedSwatch.id;
 
     // Pick an unused placeholder name if possible
@@ -1166,13 +1170,14 @@
       "Wren",
       "Sparrow",
       "Heron",
-      "Egret"
+      "Egret",
     ];
     const usedNames = state.counters.map((c) => c.name);
     const unusedNames = nameChoices.filter((name) => !usedNames.includes(name));
-    const name = unusedNames.length > 0
-      ? unusedNames[Math.floor(Math.random() * unusedNames.length)]
-      : nameChoices[Math.floor(Math.random() * nameChoices.length)];
+    const name =
+      unusedNames.length > 0
+        ? unusedNames[Math.floor(Math.random() * unusedNames.length)]
+        : nameChoices[Math.floor(Math.random() * nameChoices.length)];
 
     const newPlayer = {
       id: Date.now().toString(),
@@ -1436,7 +1441,9 @@
         scorePressTimer = setTimeout(() => {
           if (scorePressActive && !scorePressMoved) {
             scorePressActive = false;
-            const player = state.counters.find((c) => c.id === scorePressPlayerId);
+            const player = state.counters.find(
+              (c) => c.id === scorePressPlayerId,
+            );
             if (player) {
               state.activePlayerIdForEdit = scorePressPlayerId;
               const valueInput = $("#edit-value-input");
@@ -1460,7 +1467,10 @@
 
       listWrapper.addEventListener("pointermove", (e) => {
         if (!scorePressActive) return;
-        const dist = Math.hypot(e.clientX - scorePressStartX, e.clientY - scorePressStartY);
+        const dist = Math.hypot(
+          e.clientX - scorePressStartX,
+          e.clientY - scorePressStartY,
+        );
         if (dist > 10) {
           scorePressMoved = true;
           if (scorePressTimer) {
@@ -1487,7 +1497,9 @@
         }
 
         if (!scorePressMoved) {
-          const player = state.counters.find((c) => c.id === scorePressPlayerId);
+          const player = state.counters.find(
+            (c) => c.id === scorePressPlayerId,
+          );
           if (player) {
             state.activePlayerIdForCalc = scorePressPlayerId;
             state.calcPendingValue = "";
@@ -1504,7 +1516,7 @@
             if (dialog) {
               const swatch = colorSwatches[player.color] || colorSwatches[0];
               dialog.style.setProperty("--sheet-theme", swatch.hex);
-              
+
               const titleEl = $("#calc-dialog-title");
               if (titleEl) {
                 titleEl.style.setProperty("--pill-bg", `${swatch.hex}15`);
@@ -1584,7 +1596,6 @@
         triggerHaptic(10);
         return;
       }
-
 
       // 3.5. Click on the player name (opens minimal edit name dialog)
       const playerName = e.target.closest(".player-name");
