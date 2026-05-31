@@ -75,8 +75,8 @@
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-CW8kbgYy.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CzAL18uX.css">
+    <script type="module" crossorigin src="./assets/index-CkdIHFOe.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BqGjgqCz.css">
   </head>
   <body>
     <!-- App Header -->
@@ -316,7 +316,7 @@
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
-        <h2 id="calc-dialog-title" class="sheet-title">Name</h2>
+        <h2 id="calc-dialog-title" class="sheet-title-pill">Name</h2>
         <div class="header-actions">
           <button
             class="sheet-close-btn"
@@ -347,9 +347,11 @@
             <!-- Injected dynamically by JavaScript, e.g. +5, +10, +50 -->
           </div>
 
-          <p class="tweak-caption">
+           <p class="tweak-caption">
             You can tweak these values in the Settings
           </p>
+
+          <hr class="dialog-divider" />
 
           <!-- Interactive Math Area -->
           <div class="math-entry-row">
@@ -380,9 +382,9 @@
             type="submit"
             class="primary-btn full-width"
             id="calc-btn-submit"
-            style="margin-top: 20px; font-size: 16px; font-weight: 600; padding: 14px 24px;"
+            style="font-size: 16px; font-weight: 600; padding: 14px 24px;"
           >
-            Apply adjustment
+            Apply
           </button>
         </div>
       </div>
@@ -879,12 +881,13 @@
     <!-- 5. History Log Dialog -->
     <dialog
       id="history-dialog"
-      class="history-log-dialog"
+      class="bottom-sheet-dialog"
       aria-labelledby="history-dialog-title"
     >
-      <div class="history-header">
-        <h2 id="history-dialog-title">History</h2>
-        <div class="history-actions">
+      <div class="bottom-sheet-header">
+        <div class="drag-handle"></div>
+        <h2 id="history-dialog-title" class="sheet-title">History</h2>
+        <div class="header-actions">
           <button
             class="header-icon-btn danger-color"
             id="history-btn-clear"
@@ -904,7 +907,7 @@
             </svg>
           </button>
           <button
-            class="options-close-btn"
+            class="sheet-close-btn"
             commandfor="history-dialog"
             command="close"
             aria-label="Close history"
@@ -912,8 +915,8 @@
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
-              width="20"
-              height="20"
+              width="24"
+              height="24"
               fill="currentColor"
             >
               <path
@@ -924,7 +927,7 @@
         </div>
       </div>
 
-      <div class="history-body">
+      <div class="bottom-sheet-body">
         <div class="history-list" id="history-items-wrapper">
           <!-- History entries injected dynamically by JavaScript -->
         </div>
