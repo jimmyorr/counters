@@ -1104,33 +1104,50 @@
     });
   };
 
-  // Open Edit Dialog wrapper for adding new counter
-  const openAddPlayerDialog = () => {
-    state.activePlayerIdForEdit = "new";
+  // Streamlined: Add new counter directly without dialog
+  const addNewCounterStreamlined = () => {
+    // Pick an unused color swatch
+    const usedColors = state.counters.map((c) => c.color);
+    const unusedSwatches = colorSwatches.filter((s) => !usedColors.includes(s.id));
+    const selectedSwatch = unusedSwatches.length > 0
+      ? unusedSwatches[Math.floor(Math.random() * unusedSwatches.length)]
+      : colorSwatches[Math.floor(Math.random() * colorSwatches.length)];
+    const colorId = selectedSwatch.id;
 
-    // Set edit header text
-    $("#edit-dialog-title").textContent = "Add counter";
-    $("#edit-btn-delete").style.display = "none"; // Hide trash
+    // Pick an unused placeholder name if possible
+    const nameChoices = [
+      "Flicker",
+      "Robin",
+      "Finch",
+      "Junco",
+      "Wren",
+      "Sparrow",
+      "Heron",
+      "Egret"
+    ];
+    const usedNames = state.counters.map((c) => c.name);
+    const unusedNames = nameChoices.filter((name) => !usedNames.includes(name));
+    const name = unusedNames.length > 0
+      ? unusedNames[Math.floor(Math.random() * unusedNames.length)]
+      : nameChoices[Math.floor(Math.random() * nameChoices.length)];
 
-    // Reset values to blank/defaults
-    $("#edit-label").value = "";
-    $("#edit-score").value = "0";
-    $("#edit-increment").value = "1";
-    $("#edit-reset-val").value = "0";
+    const newPlayer = {
+      id: Date.now().toString(),
+      name,
+      score: 0,
+      color: colorId,
+      increment: 1,
+      resetValue: 0,
+    };
 
-    // Random default color swatch selection
-    const randColor = Math.floor(Math.random() * colorSwatches.length);
-    $$(".palette-swatch").forEach((swatch) => {
-      const id = parseInt(swatch.getAttribute("data-color-id"));
-      swatch.classList.toggle("active", id === randColor);
-    });
-
-    const dialog = $("#edit-player-dialog");
-    if (dialog) {
-      dialog.showModal();
-      playClickSound();
-      triggerHaptic();
-    }
+    state.counters.push(newPlayer);
+    saveCounters();
+    addHistoryLog(newPlayer, "Added counter", 0, 0);
+    showToast(`Counter "${name}" added`);
+    renderCountersList();
+    triggerAutoSortWithDebounce();
+    playSuccessSound();
+    triggerHaptic(20);
   };
 
   // Open Edit Dialog wrapper for editing counter details
@@ -1339,11 +1356,11 @@
 
     // Header buttons
     $("#btn-add-player").addEventListener("click", () => {
-      openAddPlayerDialog();
+      addNewCounterStreamlined();
     });
 
     $("#btn-empty-add-player").addEventListener("click", () => {
-      openAddPlayerDialog();
+      addNewCounterStreamlined();
     });
 
     // Pointer handlers for long press vs short press on card body
