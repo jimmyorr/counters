@@ -317,7 +317,6 @@
       id="calculator-dialog"
       class="bottom-sheet-dialog"
       aria-labelledby="calc-dialog-title"
-      closedby="any"
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
@@ -450,7 +449,6 @@
       id="edit-player-dialog"
       class="bottom-sheet-dialog full-sheet-dialog"
       aria-labelledby="edit-dialog-title"
-      closedby="any"
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
@@ -573,7 +571,6 @@
       id="main-menu-dialog"
       class="options-menu-dialog"
       aria-labelledby="main-menu-title"
-      closedby="any"
     >
       <div class="options-dialog-header">
         <h2 id="main-menu-title">Menu</h2>
@@ -660,7 +657,6 @@
       id="settings-dialog"
       class="bottom-sheet-dialog full-sheet-dialog"
       aria-labelledby="settings-dialog-title"
-      closedby="any"
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
@@ -769,7 +765,6 @@
       id="options-dialog"
       class="options-menu-dialog"
       aria-labelledby="options-dialog-title"
-      closedby="any"
     >
       <div class="options-dialog-header">
         <h2 id="options-dialog-title">Display options</h2>
@@ -942,7 +937,6 @@
       id="history-dialog"
       class="history-log-dialog"
       aria-labelledby="history-dialog-title"
-      closedby="any"
     >
       <div class="history-header">
         <h2 id="history-dialog-title">History</h2>
@@ -1009,6 +1003,37 @@
           </svg>
           <p>No transactions logged yet.</p>
         </div>
+      </div>
+    </dialog>
+
+    <!-- 7. Minimal Edit Name Dialog -->
+    <dialog id="edit-name-dialog" class="bottom-sheet-dialog">
+      <div class="bottom-sheet-header">
+        <div class="drag-handle"></div>
+        <h2 class="sheet-title">Edit name</h2>
+      </div>
+      <div class="bottom-sheet-body" style="padding-top: 10px">
+        <form id="edit-name-form" method="dialog" autocomplete="off" style="width: 100%">
+          <div class="form-group" style="margin-bottom: 20px">
+            <input
+              type="text"
+              id="edit-name-input"
+              class="form-input"
+              required
+              autocomplete="new-password"
+              placeholder="Name"
+              style="width: 100%; box-sizing: border-box"
+            />
+          </div>
+          <div style="display: flex; gap: 12px; width: 100%">
+            <button type="button" class="secondary-btn full-width" commandfor="edit-name-dialog" command="close">
+              Cancel
+            </button>
+            <button type="submit" class="primary-btn full-width" id="edit-name-save-btn">
+              Save
+            </button>
+          </div>
+        </form>
       </div>
     </dialog>
 

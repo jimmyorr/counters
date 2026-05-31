@@ -456,8 +456,8 @@
       if (state.settings.autoSort) return;
       const header = e.target.closest(".card-header");
       if (!header) return;
-      // Skip if tapping a button inside the header
-      if (e.target.closest("button")) return;
+      // Skip if tapping a button or the player name inside the header
+      if (e.target.closest("button") || e.target.closest(".player-name")) return;
 
       const card = header.closest(".player-card");
       if (!card) return;
@@ -1106,6 +1106,35 @@
     });
   };
 
+  const setupEditNameDialog = () => {
+    const dialog = $("#edit-name-dialog");
+    const form = $("#edit-name-form");
+
+    if (!dialog || !form) return;
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const newName = $("#edit-name-input").value.trim();
+      if (!newName) return;
+
+      const player = state.counters.find(
+        (c) => c.id === state.activePlayerIdForEdit
+      );
+      if (player) {
+        player.name = newName;
+        saveCounters();
+        addHistoryLog(player, "Edited name", player.score, player.score);
+        showToast("Name updated");
+      }
+
+      dialog.close();
+      renderCountersList();
+      playSuccessSound();
+      triggerHaptic(20);
+    });
+  };
+
   // Streamlined: Add new counter directly without dialog
   const addNewCounterStreamlined = () => {
     // Pick an unused color swatch
@@ -1256,23 +1285,22 @@
   // ------------------------------------------------------------------------
   const setupDialogBackdrops = () => {
     $$("dialog").forEach((dialog) => {
-      // Direct click outside boundary fallback (Safari etc.)
-      if (!("closedBy" in HTMLDialogElement.prototype)) {
-        dialog.addEventListener("click", (event) => {
-          if (event.target !== dialog) return;
-          const rect = dialog.getBoundingClientRect();
-          const isDialogContent =
-            rect.top <= event.clientY &&
-            event.clientY <= rect.top + rect.height &&
-            rect.left <= event.clientX &&
-            event.clientX <= rect.left + rect.width;
-          if (!isDialogContent) {
-            dialog.close();
-            playClickSound();
-            triggerHaptic(5);
-          }
-        });
-      }
+      dialog.addEventListener("click", (event) => {
+        if (event.target !== dialog) return;
+        const rect = dialog.getBoundingClientRect();
+        const isDialogContent =
+          rect.top <= event.clientY &&
+          event.clientY <= rect.top + rect.height &&
+          rect.left <= event.clientX &&
+          event.clientX <= rect.left + rect.width;
+        if (!isDialogContent) {
+          event.preventDefault();
+          event.stopPropagation();
+          dialog.close();
+          playClickSound();
+          triggerHaptic(5);
+        }
+      });
     });
   };
 
@@ -1439,6 +1467,23 @@
           dialog.showModal();
           playClickSound(600, 700, 0.08, 0.05);
           triggerHaptic(15);
+        }
+        return;
+      }
+
+      // 3.5. Click on the player name (opens minimal edit name dialog)
+      const playerName = e.target.closest(".player-name");
+      if (playerName) {
+        state.activePlayerIdForEdit = playerId;
+        const nameInput = $("#edit-name-input");
+        if (nameInput) {
+          nameInput.value = player.name;
+        }
+        const dialog = $("#edit-name-dialog");
+        if (dialog) {
+          dialog.showModal();
+          playClickSound();
+          triggerHaptic(10);
         }
         return;
       }
@@ -1681,6 +1726,7 @@
     setupMainMenuDialog();
     setupCalculatorDialog();
     setupEditPlayerDialog();
+    setupEditNameDialog();
     setupHistoryDialog();
     setupConfirmDialog();
 
