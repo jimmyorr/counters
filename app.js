@@ -899,10 +899,6 @@
       triggerHaptic();
     });
 
-    $("#menu-btn-view-options")?.addEventListener("click", () => {
-      dialog.close();
-      if (window.openOptionsDialog) window.openOptionsDialog();
-    });
 
     $("#menu-btn-open-settings")?.addEventListener("click", () => {
       dialog.close();
