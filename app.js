@@ -1,7 +1,7 @@
 /* ==========================================================================
    COUNTERS MODERN JAVASCRIPT CONTROLLER
    Vanilla ES6+ implementation with dynamic state management, local storage,
-   Web Audio synthesizer, haptics, and custom mathematical overlays.
+   Web Audio synthesizer, and custom mathematical overlays.
    ========================================================================== */
 
 (function () {
@@ -27,7 +27,6 @@
       topBarContent: "highest",
       autoSort: false,
       soundEnabled: true,
-      hapticEnabled: true,
       quickAddValues: [5, 10, 15, 20, 50, 100],
     },
     history: [],
@@ -210,17 +209,7 @@
   };
 
   // ------------------------------------------------------------------------
-  // 4. Haptic Vibration Helper
-  // ------------------------------------------------------------------------
-  const triggerHaptic = (ms = 10) => {
-    if (!state.settings.hapticEnabled) return;
-    if ("vibrate" in navigator) {
-      try {
-        navigator.vibrate(ms);
-      } catch (e) {
-        console.warn("Tactile vibration not allowed", e);
       }
-    }
   };
 
   // ------------------------------------------------------------------------
@@ -258,7 +247,6 @@
     confirmCallback = onConfirm;
     dialog.showModal();
     playClickSound();
-    triggerHaptic();
   };
 
   const setupConfirmDialog = () => {
@@ -590,7 +578,6 @@
       state.counters.splice(toIdx, 0, moved_item);
       saveCounters();
       renderCountersList();
-      triggerHaptic(12);
       playClickSound(500, 650, 0.06, 0.04);
     };
 
@@ -707,7 +694,6 @@
 
       dialog.showModal();
       playClickSound();
-      triggerHaptic();
     };
 
     // Open view options when clicking on the leader container (top left)
@@ -725,7 +711,6 @@
       saveSettings();
       renderCountersList();
       playClickSound();
-      triggerHaptic();
     });
 
     $("#layout-opt-grid").addEventListener("click", () => {
@@ -736,7 +721,6 @@
       saveSettings();
       renderCountersList();
       playClickSound();
-      triggerHaptic();
     });
 
     // Top Bar content settings options
@@ -752,7 +736,6 @@
         saveSettings();
         renderLeaderBar();
         playClickSound();
-        triggerHaptic();
       });
     });
 
@@ -762,7 +745,6 @@
       saveSettings();
       renderCountersList();
       playClickSound();
-      triggerHaptic();
     });
   };
 
@@ -807,14 +789,12 @@
       state.calcPendingOperation = "minus";
       updateCalcDisplayDOM();
       playClickSound();
-      triggerHaptic(5);
     });
 
     $("#calc-op-plus").addEventListener("click", () => {
       state.calcPendingOperation = "plus";
       updateCalcDisplayDOM();
       playClickSound();
-      triggerHaptic(5);
     });
 
     // Quick Accumulating Buttons Taps (Instant apply & close)
@@ -850,7 +830,6 @@
       renderCountersList();
       triggerAutoSortWithDebounce();
       playSuccessSound();
-      triggerHaptic(18);
     });
 
     // Calculate Checkmark confirm submit button
@@ -886,7 +865,6 @@
       renderCountersList();
       triggerAutoSortWithDebounce();
       playSuccessSound();
-      triggerHaptic(18);
     });
   };
 
@@ -901,7 +879,6 @@
     openBtn.addEventListener("click", () => {
       dialog.showModal();
       playClickSound();
-      triggerHaptic();
     });
 
     $("#menu-btn-open-settings")?.addEventListener("click", () => {
@@ -911,7 +888,6 @@
         loadSettingsIntoDOM();
         settingsDialog.showModal();
         playClickSound();
-        triggerHaptic();
       }
     });
 
@@ -930,7 +906,6 @@
           renderCountersList();
           showToast("All counters reset");
           playResetSound();
-          triggerHaptic(40);
         },
       );
     });
@@ -947,7 +922,6 @@
         renderHistory();
         showToast("All counters deleted");
         playResetSound();
-        triggerHaptic(60);
       });
     });
   };
@@ -998,7 +972,6 @@
         dialog.style.setProperty("--sheet-theme", swatchData.hex);
 
         playClickSound();
-        triggerHaptic(5);
       });
     }
 
@@ -1057,7 +1030,6 @@
       renderCountersList();
       triggerAutoSortWithDebounce();
       playSuccessSound();
-      triggerHaptic(20);
     });
 
     // Delete player trash bin button
@@ -1081,7 +1053,6 @@
           renderCountersList();
           showToast(`Counter deleted`);
           playResetSound();
-          triggerHaptic(30);
         }
       });
     });
@@ -1112,7 +1083,6 @@
       dialog.close();
       renderCountersList();
       playSuccessSound();
-      triggerHaptic(20);
     });
   };
 
@@ -1144,7 +1114,6 @@
       renderCountersList();
       triggerAutoSortWithDebounce();
       playSuccessSound();
-      triggerHaptic(20);
     });
   };
 
@@ -1195,7 +1164,6 @@
     renderCountersList();
     triggerAutoSortWithDebounce();
     playSuccessSound();
-    triggerHaptic(20);
   };
 
   // Open Edit Dialog wrapper for editing counter details
@@ -1226,7 +1194,6 @@
       dialog.style.setProperty("--sheet-theme", swatch.hex);
       dialog.showModal();
       playClickSound();
-      triggerHaptic();
     }
   };
 
@@ -1235,7 +1202,6 @@
   // ------------------------------------------------------------------------
   const loadSettingsIntoDOM = () => {
     $("#setting-sound").checked = state.settings.soundEnabled;
-    $("#setting-haptic").checked = state.settings.hapticEnabled;
     $("#setting-theme").value =
       localStorage.getItem("counters-theme") || "system";
     $("#setting-quick-add-values").value =
@@ -1248,16 +1214,8 @@
       state.settings.soundEnabled = e.target.checked;
       saveSettings();
       playClickSound();
-      triggerHaptic();
     });
 
-    // Haptic Toggle
-    $("#setting-haptic").addEventListener("change", (e) => {
-      state.settings.hapticEnabled = e.target.checked;
-      saveSettings();
-      playClickSound();
-      triggerHaptic();
-    });
 
     // Theme selector
     $("#setting-theme").addEventListener("change", (e) => {
@@ -1280,7 +1238,6 @@
         root.classList.toggle("light-mode", !systemIsDark);
       }
       playClickSound();
-      triggerHaptic();
     });
 
     // Quick Add Calculator custom items
@@ -1321,7 +1278,6 @@
           event.stopPropagation();
           dialog.close();
           playClickSound();
-          triggerHaptic(5);
         }
       });
     });
@@ -1340,7 +1296,6 @@
       renderHistory();
       dialog.showModal();
       playClickSound();
-      triggerHaptic();
     });
 
     // Clear history logs
@@ -1351,7 +1306,6 @@
         saveHistory();
         renderHistory();
         playResetSound();
-        triggerHaptic(30);
       });
     });
   };
@@ -1410,7 +1364,6 @@
         if (tab === state.currentTab) return;
         switchTab(tab);
         playClickSound(600, 350, 0.05, 0.03);
-        triggerHaptic(5);
       });
     });
 
@@ -1458,7 +1411,6 @@
                   dialog.showModal();
                 }, 50);
                 playClickSound();
-                triggerHaptic(15);
               }
             }
           }
@@ -1527,7 +1479,6 @@
                 dialog.showModal();
               }, 50);
               playClickSound(600, 700, 0.08, 0.05);
-              triggerHaptic(15);
             }
           }
         }
@@ -1570,7 +1521,6 @@
         renderCountersList();
         triggerAutoSortWithDebounce();
         playClickSound(450, 200, 0.06, 0.05);
-        triggerHaptic(10);
         return;
       }
 
@@ -1593,7 +1543,6 @@
         renderCountersList();
         triggerAutoSortWithDebounce();
         playClickSound(650, 350, 0.06, 0.05);
-        triggerHaptic(10);
         return;
       }
 
@@ -1611,7 +1560,6 @@
           dialog.style.setProperty("--sheet-theme", swatch.hex);
           dialog.showModal();
           playClickSound();
-          triggerHaptic(10);
         }
         return;
       }
@@ -1633,7 +1581,6 @@
           renderCountersList();
           triggerAutoSortWithDebounce();
           playResetSound();
-          triggerHaptic(25);
         });
         return;
       }
@@ -1647,7 +1594,6 @@
         if (dialog && dialog.open) {
           dialog.close();
           playClickSound();
-          triggerHaptic(5);
         }
       });
     });
@@ -1686,7 +1632,6 @@
         diceResult.classList.remove("rolled");
 
         playDiceSound();
-        triggerHaptic(12);
 
         setTimeout(() => {
           diceIcon.classList.remove("active");
@@ -1695,7 +1640,6 @@
           diceResult.classList.add("rolled");
           diceBtn.disabled = false;
           playClickSound(600, 800, 0.08, 0.05);
-          triggerHaptic(20);
         }, 400);
       });
     }
@@ -1736,7 +1680,6 @@
 
           timerInterval = setInterval(updateTimerDisplay, 100);
           playClickSound(650, 450, 0.05, 0.03);
-          triggerHaptic(6);
         } else {
           // Pause
           timerRunning = false;
@@ -1746,7 +1689,6 @@
 
           clearInterval(timerInterval);
           playClickSound(450, 350, 0.05, 0.03);
-          triggerHaptic(6);
         }
       });
 
@@ -1759,7 +1701,6 @@
         clearInterval(timerInterval);
         updateTimerDisplay();
         playResetSound();
-        triggerHaptic(15);
       });
     }
   };
@@ -1826,7 +1767,6 @@
             dialog.style.transform = "";
           }, 300);
           playClickSound(450, 350, 0.05, 0.03); // light close sound
-          triggerHaptic(5);
         } else {
           // Snap back smoothly
           dialog.style.transform = "";
