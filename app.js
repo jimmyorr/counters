@@ -5,7 +5,7 @@
    ========================================================================== */
 
 (function () {
-  'use strict';
+  "use strict";
 
   // ------------------------------------------------------------------------
   // 1. Core Reactive State System
@@ -13,34 +13,38 @@
   const state = {
     counters: [],
     settings: {
-      layout: 'list',
-      topBarContent: 'highest',
+      layout: "list",
+      topBarContent: "highest",
       autoSort: false,
       soundEnabled: true,
       hapticEnabled: true,
-      quickAddValues: [5, 10, 15, 20, 50, 100, 200]
+      quickAddValues: [5, 10, 15, 20, 50, 100, 200],
     },
     history: [],
-    currentTab: 'counters',
-    
+    currentTab: "counters",
+
     // Active actions/focus states
     activePlayerIdForCalc: null,
     activePlayerIdForEdit: null,
-    calcPendingOperation: 'plus', // 'plus' or 'minus'
-    calcPendingValue: '',
-    autoSortTimeout: null
+    calcPendingOperation: "plus", // 'plus' or 'minus'
+    calcPendingValue: "",
+    autoSortTimeout: null,
   };
 
   // Pre-configured player palette color swatches
   const colorSwatches = [
-    { id: 0, class: 'card-color-0', hex: '#162e8a' }, // Deep Blue
-    { id: 1, class: 'card-color-1', hex: '#e86a1a' }, // Bright Orange
-    { id: 2, class: 'card-color-2', hex: '#ca265a' }, // Crimson Pink
-    { id: 3, class: 'card-color-3', hex: '#5b6973' }, // Slate Grey
-    { id: 4, class: 'card-color-4', hex: '#167648' }, // Forest Green
-    { id: 5, class: 'card-color-5 { --card-theme: hsl(45, 95%, 45%); }', hex: '#e69f00' }, // Golden Yellow
-    { id: 6, class: 'card-color-6', hex: '#1096a6' }, // Teal
-    { id: 7, class: 'card-color-7', hex: '#622ea1' }  // Purple
+    { id: 0, class: "card-color-0", hex: "#162e8a" }, // Deep Blue
+    { id: 1, class: "card-color-1", hex: "#e86a1a" }, // Bright Orange
+    { id: 2, class: "card-color-2", hex: "#ca265a" }, // Crimson Pink
+    { id: 3, class: "card-color-3", hex: "#5b6973" }, // Slate Grey
+    { id: 4, class: "card-color-4", hex: "#167648" }, // Forest Green
+    {
+      id: 5,
+      class: "card-color-5 { --card-theme: hsl(45, 95%, 45%); }",
+      hex: "#e69f00",
+    }, // Golden Yellow
+    { id: 6, class: "card-color-6", hex: "#1096a6" }, // Teal
+    { id: 7, class: "card-color-7", hex: "#622ea1" }, // Purple
   ];
 
   // ------------------------------------------------------------------------
@@ -48,9 +52,9 @@
   // ------------------------------------------------------------------------
   const loadStateFromStorage = () => {
     try {
-      const savedCounters = localStorage.getItem('counters-list');
-      const savedSettings = localStorage.getItem('counters-settings');
-      const savedHistory = localStorage.getItem('counters-history');
+      const savedCounters = localStorage.getItem("counters-list");
+      const savedSettings = localStorage.getItem("counters-settings");
+      const savedHistory = localStorage.getItem("counters-history");
 
       if (savedCounters) {
         state.counters = JSON.parse(savedCounters);
@@ -74,20 +78,20 @@
   };
 
   const saveCounters = () => {
-    localStorage.setItem('counters-list', JSON.stringify(state.counters));
+    localStorage.setItem("counters-list", JSON.stringify(state.counters));
   };
 
   const saveSettings = () => {
-    localStorage.setItem('counters-settings', JSON.stringify(state.settings));
+    localStorage.setItem("counters-settings", JSON.stringify(state.settings));
   };
 
   const saveHistory = () => {
-    localStorage.setItem('counters-history', JSON.stringify(state.history));
+    localStorage.setItem("counters-history", JSON.stringify(state.history));
   };
 
   // Helper: Format large numbers with commas
   const formatNumber = (num) => {
-    return Number(num).toLocaleString('en-US');
+    return Number(num).toLocaleString("en-US");
   };
 
   // Helper: DOM Element Selectors
@@ -104,30 +108,38 @@
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
     // Resume context if suspended (common browser security constraint)
-    if (audioCtx.state === 'suspended') {
+    if (audioCtx.state === "suspended") {
       audioCtx.resume();
     }
     return audioCtx;
   };
 
   // Subtle clicks/beeps to ensure highly satisfying user interface
-  const playClickSound = (freqStart = 550, freqEnd = 200, duration = 0.06, vol = 0.05) => {
+  const playClickSound = (
+    freqStart = 550,
+    freqEnd = 200,
+    duration = 0.06,
+    vol = 0.05,
+  ) => {
     if (!state.settings.soundEnabled) return;
     try {
       const ctx = getAudioContext();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      
-      osc.type = 'sine';
+
+      osc.type = "sine";
       osc.frequency.setValueAtTime(freqStart, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(freqEnd, ctx.currentTime + duration);
-      
+      osc.frequency.exponentialRampToValueAtTime(
+        freqEnd,
+        ctx.currentTime + duration,
+      );
+
       gain.gain.setValueAtTime(vol, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-      
+
       osc.connect(gain);
       gain.connect(ctx.destination);
-      
+
       osc.start();
       osc.stop(ctx.currentTime + duration);
     } catch (e) {
@@ -158,29 +170,29 @@
       const bufferSize = ctx.sampleRate * 0.15; // 150ms buffer
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const data = buffer.getChannelData(0);
-      
+
       // Populate buffer with randomized white noise
       for (let i = 0; i < bufferSize; i++) {
         data[i] = Math.random() * 2 - 1;
       }
-      
+
       const noiseSource = ctx.createBufferSource();
       noiseSource.buffer = buffer;
-      
+
       // Filter the white noise to sound like heavy rolling dice clicking together
       const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
+      filter.type = "bandpass";
       filter.frequency.setValueAtTime(450, ctx.currentTime);
       filter.Q.setValueAtTime(3.0, ctx.currentTime);
-      
+
       const gain = ctx.createGain();
       gain.gain.setValueAtTime(0.08, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
-      
+
       noiseSource.connect(filter);
       filter.connect(gain);
       gain.connect(ctx.destination);
-      
+
       noiseSource.start();
     } catch (e) {
       console.warn("Failed to generate noise source", e);
@@ -192,7 +204,7 @@
   // ------------------------------------------------------------------------
   const triggerHaptic = (ms = 10) => {
     if (!state.settings.hapticEnabled) return;
-    if ('vibrate' in navigator) {
+    if ("vibrate" in navigator) {
       try {
         navigator.vibrate(ms);
       } catch (e) {
@@ -207,18 +219,18 @@
   let toastTimeout = null;
 
   const showToast = (message) => {
-    const toast = $('#toast-wrapper');
-    const toastText = $('#toast-text');
-    
+    const toast = $("#toast-wrapper");
+    const toastText = $("#toast-text");
+
     if (!toast || !toastText) return;
-    
+
     toastText.textContent = message;
-    toast.classList.remove('hidden');
-    
+    toast.classList.remove("hidden");
+
     if (toastTimeout) clearTimeout(toastTimeout);
-    
+
     toastTimeout = setTimeout(() => {
-      toast.classList.add('hidden');
+      toast.classList.add("hidden");
     }, 2500);
   };
 
@@ -228,10 +240,10 @@
   let confirmCallback = null;
 
   const showConfirmDialog = (message, onConfirm) => {
-    const dialog = $('#confirm-dialog');
-    const msgEl = $('#confirm-dialog-message');
+    const dialog = $("#confirm-dialog");
+    const msgEl = $("#confirm-dialog-message");
     if (!dialog || !msgEl) return;
-    
+
     msgEl.textContent = message;
     confirmCallback = onConfirm;
     dialog.showModal();
@@ -240,16 +252,16 @@
   };
 
   const setupConfirmDialog = () => {
-    const dialog = $('#confirm-dialog');
+    const dialog = $("#confirm-dialog");
     if (!dialog) return;
 
-    $('#confirm-btn-ok')?.addEventListener('click', () => {
+    $("#confirm-btn-ok")?.addEventListener("click", () => {
       if (confirmCallback) confirmCallback();
       dialog.close();
       playClickSound();
     });
 
-    $('#confirm-btn-cancel')?.addEventListener('click', () => {
+    $("#confirm-btn-cancel")?.addEventListener("click", () => {
       dialog.close();
       playClickSound();
     });
@@ -258,40 +270,45 @@
   // ------------------------------------------------------------------------
   // 7. Dynamic View Renderers (Counters List, Leader Top Bar)
   // ------------------------------------------------------------------------
-  
+
   // Re-calculate the leader bar metrics (Highest, Lowest, or Total score)
   const renderLeaderBar = () => {
-    const leaderContainer = $('#header-leader-container');
-    const leaderText = $('#header-leader-text');
-    
+    const leaderContainer = $("#header-leader-container");
+    const leaderText = $("#header-leader-text");
+
     if (!leaderContainer || !leaderText) return;
     if (state.counters.length === 0) {
-      leaderContainer.style.opacity = '0';
-      leaderContainer.style.pointerEvents = 'none';
+      leaderContainer.style.opacity = "0";
+      leaderContainer.style.pointerEvents = "none";
       return;
     }
-    
-    leaderContainer.style.opacity = '1';
-    leaderContainer.style.pointerEvents = 'auto';
+
+    leaderContainer.style.opacity = "1";
+    leaderContainer.style.pointerEvents = "auto";
 
     const type = state.settings.topBarContent;
-    
-    if (type === 'highest') {
+
+    if (type === "highest") {
       // Find highest scoring player
       const leader = [...state.counters].sort((a, b) => b.score - a.score)[0];
-      leaderContainer.querySelector('.leader-icon svg').innerHTML = 
+      leaderContainer.querySelector(".leader-icon svg").innerHTML =
         `<path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/>`;
       leaderText.textContent = leader.name;
-    } else if (type === 'lowest') {
+    } else if (type === "lowest") {
       // Find lowest scoring player
-      const lowLeader = [...state.counters].sort((a, b) => a.score - b.score)[0];
-      leaderContainer.querySelector('.leader-icon svg').innerHTML = 
+      const lowLeader = [...state.counters].sort(
+        (a, b) => a.score - b.score,
+      )[0];
+      leaderContainer.querySelector(".leader-icon svg").innerHTML =
         `<path d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"/>`;
       leaderText.textContent = lowLeader.name;
-    } else if (type === 'total') {
+    } else if (type === "total") {
       // Find sum of all scores
-      const totalScore = state.counters.reduce((sum, item) => sum + item.score, 0);
-      leaderContainer.querySelector('.leader-icon svg').innerHTML = 
+      const totalScore = state.counters.reduce(
+        (sum, item) => sum + item.score,
+        0,
+      );
+      leaderContainer.querySelector(".leader-icon svg").innerHTML =
         `<path d="M19 18v2H5v-2l6-6-6-6V4h14v2h-9.35L14 12l-4.35 6H19z"/>`;
       leaderText.textContent = `Total: ${formatNumber(totalScore)}`;
     }
@@ -299,27 +316,31 @@
 
   // Compile individual player card templates into the wrapper list
   const renderCountersList = () => {
-    const listWrapper = $('#counters-list-wrapper');
-    const emptyState = $('#empty-state-view');
-    
+    const listWrapper = $("#counters-list-wrapper");
+    const emptyState = $("#empty-state-view");
+
     if (!listWrapper || !emptyState) return;
 
     if (state.counters.length === 0) {
-      listWrapper.innerHTML = '';
-      emptyState.classList.remove('hidden');
+      listWrapper.innerHTML = "";
+      emptyState.classList.remove("hidden");
       renderLeaderBar();
       return;
     }
 
-    emptyState.classList.add('hidden');
-    
+    emptyState.classList.add("hidden");
+
     // Reflect drag-enabled state on the wrapper for CSS cursor targeting
-    listWrapper.setAttribute('data-drag-enabled', state.settings.autoSort ? 'false' : 'true');
-    
+    listWrapper.setAttribute(
+      "data-drag-enabled",
+      state.settings.autoSort ? "false" : "true",
+    );
+
     // Inject rendered HTML for each array item
-    listWrapper.innerHTML = state.counters.map(player => {
-      const swatch = colorSwatches[player.color] || colorSwatches[0];
-      return `
+    listWrapper.innerHTML = state.counters
+      .map((player) => {
+        const swatch = colorSwatches[player.color] || colorSwatches[0];
+        return `
         <div class="player-card ${swatch.class}" data-player-id="${player.id}" style="--card-theme: ${swatch.hex}">
           <!-- Card Top Info Bar -->
           <div class="card-header">
@@ -348,7 +369,8 @@
           <div class="card-direct-zone card-direct-zone-plus" data-action="increment" aria-label="Add direct increment">+</div>
         </div>
       `;
-    }).join('');
+      })
+      .join("");
 
     renderLeaderBar();
   };
@@ -358,13 +380,13 @@
   // ------------------------------------------------------------------------
   const triggerAutoSortWithDebounce = () => {
     if (!state.settings.autoSort) return;
-    
+
     if (state.autoSortTimeout) {
       clearTimeout(state.autoSortTimeout);
     }
-    
+
     state.autoSortTimeout = setTimeout(() => {
-      if (state.settings.topBarContent === 'lowest') {
+      if (state.settings.topBarContent === "lowest") {
         state.counters.sort((a, b) => a.score - b.score);
       } else {
         state.counters.sort((a, b) => b.score - a.score);
@@ -380,18 +402,20 @@
   const setupCardDragDrop = () => {
     if (state.settings.autoSort) return; // Drag disabled when auto-sort is on
 
-    const listWrapper = $('#counters-list-wrapper');
+    const listWrapper = $("#counters-list-wrapper");
     if (!listWrapper) return;
 
     let dragState = null; // Tracks active drag session
 
-    const getCardEls = () => [...listWrapper.querySelectorAll('.player-card:not(.drag-placeholder)')];
+    const getCardEls = () => [
+      ...listWrapper.querySelectorAll(".player-card:not(.drag-placeholder)"),
+    ];
 
     // Creates a pixel-perfect clone of the dragged card to float under pointer
     const createGhost = (sourceCard, offsetX, offsetY) => {
       const rect = sourceCard.getBoundingClientRect();
       const ghost = sourceCard.cloneNode(true);
-      ghost.classList.add('drag-ghost');
+      ghost.classList.add("drag-ghost");
       ghost.style.width = `${rect.width}px`;
       ghost.style.height = `${rect.height}px`;
       ghost.style.left = `${rect.left}px`;
@@ -426,14 +450,14 @@
       }
     };
 
-    listWrapper.addEventListener('pointerdown', (e) => {
+    listWrapper.addEventListener("pointerdown", (e) => {
       if (state.settings.autoSort) return;
-      const header = e.target.closest('.card-header');
+      const header = e.target.closest(".card-header");
       if (!header) return;
       // Skip if tapping a button inside the header
-      if (e.target.closest('button')) return;
+      if (e.target.closest("button")) return;
 
-      const card = header.closest('.player-card');
+      const card = header.closest(".player-card");
       if (!card) return;
 
       // Measure pointer offset relative to card top-left
@@ -444,13 +468,13 @@
       const { ghost } = createGhost(card, offsetX, offsetY);
 
       // Placeholder mimics the card's dimensions
-      const placeholder = document.createElement('div');
-      placeholder.className = 'drag-placeholder';
+      const placeholder = document.createElement("div");
+      placeholder.className = "drag-placeholder";
       placeholder.style.height = `${rect.height}px`;
       placeholder.style.minHeight = `${rect.height}px`;
       listWrapper.insertBefore(placeholder, card);
 
-      card.classList.add('dragging');
+      card.classList.add("dragging");
 
       dragState = {
         card,
@@ -458,20 +482,28 @@
         placeholder,
         offsetX,
         offsetY,
-        moved: false
+        moved: false,
       };
 
       // Capture pointer for smooth touch drag outside origin
-      try { listWrapper.setPointerCapture(e.pointerId); } catch (_) {}
+      try {
+        listWrapper.setPointerCapture(e.pointerId);
+      } catch (_) {}
 
       e.preventDefault();
     });
 
-    listWrapper.addEventListener('pointermove', (e) => {
+    listWrapper.addEventListener("pointermove", (e) => {
       if (!dragState) return;
       dragState.moved = true;
 
-      moveGhost(dragState.ghost, e.clientX, e.clientY, dragState.offsetX, dragState.offsetY);
+      moveGhost(
+        dragState.ghost,
+        e.clientX,
+        e.clientY,
+        dragState.offsetX,
+        dragState.offsetY,
+      );
 
       const before = getDropTarget(e.clientY);
       movePlaceholder(dragState.placeholder, before);
@@ -485,7 +517,7 @@
 
       // Clean up ghost and dragging state
       ghost.remove();
-      card.classList.remove('dragging');
+      card.classList.remove("dragging");
 
       if (!moved) {
         // Treat no-movement as a cancelled drag — just remove placeholder
@@ -499,8 +531,8 @@
       placeholder.remove();
 
       // Determine original index to remove from
-      const playerId = card.getAttribute('data-player-id');
-      const fromIdx = state.counters.findIndex(c => c.id === playerId);
+      const playerId = card.getAttribute("data-player-id");
+      const fromIdx = state.counters.findIndex((c) => c.id === playerId);
       if (fromIdx === -1) return;
 
       // Count how many real cards are before the placeholder position to get target index
@@ -509,7 +541,11 @@
       for (let i = 0; i < allChildren.length; i++) {
         if (i === placeholderIdx) break;
         const child = allChildren[i];
-        if (child !== card && child !== placeholder && child.classList.contains('player-card')) {
+        if (
+          child !== card &&
+          child !== placeholder &&
+          child.classList.contains("player-card")
+        ) {
           seen++;
         }
       }
@@ -531,11 +567,11 @@
       playClickSound(500, 650, 0.06, 0.04);
     };
 
-    listWrapper.addEventListener('pointerup', endDrag);
-    listWrapper.addEventListener('pointercancel', (e) => {
+    listWrapper.addEventListener("pointerup", endDrag);
+    listWrapper.addEventListener("pointercancel", (e) => {
       if (!dragState) return;
       dragState.ghost.remove();
-      dragState.card.classList.remove('dragging');
+      dragState.card.classList.remove("dragging");
       dragState.placeholder.remove();
       dragState = null;
       renderCountersList();
@@ -546,21 +582,22 @@
   // 9. History Log Renderer
   // ------------------------------------------------------------------------
   const renderHistory = () => {
-    const listWrapper = $('#history-items-wrapper');
-    const emptyView = $('#history-empty-view');
-    
+    const listWrapper = $("#history-items-wrapper");
+    const emptyView = $("#history-empty-view");
+
     if (!listWrapper || !emptyView) return;
 
     if (state.history.length === 0) {
-      listWrapper.innerHTML = '';
-      emptyView.classList.remove('hidden');
+      listWrapper.innerHTML = "";
+      emptyView.classList.remove("hidden");
       return;
     }
 
-    emptyView.classList.add('hidden');
-    listWrapper.innerHTML = state.history.map(log => {
-      const swatch = colorSwatches[log.color] || colorSwatches[0];
-      return `
+    emptyView.classList.add("hidden");
+    listWrapper.innerHTML = state.history
+      .map((log) => {
+        const swatch = colorSwatches[log.color] || colorSwatches[0];
+        return `
         <div class="history-item" style="--history-theme: ${swatch.hex}">
           <div class="history-badge"></div>
           <div class="history-details">
@@ -575,7 +612,8 @@
           </div>
         </div>
       `;
-    }).join('');
+      })
+      .join("");
   };
 
   // ------------------------------------------------------------------------
@@ -583,35 +621,35 @@
   // ------------------------------------------------------------------------
   const switchTab = (tabId) => {
     state.currentTab = tabId;
-    
+
     // Update footer button active class
-    $$('[data-tab-btn]').forEach(btn => {
-      if (btn.getAttribute('data-tab-btn') === tabId) {
-        btn.classList.add('active');
+    $$("[data-tab-btn]").forEach((btn) => {
+      if (btn.getAttribute("data-tab-btn") === tabId) {
+        btn.classList.add("active");
       } else {
-        btn.classList.remove('active');
+        btn.classList.remove("active");
       }
     });
 
     // Update screen tab visibility
-    $$('.tab-content').forEach(section => {
-      if (section.getAttribute('data-view') === tabId) {
-        section.classList.add('active');
+    $$(".tab-content").forEach((section) => {
+      if (section.getAttribute("data-view") === tabId) {
+        section.classList.add("active");
       } else {
-        section.classList.remove('active');
+        section.classList.remove("active");
       }
     });
 
     // Update Topbar View Title
-    const viewTitle = $('#app-view-title');
+    const viewTitle = $("#app-view-title");
     if (viewTitle) {
-      if (tabId === 'counters') viewTitle.textContent = 'Counters';
-      else if (tabId === 'dice') viewTitle.textContent = 'Dice';
-      else if (tabId === 'timer') viewTitle.textContent = 'Timer';
+      if (tabId === "counters") viewTitle.textContent = "Counters";
+      else if (tabId === "dice") viewTitle.textContent = "Dice";
+      else if (tabId === "timer") viewTitle.textContent = "Timer";
     }
 
     // Dynamic render adjustments
-    if (tabId === 'counters') {
+    if (tabId === "counters") {
       renderCountersList();
     }
   };
@@ -620,54 +658,54 @@
   // 11. Options Overlay Dialog logic
   // ------------------------------------------------------------------------
   const setupOptionsDialog = () => {
-    const dialog = $('#options-dialog');
+    const dialog = $("#options-dialog");
     if (!dialog) return;
-    
+
     const openOptionsDialog = () => {
       // Sync dialog display to state configs before showing
-      $('#options-auto-sort').checked = state.settings.autoSort;
-      
-      if (state.settings.layout === 'grid') {
-        $('#layout-opt-grid').classList.add('active');
-        $('#layout-opt-list').classList.remove('active');
+      $("#options-auto-sort").checked = state.settings.autoSort;
+
+      if (state.settings.layout === "grid") {
+        $("#layout-opt-grid").classList.add("active");
+        $("#layout-opt-list").classList.remove("active");
       } else {
-        $('#layout-opt-list').classList.add('active');
-        $('#layout-opt-grid').classList.remove('active');
+        $("#layout-opt-list").classList.add("active");
+        $("#layout-opt-grid").classList.remove("active");
       }
-      
+
       const type = state.settings.topBarContent;
-      $(`#topbar-opt-highest`).classList.toggle('active', type === 'highest');
-      $(`#topbar-opt-lowest`).classList.toggle('active', type === 'lowest');
-      $(`#topbar-opt-total`).classList.toggle('active', type === 'total');
-      
+      $(`#topbar-opt-highest`).classList.toggle("active", type === "highest");
+      $(`#topbar-opt-lowest`).classList.toggle("active", type === "lowest");
+      $(`#topbar-opt-total`).classList.toggle("active", type === "total");
+
       dialog.showModal();
       playClickSound();
       triggerHaptic();
     };
 
     // Open view options when clicking on the leader container (top left)
-    $('#header-leader-container')?.addEventListener('click', openOptionsDialog);
+    $("#header-leader-container")?.addEventListener("click", openOptionsDialog);
 
     // Make openOptionsDialog available to other menus
     window.openOptionsDialog = openOptionsDialog;
 
     // Handle standard layout button switches
-    $('#layout-opt-list').addEventListener('click', () => {
-      state.settings.layout = 'list';
-      document.documentElement.setAttribute('data-layout', 'list');
-      $('#layout-opt-list').classList.add('active');
-      $('#layout-opt-grid').classList.remove('active');
+    $("#layout-opt-list").addEventListener("click", () => {
+      state.settings.layout = "list";
+      document.documentElement.setAttribute("data-layout", "list");
+      $("#layout-opt-list").classList.add("active");
+      $("#layout-opt-grid").classList.remove("active");
       saveSettings();
       renderCountersList();
       playClickSound();
       triggerHaptic();
     });
 
-    $('#layout-opt-grid').addEventListener('click', () => {
-      state.settings.layout = 'grid';
-      document.documentElement.setAttribute('data-layout', 'grid');
-      $('#layout-opt-grid').classList.add('active');
-      $('#layout-opt-list').classList.remove('active');
+    $("#layout-opt-grid").addEventListener("click", () => {
+      state.settings.layout = "grid";
+      document.documentElement.setAttribute("data-layout", "grid");
+      $("#layout-opt-grid").classList.add("active");
+      $("#layout-opt-list").classList.remove("active");
       saveSettings();
       renderCountersList();
       playClickSound();
@@ -675,12 +713,15 @@
     });
 
     // Top Bar content settings options
-    ['highest', 'lowest', 'total'].forEach(option => {
-      $(`#topbar-opt-${option}`).addEventListener('click', () => {
+    ["highest", "lowest", "total"].forEach((option) => {
+      $(`#topbar-opt-${option}`).addEventListener("click", () => {
         state.settings.topBarContent = option;
-        $(`#topbar-opt-highest`).classList.toggle('active', option === 'highest');
-        $(`#topbar-opt-lowest`).classList.toggle('active', option === 'lowest');
-        $(`#topbar-opt-total`).classList.toggle('active', option === 'total');
+        $(`#topbar-opt-highest`).classList.toggle(
+          "active",
+          option === "highest",
+        );
+        $(`#topbar-opt-lowest`).classList.toggle("active", option === "lowest");
+        $(`#topbar-opt-total`).classList.toggle("active", option === "total");
         saveSettings();
         renderLeaderBar();
         playClickSound();
@@ -689,7 +730,7 @@
     });
 
     // Auto sort toggles
-    $('#options-auto-sort').addEventListener('change', (e) => {
+    $("#options-auto-sort").addEventListener("change", (e) => {
       state.settings.autoSort = e.target.checked;
       saveSettings();
       renderCountersList();
@@ -702,62 +743,72 @@
   // 12. Calculator Dialog Sheet Logic (Accumulating math value)
   // ------------------------------------------------------------------------
   const setupCalculatorDialog = () => {
-    const dialog = $('#calculator-dialog');
+    const dialog = $("#calculator-dialog");
     if (!dialog) return;
 
     // Reset current mathematical state
     const resetCalculatorState = () => {
-      state.calcPendingValue = '';
-      state.calcPendingOperation = 'plus';
+      state.calcPendingValue = "";
+      state.calcPendingOperation = "plus";
       updateCalcDisplayDOM();
     };
 
     const updateCalcDisplayDOM = () => {
-      const display = $('#calc-number-input');
-      const opIndicator = $('.math-op-indicator');
-      const opMinus = $('#calc-op-minus');
-      const opPlus = $('#calc-op-plus');
-      
+      const display = $("#calc-number-input");
+      const opIndicator = $(".math-op-indicator");
+      const opMinus = $("#calc-op-minus");
+      const opPlus = $("#calc-op-plus");
+
       if (display) {
-        display.value = state.calcPendingValue === '' ? '0' : formatNumber(state.calcPendingValue);
+        display.value =
+          state.calcPendingValue === ""
+            ? "0"
+            : formatNumber(state.calcPendingValue);
       }
-      
+
       if (opIndicator) {
-        opIndicator.textContent = state.calcPendingOperation === 'plus' ? '+' : '−';
+        opIndicator.textContent =
+          state.calcPendingOperation === "plus" ? "+" : "−";
       }
 
       if (opMinus && opPlus) {
-        opMinus.classList.toggle('active', state.calcPendingOperation === 'minus');
-        opPlus.classList.toggle('active', state.calcPendingOperation === 'plus');
+        opMinus.classList.toggle(
+          "active",
+          state.calcPendingOperation === "minus",
+        );
+        opPlus.classList.toggle(
+          "active",
+          state.calcPendingOperation === "plus",
+        );
       }
     };
 
     // Toggle calculator operators (+ / -)
-    $('#calc-op-minus').addEventListener('click', () => {
-      state.calcPendingOperation = 'minus';
+    $("#calc-op-minus").addEventListener("click", () => {
+      state.calcPendingOperation = "minus";
       updateCalcDisplayDOM();
       playClickSound();
       triggerHaptic(5);
     });
 
-    $('#calc-op-plus').addEventListener('click', () => {
-      state.calcPendingOperation = 'plus';
+    $("#calc-op-plus").addEventListener("click", () => {
+      state.calcPendingOperation = "plus";
       updateCalcDisplayDOM();
       playClickSound();
       triggerHaptic(5);
     });
 
     // Numerical keypad actions
-    $$('.calc-numpad .num-btn[data-key]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const key = btn.getAttribute('data-key');
-        
+    $$(".calc-numpad .num-btn[data-key]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const key = btn.getAttribute("data-key");
+
         // Prevent multiple decimals
-        if (key === '.' && state.calcPendingValue.includes('.')) return;
-        
+        if (key === "." && state.calcPendingValue.includes(".")) return;
+
         // Capping total entry size
         if (state.calcPendingValue.length >= 8) return;
-        
+
         state.calcPendingValue += key;
         updateCalcDisplayDOM();
         playClickSound(650, 400, 0.05, 0.03);
@@ -766,15 +817,15 @@
     });
 
     // Clear Calculator button
-    $('#calc-btn-clear').addEventListener('click', () => {
-      state.calcPendingValue = '';
+    $("#calc-btn-clear").addEventListener("click", () => {
+      state.calcPendingValue = "";
       updateCalcDisplayDOM();
       playClickSound(350, 200, 0.06, 0.04);
       triggerHaptic(5);
     });
 
     // Backspace button
-    $('#calc-btn-backspace').addEventListener('click', () => {
+    $("#calc-btn-backspace").addEventListener("click", () => {
       state.calcPendingValue = state.calcPendingValue.slice(0, -1);
       updateCalcDisplayDOM();
       playClickSound(400, 300, 0.05, 0.03);
@@ -782,44 +833,50 @@
     });
 
     // Quick Accumulating Buttons Taps (Adds to current screen value)
-    $('#calc-quick-add-container').addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-quick-val]');
+    $("#calc-quick-add-container").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-quick-val]");
       if (!btn) return;
 
-      const val = parseFloat(btn.getAttribute('data-quick-val'));
-      
+      const val = parseFloat(btn.getAttribute("data-quick-val"));
+
       // Accumulate mathematical value
-      const current = parseFloat(state.calcPendingValue || '0');
+      const current = parseFloat(state.calcPendingValue || "0");
       state.calcPendingValue = (current + val).toString();
-      
+
       updateCalcDisplayDOM();
       playClickSound(750, 500, 0.06, 0.05);
       triggerHaptic(8);
     });
 
     // Calculate Checkmark confirm submit button
-    $('#calc-btn-submit').addEventListener('click', () => {
+    $("#calc-btn-submit").addEventListener("click", () => {
       if (state.activePlayerIdForCalc === null) return;
-      
-      const player = state.counters.find(c => c.id === state.activePlayerIdForCalc);
+
+      const player = state.counters.find(
+        (c) => c.id === state.activePlayerIdForCalc,
+      );
       if (!player) return;
-      
-      const deltaValue = parseFloat(state.calcPendingValue || '0');
+
+      const deltaValue = parseFloat(state.calcPendingValue || "0");
       if (deltaValue === 0) {
         dialog.close();
         return;
       }
-      
+
       const oldScore = player.score;
-      const signedDelta = state.calcPendingOperation === 'plus' ? deltaValue : -deltaValue;
-      
+      const signedDelta =
+        state.calcPendingOperation === "plus" ? deltaValue : -deltaValue;
+
       player.score += signedDelta;
       saveCounters();
-      
+
       // History logging
-      const label = signedDelta > 0 ? `+${formatNumber(deltaValue)}` : `−${formatNumber(deltaValue)}`;
+      const label =
+        signedDelta > 0
+          ? `+${formatNumber(deltaValue)}`
+          : `−${formatNumber(deltaValue)}`;
       addHistoryLog(player, label, oldScore, player.score);
-      
+
       dialog.close();
       renderCountersList();
       triggerAutoSortWithDebounce();
@@ -832,24 +889,24 @@
   // 13. Main Menu & Points to Win Logic
   // ------------------------------------------------------------------------
   const setupMainMenuDialog = () => {
-    const dialog = $('#main-menu-dialog');
-    const openBtn = $('#btn-open-options');
+    const dialog = $("#main-menu-dialog");
+    const openBtn = $("#btn-open-options");
     if (!dialog || !openBtn) return;
 
-    openBtn.addEventListener('click', () => {
+    openBtn.addEventListener("click", () => {
       dialog.showModal();
       playClickSound();
       triggerHaptic();
     });
 
-    $('#menu-btn-view-options')?.addEventListener('click', () => {
+    $("#menu-btn-view-options")?.addEventListener("click", () => {
       dialog.close();
       if (window.openOptionsDialog) window.openOptionsDialog();
     });
 
-    $('#menu-btn-open-settings')?.addEventListener('click', () => {
+    $("#menu-btn-open-settings")?.addEventListener("click", () => {
       dialog.close();
-      const settingsDialog = $('#settings-dialog');
+      const settingsDialog = $("#settings-dialog");
       if (settingsDialog) {
         loadSettingsIntoDOM();
         settingsDialog.showModal();
@@ -858,24 +915,27 @@
       }
     });
 
-    $('#menu-btn-reset-scores')?.addEventListener('click', () => {
+    $("#menu-btn-reset-scores")?.addEventListener("click", () => {
       dialog.close();
       if (state.counters.length === 0) return;
-      showConfirmDialog("Reset scores for all counters to their base target values?", () => {
-        state.counters.forEach(player => {
-          const oldScore = player.score;
-          player.score = player.resetValue || 0;
-          addHistoryLog(player, "Reset score", oldScore, player.score);
-        });
-        saveCounters();
-        renderCountersList();
-        showToast("All scores reset");
-        playResetSound();
-        triggerHaptic(40);
-      });
+      showConfirmDialog(
+        "Reset scores for all counters to their base target values?",
+        () => {
+          state.counters.forEach((player) => {
+            const oldScore = player.score;
+            player.score = player.resetValue || 0;
+            addHistoryLog(player, "Reset score", oldScore, player.score);
+          });
+          saveCounters();
+          renderCountersList();
+          showToast("All scores reset");
+          playResetSound();
+          triggerHaptic(40);
+        },
+      );
     });
 
-    $('#menu-btn-delete-all')?.addEventListener('click', () => {
+    $("#menu-btn-delete-all")?.addEventListener("click", () => {
       dialog.close();
       if (state.counters.length === 0) return;
       showConfirmDialog("Are you sure you want to delete all counters?", () => {
@@ -894,57 +954,63 @@
 
   // Populate dynamic quick-add grids inside calculator overlay
   const populateCalculatorQuickAdds = () => {
-    const container = $('#calc-quick-add-container');
+    const container = $("#calc-quick-add-container");
     if (!container) return;
 
-    container.innerHTML = state.settings.quickAddValues.map(val => {
-      return `<button data-quick-val="${val}">+${formatNumber(val)}</button>`;
-    }).join('');
+    container.innerHTML = state.settings.quickAddValues
+      .map((val) => {
+        return `<button data-quick-val="${val}">+${formatNumber(val)}</button>`;
+      })
+      .join("");
   };
 
   // ------------------------------------------------------------------------
   // 13. Edit / Add player Panel Logic
   // ------------------------------------------------------------------------
   const setupEditPlayerDialog = () => {
-    const dialog = $('#edit-player-dialog');
-    const form = $('#edit-player-form');
-    
+    const dialog = $("#edit-player-dialog");
+    const form = $("#edit-player-form");
+
     if (!dialog || !form) return;
 
     // Compile Palette Grid circular swatches
-    const paletteContainer = $('#edit-palette-container');
+    const paletteContainer = $("#edit-palette-container");
     if (paletteContainer) {
-      paletteContainer.innerHTML = colorSwatches.map(swatch => {
-        return `
+      paletteContainer.innerHTML = colorSwatches
+        .map((swatch) => {
+          return `
           <div class="palette-swatch ${swatch.class}" data-color-id="${swatch.id}" style="background-color: ${swatch.hex}"></div>
         `;
-      }).join('');
-      
+        })
+        .join("");
+
       // Swatch Click bind
-      paletteContainer.addEventListener('click', (e) => {
-        const swatch = e.target.closest('.palette-swatch');
+      paletteContainer.addEventListener("click", (e) => {
+        const swatch = e.target.closest(".palette-swatch");
         if (!swatch) return;
 
-        $$('.palette-swatch').forEach(s => s.classList.remove('active'));
-        swatch.classList.add('active');
+        $$(".palette-swatch").forEach((s) => s.classList.remove("active"));
+        swatch.classList.add("active");
         playClickSound();
         triggerHaptic(5);
       });
     }
 
     // Form submission (Save player adjustments or Add player)
-    form.addEventListener('submit', (e) => {
+    form.addEventListener("submit", (e) => {
       e.preventDefault();
-      
-      const selectedSwatch = $('.palette-swatch.active');
-      const colorId = selectedSwatch ? parseInt(selectedSwatch.getAttribute('data-color-id')) : 0;
-      
-      const name = $('#edit-name').value.trim();
-      const score = parseInt($('#edit-score').value || '0');
-      const increment = parseInt($('#edit-increment').value || '1');
-      const resetValue = parseInt($('#edit-reset-val').value || '0');
 
-      if (state.activePlayerIdForEdit === 'new') {
+      const selectedSwatch = $(".palette-swatch.active");
+      const colorId = selectedSwatch
+        ? parseInt(selectedSwatch.getAttribute("data-color-id"))
+        : 0;
+
+      const name = $("#edit-name").value.trim();
+      const score = parseInt($("#edit-score").value || "0");
+      const increment = parseInt($("#edit-increment").value || "1");
+      const resetValue = parseInt($("#edit-reset-val").value || "0");
+
+      if (state.activePlayerIdForEdit === "new") {
         // Create new counter
         const newPlayer = {
           id: Date.now().toString(),
@@ -952,7 +1018,7 @@
           score,
           color: colorId,
           increment,
-          resetValue
+          resetValue,
         };
         state.counters.push(newPlayer);
         saveCounters();
@@ -960,7 +1026,9 @@
         showToast(`Counter "${name}" added`);
       } else {
         // Edit existing counter
-        const player = state.counters.find(c => c.id === state.activePlayerIdForEdit);
+        const player = state.counters.find(
+          (c) => c.id === state.activePlayerIdForEdit,
+        );
         if (player) {
           const oldScore = player.score;
           player.name = name;
@@ -969,7 +1037,7 @@
           player.increment = increment;
           player.resetValue = resetValue;
           saveCounters();
-          
+
           if (oldScore !== score) {
             addHistoryLog(player, "Edited score", oldScore, score);
           } else {
@@ -987,14 +1055,19 @@
     });
 
     // Delete player trash bin button
-    $('#edit-btn-delete').addEventListener('click', () => {
-      if (state.activePlayerIdForEdit === 'new' || state.activePlayerIdForEdit === null) {
+    $("#edit-btn-delete").addEventListener("click", () => {
+      if (
+        state.activePlayerIdForEdit === "new" ||
+        state.activePlayerIdForEdit === null
+      ) {
         dialog.close();
         return;
       }
-      
+
       showConfirmDialog("Delete this player?", () => {
-        const idx = state.counters.findIndex(c => c.id === state.activePlayerIdForEdit);
+        const idx = state.counters.findIndex(
+          (c) => c.id === state.activePlayerIdForEdit,
+        );
         if (idx !== -1) {
           state.counters.splice(idx, 1);
           saveCounters();
@@ -1010,26 +1083,26 @@
 
   // Open Edit Dialog wrapper for adding new counter
   const openAddPlayerDialog = () => {
-    state.activePlayerIdForEdit = 'new';
-    
+    state.activePlayerIdForEdit = "new";
+
     // Set edit header text
-    $('#edit-dialog-title').textContent = 'Add counter';
-    $('#edit-btn-delete').style.display = 'none'; // Hide trash
-    
+    $("#edit-dialog-title").textContent = "Add counter";
+    $("#edit-btn-delete").style.display = "none"; // Hide trash
+
     // Reset values to blank/defaults
-    $('#edit-name').value = '';
-    $('#edit-score').value = '0';
-    $('#edit-increment').value = '1';
-    $('#edit-reset-val').value = '0';
-    
+    $("#edit-name").value = "";
+    $("#edit-score").value = "0";
+    $("#edit-increment").value = "1";
+    $("#edit-reset-val").value = "0";
+
     // Random default color swatch selection
     const randColor = Math.floor(Math.random() * colorSwatches.length);
-    $$('.palette-swatch').forEach(swatch => {
-      const id = parseInt(swatch.getAttribute('data-color-id'));
-      swatch.classList.toggle('active', id === randColor);
+    $$(".palette-swatch").forEach((swatch) => {
+      const id = parseInt(swatch.getAttribute("data-color-id"));
+      swatch.classList.toggle("active", id === randColor);
     });
 
-    const dialog = $('#edit-player-dialog');
+    const dialog = $("#edit-player-dialog");
     if (dialog) {
       dialog.showModal();
       playClickSound();
@@ -1039,27 +1112,27 @@
 
   // Open Edit Dialog wrapper for editing counter details
   const openEditPlayerDetails = (playerId) => {
-    const player = state.counters.find(c => c.id === playerId);
+    const player = state.counters.find((c) => c.id === playerId);
     if (!player) return;
 
     state.activePlayerIdForEdit = playerId;
-    
-    $('#edit-dialog-title').textContent = `Edit ${player.name}`;
-    $('#edit-btn-delete').style.display = 'flex'; // Show trash
-    
+
+    $("#edit-dialog-title").textContent = `Edit ${player.name}`;
+    $("#edit-btn-delete").style.display = "flex"; // Show trash
+
     // Populate form values
-    $('#edit-name').value = player.name;
-    $('#edit-score').value = player.score;
-    $('#edit-increment').value = player.increment;
-    $('#edit-reset-val').value = player.resetValue;
-    
+    $("#edit-name").value = player.name;
+    $("#edit-score").value = player.score;
+    $("#edit-increment").value = player.increment;
+    $("#edit-reset-val").value = player.resetValue;
+
     // Set palette swatch selected
-    $$('.palette-swatch').forEach(swatch => {
-      const id = parseInt(swatch.getAttribute('data-color-id'));
-      swatch.classList.toggle('active', id === player.color);
+    $$(".palette-swatch").forEach((swatch) => {
+      const id = parseInt(swatch.getAttribute("data-color-id"));
+      swatch.classList.toggle("active", id === player.color);
     });
 
-    const dialog = $('#edit-player-dialog');
+    const dialog = $("#edit-player-dialog");
     if (dialog) {
       dialog.showModal();
       playClickSound();
@@ -1071,15 +1144,17 @@
   // 14. Settings Dialog Data Binder
   // ------------------------------------------------------------------------
   const loadSettingsIntoDOM = () => {
-    $('#setting-sound').checked = state.settings.soundEnabled;
-    $('#setting-haptic').checked = state.settings.hapticEnabled;
-    $('#setting-theme').value = localStorage.getItem('counters-theme') || 'system';
-    $('#setting-quick-add-values').value = state.settings.quickAddValues.join(', ');
+    $("#setting-sound").checked = state.settings.soundEnabled;
+    $("#setting-haptic").checked = state.settings.hapticEnabled;
+    $("#setting-theme").value =
+      localStorage.getItem("counters-theme") || "system";
+    $("#setting-quick-add-values").value =
+      state.settings.quickAddValues.join(", ");
   };
 
   const bindSettingsActions = () => {
     // Sound Toggle
-    $('#setting-sound').addEventListener('change', (e) => {
+    $("#setting-sound").addEventListener("change", (e) => {
       state.settings.soundEnabled = e.target.checked;
       saveSettings();
       playClickSound();
@@ -1087,7 +1162,7 @@
     });
 
     // Haptic Toggle
-    $('#setting-haptic').addEventListener('change', (e) => {
+    $("#setting-haptic").addEventListener("change", (e) => {
       state.settings.hapticEnabled = e.target.checked;
       saveSettings();
       playClickSound();
@@ -1095,34 +1170,37 @@
     });
 
     // Theme selector
-    $('#setting-theme').addEventListener('change', (e) => {
+    $("#setting-theme").addEventListener("change", (e) => {
       const val = e.target.value;
-      localStorage.setItem('counters-theme', val);
-      
+      localStorage.setItem("counters-theme", val);
+
       const root = document.documentElement;
-      if (val === 'dark') {
-        root.classList.add('dark-mode');
-        root.classList.remove('light-mode');
-      } else if (val === 'light') {
-        root.classList.add('light-mode');
-        root.classList.remove('dark-mode');
+      if (val === "dark") {
+        root.classList.add("dark-mode");
+        root.classList.remove("light-mode");
+      } else if (val === "light") {
+        root.classList.add("light-mode");
+        root.classList.remove("dark-mode");
       } else {
         // System preference
-        const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        root.classList.toggle('dark-mode', systemIsDark);
-        root.classList.toggle('light-mode', !systemIsDark);
+        const systemIsDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+        root.classList.toggle("dark-mode", systemIsDark);
+        root.classList.toggle("light-mode", !systemIsDark);
       }
       playClickSound();
       triggerHaptic();
     });
 
     // Quick Add Calculator custom items
-    $('#setting-quick-add-values').addEventListener('input', (e) => {
+    $("#setting-quick-add-values").addEventListener("input", (e) => {
       const val = e.target.value;
-      const parsed = val.split(',')
-                        .map(n => parseInt(n.trim()))
-                        .filter(n => !isNaN(n) && n > 0);
-      
+      const parsed = val
+        .split(",")
+        .map((n) => parseInt(n.trim()))
+        .filter((n) => !isNaN(n) && n > 0);
+
       if (parsed.length > 0) {
         state.settings.quickAddValues = parsed;
         saveSettings();
@@ -1135,18 +1213,17 @@
   // 15. Dialog Dismiss backdrop check bindings
   // ------------------------------------------------------------------------
   const setupDialogBackdrops = () => {
-    $$('dialog').forEach(dialog => {
+    $$("dialog").forEach((dialog) => {
       // Direct click outside boundary fallback (Safari etc.)
-      if (!('closedBy' in HTMLDialogElement.prototype)) {
-        dialog.addEventListener('click', (event) => {
+      if (!("closedBy" in HTMLDialogElement.prototype)) {
+        dialog.addEventListener("click", (event) => {
           if (event.target !== dialog) return;
           const rect = dialog.getBoundingClientRect();
-          const isDialogContent = (
+          const isDialogContent =
             rect.top <= event.clientY &&
             event.clientY <= rect.top + rect.height &&
             rect.left <= event.clientX &&
-            event.clientX <= rect.left + rect.width
-          );
+            event.clientX <= rect.left + rect.width;
           if (!isDialogContent) {
             dialog.close();
             playClickSound();
@@ -1161,12 +1238,12 @@
   // 16. History Dialog log overlays
   // ------------------------------------------------------------------------
   const setupHistoryDialog = () => {
-    const dialog = $('#history-dialog');
-    const openBtn = $('#btn-open-history');
-    
+    const dialog = $("#history-dialog");
+    const openBtn = $("#btn-open-history");
+
     if (!dialog || !openBtn) return;
 
-    openBtn.addEventListener('click', () => {
+    openBtn.addEventListener("click", () => {
       renderHistory();
       dialog.showModal();
       playClickSound();
@@ -1174,7 +1251,7 @@
     });
 
     // Clear history logs
-    $('#history-btn-clear').addEventListener('click', () => {
+    $("#history-btn-clear").addEventListener("click", () => {
       if (state.history.length === 0) return;
       showConfirmDialog("Clear transaction history?", () => {
         state.history = [];
@@ -1194,15 +1271,19 @@
       color: player.color,
       actionLabel: actionLabel,
       progression: `${formatNumber(oldScore)} → ${formatNumber(newScore)}`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }),
     };
     state.history.unshift(log);
-    
+
     // Capacity ceiling (50 entries)
     if (state.history.length > 50) {
       state.history.pop();
     }
-    
+
     saveHistory();
   };
 
@@ -1211,17 +1292,21 @@
   // ------------------------------------------------------------------------
   const bindDOMEvents = () => {
     // Prevent long press context menu globally except on text inputs to feel like a native app
-    window.addEventListener('contextmenu', (e) => {
+    window.addEventListener("contextmenu", (e) => {
       const tagName = e.target.tagName;
-      if (tagName !== 'INPUT' && tagName !== 'TEXTAREA' && !e.target.isContentEditable) {
+      if (
+        tagName !== "INPUT" &&
+        tagName !== "TEXTAREA" &&
+        !e.target.isContentEditable
+      ) {
         e.preventDefault();
       }
     });
-    
+
     // Bottom Nav clicks
-    $$('[data-tab-btn]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const tab = btn.getAttribute('data-tab-btn');
+    $$("[data-tab-btn]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const tab = btn.getAttribute("data-tab-btn");
         if (tab === state.currentTab) return;
         switchTab(tab);
         playClickSound(600, 350, 0.05, 0.03);
@@ -1230,11 +1315,11 @@
     });
 
     // Header buttons
-    $('#btn-add-player').addEventListener('click', () => {
+    $("#btn-add-player").addEventListener("click", () => {
       openAddPlayerDialog();
     });
 
-    $('#btn-empty-add-player').addEventListener('click', () => {
+    $("#btn-empty-add-player").addEventListener("click", () => {
       openAddPlayerDialog();
     });
 
@@ -1243,32 +1328,33 @@
     let isLongPress = false;
     let longPressedPlayerId = null;
 
-    $('#counters-list-wrapper').addEventListener('pointerdown', (e) => {
-      const cardBody = e.target.closest('.card-score-body');
+    $("#counters-list-wrapper").addEventListener("pointerdown", (e) => {
+      const cardBody = e.target.closest(".card-score-body");
       if (!cardBody) return;
-      
+
       isLongPress = false;
-      const card = cardBody.closest('.player-card');
+      const card = cardBody.closest(".player-card");
       if (!card) return;
-      longPressedPlayerId = card.getAttribute('data-player-id');
+      longPressedPlayerId = card.getAttribute("data-player-id");
 
       pressTimer = setTimeout(() => {
         isLongPress = true;
-        const player = state.counters.find(c => c.id === longPressedPlayerId);
+        const player = state.counters.find((c) => c.id === longPressedPlayerId);
         if (!player) return;
 
         // Long press logic: open calculator
         state.activePlayerIdForCalc = longPressedPlayerId;
-        state.calcPendingValue = '';
-        state.calcPendingOperation = 'plus';
-        
-        $('#calc-dialog-title').textContent = `${player.name}: ${formatNumber(player.score)}`;
-        $('#calc-number-input').value = '0';
-        $('.math-op-indicator').textContent = '+';
-        $$('.op-btn').forEach(b => b.classList.remove('active'));
-        $('#calc-op-plus').classList.add('active');
-        
-        const dialog = $('#calculator-dialog');
+        state.calcPendingValue = "";
+        state.calcPendingOperation = "plus";
+
+        $("#calc-dialog-title").textContent =
+          `${player.name}: ${formatNumber(player.score)}`;
+        $("#calc-number-input").value = "0";
+        $(".math-op-indicator").textContent = "+";
+        $$(".op-btn").forEach((b) => b.classList.remove("active"));
+        $("#calc-op-plus").classList.add("active");
+
+        const dialog = $("#calculator-dialog");
         if (dialog) {
           dialog.showModal();
           playClickSound(600, 700, 0.08, 0.05); // variant for long press
@@ -1281,33 +1367,36 @@
       if (pressTimer) clearTimeout(pressTimer);
     };
 
-    $('#counters-list-wrapper').addEventListener('pointercancel', cancelLongPress);
-    
+    $("#counters-list-wrapper").addEventListener(
+      "pointercancel",
+      cancelLongPress,
+    );
+
     // Prevent long press trigger if user scrolls/moves pointer significantly
-    $('#counters-list-wrapper').addEventListener('pointermove', () => {
+    $("#counters-list-wrapper").addEventListener("pointermove", () => {
       // Real robust implementations check distance, but cancel works as a baseline
     });
 
-    $('#counters-list-wrapper').addEventListener('pointerup', (e) => {
+    $("#counters-list-wrapper").addEventListener("pointerup", (e) => {
       cancelLongPress();
-      
-      const cardBody = e.target.closest('.card-score-body');
+
+      const cardBody = e.target.closest(".card-score-body");
       if (!cardBody) return;
 
       // Prevent triggering short press if it was a long press
       if (!isLongPress && longPressedPlayerId) {
         // Short press logic: increment score by 1
-        const player = state.counters.find(c => c.id === longPressedPlayerId);
+        const player = state.counters.find((c) => c.id === longPressedPlayerId);
         if (!player) return;
 
         const oldScore = player.score;
         player.score += 1;
         saveCounters();
         addHistoryLog(player, "+1", oldScore, player.score);
-        
+
         // Brief visual flash
-        cardBody.classList.add('zone-active-flash');
-        setTimeout(() => cardBody.classList.remove('zone-active-flash'), 300);
+        cardBody.classList.add("zone-active-flash");
+        setTimeout(() => cardBody.classList.remove("zone-active-flash"), 300);
 
         renderCountersList();
         triggerAutoSortWithDebounce();
@@ -1318,25 +1407,30 @@
     });
 
     // Counters List Delegated clicks (optimizing performance & garbage collection)
-    $('#counters-list-wrapper').addEventListener('click', (e) => {
-      const card = e.target.closest('.player-card');
+    $("#counters-list-wrapper").addEventListener("click", (e) => {
+      const card = e.target.closest(".player-card");
       if (!card) return;
 
-      const playerId = card.getAttribute('data-player-id');
-      const player = state.counters.find(c => c.id === playerId);
+      const playerId = card.getAttribute("data-player-id");
+      const player = state.counters.find((c) => c.id === playerId);
       if (!player) return;
 
       // 1. Direct Edge Subtract click target
-      const zoneMinus = e.target.closest('.card-direct-zone-minus');
+      const zoneMinus = e.target.closest(".card-direct-zone-minus");
       if (zoneMinus) {
-        zoneMinus.classList.add('zone-active-flash');
-        setTimeout(() => zoneMinus.classList.remove('zone-active-flash'), 300);
-        
+        zoneMinus.classList.add("zone-active-flash");
+        setTimeout(() => zoneMinus.classList.remove("zone-active-flash"), 300);
+
         const oldScore = player.score;
         player.score -= player.increment || 1;
         saveCounters();
-        addHistoryLog(player, `−${formatNumber(player.increment)}`, oldScore, player.score);
-        
+        addHistoryLog(
+          player,
+          `−${formatNumber(player.increment)}`,
+          oldScore,
+          player.score,
+        );
+
         renderCountersList();
         triggerAutoSortWithDebounce();
         playClickSound(450, 200, 0.06, 0.05);
@@ -1345,16 +1439,21 @@
       }
 
       // 2. Direct Edge Add click target
-      const zonePlus = e.target.closest('.card-direct-zone-plus');
+      const zonePlus = e.target.closest(".card-direct-zone-plus");
       if (zonePlus) {
-        zonePlus.classList.add('zone-active-flash');
-        setTimeout(() => zonePlus.classList.remove('zone-active-flash'), 300);
-        
+        zonePlus.classList.add("zone-active-flash");
+        setTimeout(() => zonePlus.classList.remove("zone-active-flash"), 300);
+
         const oldScore = player.score;
         player.score += player.increment || 1;
         saveCounters();
-        addHistoryLog(player, `+${formatNumber(player.increment)}`, oldScore, player.score);
-        
+        addHistoryLog(
+          player,
+          `+${formatNumber(player.increment)}`,
+          oldScore,
+          player.score,
+        );
+
         renderCountersList();
         triggerAutoSortWithDebounce();
         playClickSound(650, 350, 0.06, 0.05);
@@ -1363,19 +1462,19 @@
       }
 
       // 3. Edit details button click target
-      if (e.target.closest('.btn-player-edit')) {
+      if (e.target.closest(".btn-player-edit")) {
         openEditPlayerDetails(playerId);
         return;
       }
 
       // 4. Quick Reset score target
-      if (e.target.closest('.btn-player-reset')) {
+      if (e.target.closest(".btn-player-reset")) {
         showConfirmDialog(`Reset score for ${player.name} to 0?`, () => {
           const oldScore = player.score;
           player.score = 0;
           saveCounters();
           addHistoryLog(player, "Reset score", oldScore, player.score);
-          
+
           renderCountersList();
           triggerAutoSortWithDebounce();
           playResetSound();
@@ -1386,10 +1485,10 @@
     });
 
     // Close Dialog triggers
-    $$('dialog [command="close"]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+    $$('dialog [command="close"]').forEach((btn) => {
+      btn.addEventListener("click", (e) => {
         e.preventDefault(); // Prevent double-close warning in modern browsers
-        const dialog = btn.closest('dialog');
+        const dialog = btn.closest("dialog");
         if (dialog && dialog.open) {
           dialog.close();
           playClickSound();
@@ -1399,17 +1498,19 @@
     });
 
     // Listen to OS Dark Theme adjustments live
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      const themeSelect = $('#setting-theme');
-      if (themeSelect) {
-        const savedTheme = localStorage.getItem('counters-theme') || 'system';
-        if (savedTheme === 'system') {
-          const root = document.documentElement;
-          root.classList.toggle('dark-mode', e.matches);
-          root.classList.toggle('light-mode', !e.matches);
+    window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .addEventListener("change", (e) => {
+        const themeSelect = $("#setting-theme");
+        if (themeSelect) {
+          const savedTheme = localStorage.getItem("counters-theme") || "system";
+          if (savedTheme === "system") {
+            const root = document.documentElement;
+            root.classList.toggle("dark-mode", e.matches);
+            root.classList.toggle("light-mode", !e.matches);
+          }
         }
-      }
-    });
+      });
   };
 
   // ------------------------------------------------------------------------
@@ -1417,26 +1518,26 @@
   // ------------------------------------------------------------------------
   const setupPlaceholdersInteractions = () => {
     // 1. Dice Roller
-    const diceBtn = $('#btn-roll-placeholder');
-    const diceResult = $('#placeholder-dice-result');
-    const diceIcon = $('.placeholder-icon.shake-animation');
-    
+    const diceBtn = $("#btn-roll-placeholder");
+    const diceResult = $("#placeholder-dice-result");
+    const diceIcon = $(".placeholder-icon.shake-animation");
+
     if (diceBtn && diceResult && diceIcon) {
-      diceBtn.addEventListener('click', () => {
+      diceBtn.addEventListener("click", () => {
         // Trigger shaking animation
-        diceIcon.classList.add('active');
+        diceIcon.classList.add("active");
         diceBtn.disabled = true;
-        diceResult.textContent = '...';
-        diceResult.classList.remove('rolled');
-        
+        diceResult.textContent = "...";
+        diceResult.classList.remove("rolled");
+
         playDiceSound();
         triggerHaptic(12);
 
         setTimeout(() => {
-          diceIcon.classList.remove('active');
+          diceIcon.classList.remove("active");
           const roll = Math.floor(Math.random() * 6) + 1;
           diceResult.textContent = roll;
-          diceResult.classList.add('rolled');
+          diceResult.classList.add("rolled");
           diceBtn.disabled = false;
           playClickSound(600, 800, 0.08, 0.05);
           triggerHaptic(20);
@@ -1445,38 +1546,39 @@
     }
 
     // 2. Stopwatch
-    const swStart = $('#btn-timer-placeholder-start');
-    const swReset = $('#btn-timer-placeholder-reset');
-    const swDisplay = $('#placeholder-stopwatch-display');
-    
+    const swStart = $("#btn-timer-placeholder-start");
+    const swReset = $("#btn-timer-placeholder-reset");
+    const swDisplay = $("#placeholder-stopwatch-display");
+
     let timerInterval = null;
     let timerStartTime = 0;
     let timerElapsedTime = 0;
     let timerRunning = false;
 
     const updateTimerDisplay = () => {
-      const totalMs = timerElapsedTime + (timerRunning ? (Date.now() - timerStartTime) : 0);
+      const totalMs =
+        timerElapsedTime + (timerRunning ? Date.now() - timerStartTime : 0);
       const minutes = Math.floor(totalMs / 60000);
       const seconds = Math.floor((totalMs % 60000) / 1000);
       const ms = Math.floor((totalMs % 1000) / 100);
-      
-      const mm = String(minutes).padStart(2, '0');
-      const ss = String(seconds).padStart(2, '0');
-      
+
+      const mm = String(minutes).padStart(2, "0");
+      const ss = String(seconds).padStart(2, "0");
+
       if (swDisplay) {
         swDisplay.textContent = `${mm}:${ss}.${ms}`;
       }
     };
 
     if (swStart && swReset) {
-      swStart.addEventListener('click', () => {
+      swStart.addEventListener("click", () => {
         if (!timerRunning) {
           // Play/Start
           timerRunning = true;
           timerStartTime = Date.now();
-          swStart.textContent = 'Pause';
-          swStart.classList.add('danger-btn-outline');
-          
+          swStart.textContent = "Pause";
+          swStart.classList.add("danger-btn-outline");
+
           timerInterval = setInterval(updateTimerDisplay, 100);
           playClickSound(650, 450, 0.05, 0.03);
           triggerHaptic(6);
@@ -1484,21 +1586,21 @@
           // Pause
           timerRunning = false;
           timerElapsedTime += Date.now() - timerStartTime;
-          swStart.textContent = 'Start';
-          swStart.classList.remove('danger-btn-outline');
-          
+          swStart.textContent = "Start";
+          swStart.classList.remove("danger-btn-outline");
+
           clearInterval(timerInterval);
           playClickSound(450, 350, 0.05, 0.03);
           triggerHaptic(6);
         }
       });
 
-      swReset.addEventListener('click', () => {
+      swReset.addEventListener("click", () => {
         timerRunning = false;
         timerElapsedTime = 0;
-        swStart.textContent = 'Start';
-        swStart.classList.remove('danger-btn-outline');
-        
+        swStart.textContent = "Start";
+        swStart.classList.remove("danger-btn-outline");
+
         clearInterval(timerInterval);
         updateTimerDisplay();
         playResetSound();
@@ -1511,29 +1613,34 @@
   // 18b. Sheet Swipe/Drag to Dismiss Logic
   // ------------------------------------------------------------------------
   const setupBottomSheetDragging = () => {
-    $$('.bottom-sheet-dialog').forEach(dialog => {
-      const header = dialog.querySelector('.bottom-sheet-header');
+    $$(".bottom-sheet-dialog").forEach((dialog) => {
+      const header = dialog.querySelector(".bottom-sheet-header");
       if (!header) return;
 
       let startY = 0;
       let currentY = 0;
       let isDragging = false;
 
-      header.addEventListener('pointerdown', (e) => {
+      header.addEventListener("pointerdown", (e) => {
         // Skip trigger on buttons or interactive inputs
-        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return;
-        
+        if (
+          e.target.closest("button") ||
+          e.target.closest("input") ||
+          e.target.closest("select")
+        )
+          return;
+
         startY = e.clientY;
         isDragging = true;
-        dialog.classList.add('dragging');
+        dialog.classList.add("dragging");
         try {
           header.setPointerCapture(e.pointerId);
         } catch (err) {}
       });
 
-      header.addEventListener('pointermove', (e) => {
+      header.addEventListener("pointermove", (e) => {
         if (!isDragging) return;
-        
+
         const deltaY = e.clientY - startY;
         // Only allow downward dragging
         if (deltaY > 0) {
@@ -1541,15 +1648,15 @@
           dialog.style.transform = `translate(-50%, ${deltaY}px)`;
         } else {
           currentY = 0;
-          dialog.style.transform = '';
+          dialog.style.transform = "";
         }
       });
 
       const endDragging = (e) => {
         if (!isDragging) return;
         isDragging = false;
-        dialog.classList.remove('dragging');
-        
+        dialog.classList.remove("dragging");
+
         if (e && e.pointerId) {
           try {
             header.releasePointerCapture(e.pointerId);
@@ -1558,22 +1665,22 @@
 
         // If dragged down past threshold (100px), close with a premium native slide transition
         if (currentY > 100) {
-          dialog.style.transform = 'translate(-50%, 100%)';
+          dialog.style.transform = "translate(-50%, 100%)";
           setTimeout(() => {
             dialog.close();
-            dialog.style.transform = '';
+            dialog.style.transform = "";
           }, 300);
           playClickSound(450, 350, 0.05, 0.03); // light close sound
           triggerHaptic(5);
         } else {
           // Snap back smoothly
-          dialog.style.transform = '';
+          dialog.style.transform = "";
         }
         currentY = 0;
       };
 
-      header.addEventListener('pointerup', endDragging);
-      header.addEventListener('pointercancel', endDragging);
+      header.addEventListener("pointerup", endDragging);
+      header.addEventListener("pointercancel", endDragging);
     });
   };
 
@@ -1582,9 +1689,9 @@
   // ------------------------------------------------------------------------
   const init = () => {
     loadStateFromStorage();
-    
+
     // Core Layout options loaded
-    document.documentElement.setAttribute('data-layout', state.settings.layout);
+    document.documentElement.setAttribute("data-layout", state.settings.layout);
 
     // Dialog sheets binds
     setupDialogBackdrops();
@@ -1594,15 +1701,15 @@
     setupEditPlayerDialog();
     setupHistoryDialog();
     setupConfirmDialog();
-    
+
     // Dynamic lists compile
     populateCalculatorQuickAdds();
     renderCountersList();
-    
+
     // Events bind
     bindDOMEvents();
     bindSettingsActions();
-    
+
     // Extras
     setupPlaceholdersInteractions();
     setupBottomSheetDragging();
@@ -1610,6 +1717,5 @@
   };
 
   // Bootstrap when DOM ready
-  document.addEventListener('DOMContentLoaded', init);
-
+  document.addEventListener("DOMContentLoaded", init);
 })();
