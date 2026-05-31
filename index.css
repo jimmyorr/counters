@@ -9,8 +9,10 @@
    -------------------------------------------------------------------------- */
 :root {
   /* Fonts */
-  --font-primary: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-secondary: 'Inter', -apple-system, sans-serif;
+  --font-primary:
+    "Outfit", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  --font-secondary: "Inter", -apple-system, sans-serif;
 
   /* Animation Timings */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -63,14 +65,38 @@
 }
 
 /* HSL Player Swatch Presets (Vibrant, high-contrast, premium) */
-.card-color-0 { --card-theme: hsl(224, 76%, 36%); --card-text: #ffffff; } /* Deep Blue */
-.card-color-1 { --card-theme: hsl(26, 91%, 52%); --card-text: #ffffff; }  /* Bright Orange */
-.card-color-2 { --card-theme: hsl(336, 70%, 50%); --card-text: #ffffff; } /* Crimson Pink */
-.card-color-3 { --card-theme: hsl(200, 16%, 42%); --card-text: #ffffff; } /* Slate Grey */
-.card-color-4 { --card-theme: hsl(156, 75%, 34%); --card-text: #ffffff; } /* Forest Green */
-.card-color-5 { --card-theme: hsl(45, 95%, 45%); --card-text: #ffffff; }  /* Golden Yellow */
-.card-color-6 { --card-theme: hsl(190, 85%, 38%); --card-text: #ffffff; } /* Teal Cyan */
-.card-color-7 { --card-theme: hsl(272, 60%, 46%); --card-text: #ffffff; } /* Royal Purple */
+.card-color-0 {
+  --card-theme: hsl(224, 76%, 36%);
+  --card-text: #ffffff;
+} /* Deep Blue */
+.card-color-1 {
+  --card-theme: hsl(26, 91%, 52%);
+  --card-text: #ffffff;
+} /* Bright Orange */
+.card-color-2 {
+  --card-theme: hsl(336, 70%, 50%);
+  --card-text: #ffffff;
+} /* Crimson Pink */
+.card-color-3 {
+  --card-theme: hsl(200, 16%, 42%);
+  --card-text: #ffffff;
+} /* Slate Grey */
+.card-color-4 {
+  --card-theme: hsl(156, 75%, 34%);
+  --card-text: #ffffff;
+} /* Forest Green */
+.card-color-5 {
+  --card-theme: hsl(45, 95%, 45%);
+  --card-text: #ffffff;
+} /* Golden Yellow */
+.card-color-6 {
+  --card-theme: hsl(190, 85%, 38%);
+  --card-text: #ffffff;
+} /* Teal Cyan */
+.card-color-7 {
+  --card-theme: hsl(272, 60%, 46%);
+  --card-text: #ffffff;
+} /* Royal Purple */
 
 /* --------------------------------------------------------------------------
    2. Reset & Global Layout Styles
@@ -133,8 +159,17 @@ body::before {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: radial-gradient(circle at 30% 20%, rgba(85, 177, 249, 0.08) 0%, transparent 40%),
-                    radial-gradient(circle at 80% 70%, rgba(249, 133, 26, 0.06) 0%, transparent 45%);
+  background-image:
+    radial-gradient(
+      circle at 30% 20%,
+      rgba(85, 177, 249, 0.08) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(249, 133, 26, 0.06) 0%,
+      transparent 45%
+    );
   z-index: -1;
   pointer-events: none;
 }
@@ -292,8 +327,14 @@ body > .app-nav {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -335,7 +376,9 @@ html[data-layout="grid"] .counters-container {
   overflow: hidden;
   box-shadow: var(--card-shadow);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: transform var(--trans-spring), box-shadow var(--trans-normal);
+  transition:
+    transform var(--trans-spring),
+    box-shadow var(--trans-normal);
 }
 
 /* Adjust card height slightly in grid mode */
@@ -375,7 +418,9 @@ html[data-layout="grid"] .player-card {
   transform: scale(0.98);
   box-shadow: none !important;
   pointer-events: none;
-  transition: opacity 0.15s ease, transform 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
 
 /* Floating drag ghost clone */
@@ -481,7 +526,7 @@ html[data-layout="grid"] .score-display {
   font-size: 24px;
   font-weight: 300;
   opacity: 0;
-  background-color: rgba(255, 255, 255, 0.0);
+  background-color: rgba(255, 255, 255, 0);
   cursor: pointer;
   z-index: 4;
   transition: all var(--trans-normal);
@@ -521,9 +566,15 @@ html[data-layout="grid"] .card-direct-zone {
 }
 
 @keyframes cardEdgeActive {
-  0% { background-color: rgba(255, 255, 255, 0.0); }
-  30% { background-color: rgba(255, 255, 255, 0.22); }
-  100% { background-color: rgba(255, 255, 255, 0.0); }
+  0% {
+    background-color: rgba(255, 255, 255, 0);
+  }
+  30% {
+    background-color: rgba(255, 255, 255, 0.22);
+  }
+  100% {
+    background-color: rgba(255, 255, 255, 0);
+  }
 }
 
 /* Empty State Illustration layout */
@@ -548,8 +599,13 @@ html[data-layout="grid"] .card-direct-zone {
 }
 
 @keyframes floatIllustration {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .empty-state h2 {
@@ -693,11 +749,22 @@ html[data-layout="grid"] .card-direct-zone {
 }
 
 @keyframes shake {
-  0%, 100% { transform: rotate(0deg); }
-  20% { transform: rotate(-12deg) scale(1.1); }
-  40% { transform: rotate(12deg) scale(1.1); }
-  60% { transform: rotate(-8deg) scale(1.1); }
-  80% { transform: rotate(8deg) scale(1.1); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-12deg) scale(1.1);
+  }
+  40% {
+    transform: rotate(12deg) scale(1.1);
+  }
+  60% {
+    transform: rotate(-8deg) scale(1.1);
+  }
+  80% {
+    transform: rotate(8deg) scale(1.1);
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -786,7 +853,7 @@ html[data-layout="grid"] .card-direct-zone {
   bottom: 0;
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-strong);
-  transition: .3s;
+  transition: 0.3s;
   border-radius: 34px;
 }
 
@@ -798,7 +865,7 @@ html[data-layout="grid"] .card-direct-zone {
   left: 3px;
   bottom: 3px;
   background-color: var(--text-primary);
-  transition: .3s var(--ease-spring);
+  transition: 0.3s var(--ease-spring);
   border-radius: 50%;
 }
 
@@ -1124,7 +1191,7 @@ dialog[open].bottom-sheet-dialog {
   margin-bottom: 8px;
 }
 
-.quick-add-grid > button:nth-child(n+4) {
+.quick-add-grid > button:nth-child(n + 4) {
   grid-column: span 1;
 }
 
@@ -1405,8 +1472,9 @@ dialog[open].bottom-sheet-dialog {
   transform: translate(-50%, -50%) scale(0.92);
   opacity: 0;
   margin: 0;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-              opacity 0.25s ease-out;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.25s ease-out;
   overflow: hidden;
 }
 
@@ -1579,8 +1647,9 @@ dialog[open].options-menu-dialog {
   margin: 0;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-              opacity 0.25s ease-out;
+  transition:
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.25s ease-out;
   overflow: hidden;
 }
 
@@ -1720,8 +1789,9 @@ dialog[open].history-log-dialog {
   z-index: 300;
   pointer-events: none;
   opacity: 1;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-              opacity 0.2s ease-out;
+  transition:
+    transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    opacity 0.2s ease-out;
 }
 
 .toast-notification.hidden {
@@ -1743,7 +1813,7 @@ dialog[open].history-log-dialog {
   body {
     background-color: var(--bg-primary);
   }
-  
+
   .app-header,
   .app-main,
   .app-nav,
