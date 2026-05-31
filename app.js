@@ -1447,7 +1447,9 @@
               if (dialog) {
                 const swatch = colorSwatches[player.color] || colorSwatches[0];
                 dialog.style.setProperty("--sheet-theme", swatch.hex);
-                dialog.showModal();
+                setTimeout(() => {
+                  dialog.showModal();
+                }, 50);
                 playClickSound();
                 triggerHaptic(15);
               }
@@ -1502,7 +1504,9 @@
             if (dialog) {
               const swatch = colorSwatches[player.color] || colorSwatches[0];
               dialog.style.setProperty("--sheet-theme", swatch.hex);
-              dialog.showModal();
+              setTimeout(() => {
+                dialog.showModal();
+              }, 50);
               playClickSound(600, 700, 0.08, 0.05);
               triggerHaptic(15);
             }
