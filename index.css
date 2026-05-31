@@ -595,6 +595,8 @@ html[data-layout="grid"] .score-display {
   text-align: center;
   padding: 60px 24px;
   color: var(--text-secondary);
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .empty-state.hidden {
