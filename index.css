@@ -558,13 +558,15 @@ html[data-layout="grid"] .score-display {
 }
 
 /* Hovering card brightens the signs slightly */
-.player-card:hover .card-direct-zone {
-  opacity: 0.7;
-}
+@media (hover: hover) {
+  .player-card:hover .card-direct-zone {
+    opacity: 0.7;
+  }
 
-.card-direct-zone:hover {
-  opacity: 1 !important;
-  background-color: rgba(255, 255, 255, 0.08);
+  .card-direct-zone:hover {
+    opacity: 1 !important;
+    background-color: rgba(255, 255, 255, 0.08);
+  }
 }
 
 .card-direct-zone:active {
