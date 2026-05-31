@@ -7,6 +7,17 @@
 (function () {
   "use strict";
 
+  // Central patch to track when dialogs are opened.
+  // This is used to prevent synthetic 'click' events from instantly closing them.
+  const originalShowModal = HTMLDialogElement.prototype.showModal;
+  if (originalShowModal) {
+    HTMLDialogElement.prototype.showModal = function () {
+      this.dataset.openedAt = Date.now().toString();
+      originalShowModal.apply(this, arguments);
+    };
+  }
+
+
   // ------------------------------------------------------------------------
   // 1. Core Reactive State System
   // ------------------------------------------------------------------------
@@ -1106,6 +1117,38 @@
     });
   };
 
+  const setupEditValueDialog = () => {
+    const dialog = $("#edit-value-dialog");
+    const form = $("#edit-value-form");
+
+    if (!dialog || !form) return;
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const newValueStr = $("#edit-value-input").value;
+      if (newValueStr === "") return;
+      const newValue = parseInt(newValueStr);
+
+      const player = state.counters.find(
+        (c) => c.id === state.activePlayerIdForEdit
+      );
+      if (player) {
+        const oldScore = player.score;
+        player.score = newValue;
+        saveCounters();
+        addHistoryLog(player, "Edited score", oldScore, player.score);
+        showToast("Value updated");
+      }
+
+      dialog.close();
+      renderCountersList();
+      triggerAutoSortWithDebounce();
+      playSuccessSound();
+      triggerHaptic(20);
+    });
+  };
+
   // Streamlined: Add new counter directly without dialog
   const addNewCounterStreamlined = () => {
     // Pick an unused color swatch
@@ -1260,6 +1303,10 @@
     $$("dialog").forEach((dialog) => {
       dialog.addEventListener("click", (event) => {
         if (event.target !== dialog) return;
+        const openedAt = parseInt(dialog.dataset.openedAt || "0");
+        if (Date.now() - openedAt < 300) {
+          return;
+        }
         const rect = dialog.getBoundingClientRect();
         const isDialogContent =
           rect.top <= event.clientY &&
@@ -1334,6 +1381,13 @@
   // 17. Event Delegation & Interactions
   // ------------------------------------------------------------------------
   const bindDOMEvents = () => {
+    let scorePressTimer = null;
+    let scorePressActive = false;
+    let scorePressMoved = false;
+    let scorePressStartX = 0;
+    let scorePressStartY = 0;
+    let scorePressPlayerId = null;
+
     // Prevent long press context menu globally except on text inputs to feel like a native app
     window.addEventListener("contextmenu", (e) => {
       const tagName = e.target.tagName;
@@ -1365,6 +1419,105 @@
     $("#btn-empty-add-player").addEventListener("click", () => {
       addNewCounterStreamlined();
     });
+
+    const listWrapper = $("#counters-list-wrapper");
+    if (listWrapper) {
+      listWrapper.addEventListener("pointerdown", (e) => {
+        const scoreBody = e.target.closest(".card-score-body");
+        if (!scoreBody) return;
+
+        const card = scoreBody.closest(".player-card");
+        if (!card) return;
+
+        scorePressPlayerId = card.getAttribute("data-player-id");
+        scorePressActive = true;
+        scorePressMoved = false;
+        scorePressStartX = e.clientX;
+        scorePressStartY = e.clientY;
+
+        scorePressTimer = setTimeout(() => {
+          if (scorePressActive && !scorePressMoved) {
+            scorePressActive = false;
+            const player = state.counters.find((c) => c.id === scorePressPlayerId);
+            if (player) {
+              state.activePlayerIdForEdit = scorePressPlayerId;
+              const valueInput = $("#edit-value-input");
+              if (valueInput) {
+                valueInput.value = player.score;
+              }
+              const dialog = $("#edit-value-dialog");
+              if (dialog) {
+                const swatch = colorSwatches[player.color] || colorSwatches[0];
+                dialog.style.setProperty("--sheet-theme", swatch.hex);
+                dialog.showModal();
+                playClickSound();
+                triggerHaptic(15);
+              }
+            }
+          }
+        }, 500);
+      });
+
+      listWrapper.addEventListener("pointermove", (e) => {
+        if (!scorePressActive) return;
+        const dist = Math.hypot(e.clientX - scorePressStartX, e.clientY - scorePressStartY);
+        if (dist > 10) {
+          scorePressMoved = true;
+          if (scorePressTimer) {
+            clearTimeout(scorePressTimer);
+            scorePressTimer = null;
+          }
+        }
+      });
+
+      listWrapper.addEventListener("pointerup", (e) => {
+        const scoreBody = e.target.closest(".card-score-body");
+        if (scoreBody) {
+          e.preventDefault();
+        }
+
+        if (scorePressActive) {
+          scorePressActive = false;
+          if (scorePressTimer) {
+            clearTimeout(scorePressTimer);
+            scorePressTimer = null;
+          }
+
+          if (!scorePressMoved) {
+            const player = state.counters.find((c) => c.id === scorePressPlayerId);
+            if (player) {
+              state.activePlayerIdForCalc = scorePressPlayerId;
+              state.calcPendingValue = "";
+              state.calcPendingOperation = "plus";
+
+              $("#calc-dialog-title").textContent =
+                `${player.name}: ${formatNumber(player.score)}`;
+              $("#calc-number-input").value = "";
+              $(".math-op-indicator").textContent = "+";
+              $$(".op-btn").forEach((b) => b.classList.remove("active"));
+              $("#calc-op-plus").classList.add("active");
+
+              const dialog = $("#calculator-dialog");
+              if (dialog) {
+                const swatch = colorSwatches[player.color] || colorSwatches[0];
+                dialog.style.setProperty("--sheet-theme", swatch.hex);
+                dialog.showModal();
+                playClickSound(600, 700, 0.08, 0.05);
+                triggerHaptic(15);
+              }
+            }
+          }
+        }
+      });
+
+      listWrapper.addEventListener("pointercancel", () => {
+        scorePressActive = false;
+        if (scorePressTimer) {
+          clearTimeout(scorePressTimer);
+          scorePressTimer = null;
+        }
+      });
+    }
 
     // Counters List Delegated clicks (optimizing performance & garbage collection)
     $("#counters-list-wrapper").addEventListener("click", (e) => {
@@ -1421,30 +1574,6 @@
         return;
       }
 
-      // 3. Middle display click target (opens calculator)
-      const scoreBody = e.target.closest(".card-score-body");
-      if (scoreBody) {
-        state.activePlayerIdForCalc = playerId;
-        state.calcPendingValue = "";
-        state.calcPendingOperation = "plus";
-
-        $("#calc-dialog-title").textContent =
-          `${player.name}: ${formatNumber(player.score)}`;
-        $("#calc-number-input").value = "";
-        $(".math-op-indicator").textContent = "+";
-        $$(".op-btn").forEach((b) => b.classList.remove("active"));
-        $("#calc-op-plus").classList.add("active");
-
-        const dialog = $("#calculator-dialog");
-        if (dialog) {
-          const swatch = colorSwatches[player.color] || colorSwatches[0];
-          dialog.style.setProperty("--sheet-theme", swatch.hex);
-          dialog.showModal();
-          playClickSound(600, 700, 0.08, 0.05);
-          triggerHaptic(15);
-        }
-        return;
-      }
 
       // 3.5. Click on the player name (opens minimal edit name dialog)
       const playerName = e.target.closest(".player-name");
@@ -1704,6 +1833,7 @@
     setupCalculatorDialog();
     setupEditPlayerDialog();
     setupEditNameDialog();
+    setupEditValueDialog();
     setupHistoryDialog();
     setupConfirmDialog();
 

@@ -980,6 +980,36 @@
       </div>
     </dialog>
 
+    <!-- 8. Minimal Edit Value Dialog -->
+    <dialog id="edit-value-dialog" class="bottom-sheet-dialog">
+      <div class="bottom-sheet-header">
+        <div class="drag-handle"></div>
+        <h2 class="sheet-title">Edit value</h2>
+      </div>
+      <div class="bottom-sheet-body" style="padding-top: 10px">
+        <form id="edit-value-form" method="dialog" autocomplete="off" style="width: 100%">
+          <div class="form-group" style="margin-bottom: 20px">
+            <input
+              type="number"
+              id="edit-value-input"
+              class="form-input"
+              required
+              placeholder="Value"
+              style="width: 100%; box-sizing: border-box"
+            />
+          </div>
+          <div style="display: flex; gap: 12px; width: 100%">
+            <button type="button" class="secondary-btn full-width" commandfor="edit-value-dialog" command="close">
+              Cancel
+            </button>
+            <button type="submit" class="primary-btn full-width" id="edit-value-save-btn">
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
     <!-- Subtle feedback toast -->
     <div class="toast-notification hidden" id="toast-wrapper">
       <span class="toast-message" id="toast-text">Counter deleted</span>
