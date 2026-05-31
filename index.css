@@ -1085,6 +1085,7 @@ dialog[open]::backdrop {
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
   border: 1px solid var(--border-light);
+  border-top: 3px solid var(--sheet-theme, var(--border-light)); /* Cozy themed top border */
   border-bottom: none;
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.35);
   display: flex;
@@ -1092,6 +1093,32 @@ dialog[open]::backdrop {
   max-height: 92vh;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Dynamic Sheet Theme Overrides */
+.bottom-sheet-dialog .primary-btn {
+  background-color: var(--sheet-theme, var(--accent-color));
+  color: #ffffff;
+}
+
+.bottom-sheet-dialog .primary-btn:hover {
+  opacity: 0.9;
+  box-shadow: 0 4px 14px var(--sheet-theme, var(--accent-light));
+}
+
+.bottom-sheet-dialog .op-btn.active {
+  background-color: var(--sheet-theme, var(--accent-color));
+  border-color: transparent;
+  color: #ffffff;
+}
+
+.bottom-sheet-dialog .form-input:focus,
+.bottom-sheet-dialog .math-number-input:focus {
+  border-color: var(--sheet-theme, var(--accent-color));
+}
+
+.bottom-sheet-dialog .drag-handle {
+  background-color: var(--sheet-theme, var(--text-tertiary));
 }
 
 .bottom-sheet-dialog.dragging {

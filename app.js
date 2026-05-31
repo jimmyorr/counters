@@ -967,6 +967,12 @@
 
         $$(".palette-swatch").forEach((s) => s.classList.remove("active"));
         swatch.classList.add("active");
+
+        // Dynamically update sheet theme color
+        const colorId = parseInt(swatch.getAttribute("data-color-id"));
+        const swatchData = colorSwatches[colorId] || colorSwatches[0];
+        dialog.style.setProperty("--sheet-theme", swatchData.hex);
+
         playClickSound();
         triggerHaptic(5);
       });
@@ -1156,6 +1162,8 @@
 
     const dialog = $("#edit-player-dialog");
     if (dialog) {
+      const swatch = colorSwatches[player.color] || colorSwatches[0];
+      dialog.style.setProperty("--sheet-theme", swatch.hex);
       dialog.showModal();
       playClickSound();
       triggerHaptic();
@@ -1415,6 +1423,8 @@
 
         const dialog = $("#calculator-dialog");
         if (dialog) {
+          const swatch = colorSwatches[player.color] || colorSwatches[0];
+          dialog.style.setProperty("--sheet-theme", swatch.hex);
           dialog.showModal();
           playClickSound(600, 700, 0.08, 0.05);
           triggerHaptic(15);
@@ -1432,6 +1442,8 @@
         }
         const dialog = $("#edit-name-dialog");
         if (dialog) {
+          const swatch = colorSwatches[player.color] || colorSwatches[0];
+          dialog.style.setProperty("--sheet-theme", swatch.hex);
           dialog.showModal();
           playClickSound();
           triggerHaptic(10);
