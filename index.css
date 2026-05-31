@@ -40,7 +40,7 @@
   --border-strong: rgba(0, 0, 0, 0.15);
   --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   --modal-backdrop: rgba(0, 0, 0, 0.35);
-  --overlay-bg: rgba(255, 255, 255, 0.85);
+  --overlay-bg: rgba(255, 255, 255, 0.96);
   --accent-color: #3b9df8;
   --accent-light: #e6f2fe;
 }
@@ -59,7 +59,7 @@
   --border-strong: rgba(255, 255, 255, 0.12);
   --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   --modal-backdrop: rgba(0, 0, 0, 0.55);
-  --overlay-bg: rgba(22, 23, 29, 0.85);
+  --overlay-bg: rgba(22, 23, 29, 0.96);
   --accent-color: #55b1f9;
   --accent-light: rgba(85, 177, 249, 0.15);
 }
