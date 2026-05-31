@@ -1,0 +1,39 @@
+# --- System / OS ---
+.DS_Store
+Thumbs.db
+
+# --- Dependencies & Build Artifacts ---
+node_modules/
+dist/
+build/
+vendor/
+.npm-cache/
+.server-info
+.server.pid
+
+# --- Mobile (React Native / Capacitor) ---
+android/app/build/
+android/.gradle/
+android/local.properties
+android/captmp/
+ios/
+*.swp
+*.lock
+
+# --- Environment / Secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Antigravity / AI Agent Infra ---
+# Ignore the "Runtime" (logs, sessions, and heavy cache)
+.agent/sessions/
+.agent/logs/
+.agent/cache/
+.agent/temp/
+
+# DO NOT ignore these (The "Brain")
+# !.agent/workflows/
+# !.agent/skills/
+# !.agent/rules/
+.superpowers/
