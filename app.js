@@ -1504,6 +1504,13 @@
             if (dialog) {
               const swatch = colorSwatches[player.color] || colorSwatches[0];
               dialog.style.setProperty("--sheet-theme", swatch.hex);
+              
+              const titleEl = $("#calc-dialog-title");
+              if (titleEl) {
+                titleEl.style.setProperty("--pill-bg", `${swatch.hex}15`);
+                titleEl.style.setProperty("--pill-border", `${swatch.hex}40`);
+              }
+
               setTimeout(() => {
                 dialog.showModal();
               }, 50);

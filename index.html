@@ -315,7 +315,7 @@
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
-        <h2 id="calc-dialog-title" class="sheet-title">Name</h2>
+        <h2 id="calc-dialog-title" class="sheet-title-pill">Name</h2>
         <div class="header-actions">
           <button
             class="sheet-close-btn"
@@ -346,9 +346,11 @@
             <!-- Injected dynamically by JavaScript, e.g. +5, +10, +50 -->
           </div>
 
-          <p class="tweak-caption">
+           <p class="tweak-caption">
             You can tweak these values in the Settings
           </p>
+
+          <hr class="dialog-divider" />
 
           <!-- Interactive Math Area -->
           <div class="math-entry-row">
@@ -379,9 +381,9 @@
             type="submit"
             class="primary-btn full-width"
             id="calc-btn-submit"
-            style="margin-top: 20px; font-size: 16px; font-weight: 600; padding: 14px 24px;"
+            style="font-size: 16px; font-weight: 600; padding: 14px 24px;"
           >
-            Apply adjustment
+            Apply
           </button>
         </div>
       </div>

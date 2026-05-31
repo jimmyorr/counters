@@ -1164,6 +1164,22 @@ dialog[open].bottom-sheet-dialog {
   text-align: center;
 }
 
+.sheet-title-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sheet-theme, var(--text-primary));
+  background-color: var(--pill-bg, var(--bg-tertiary));
+  border: 1px solid var(--pill-border, var(--border-light));
+  border-radius: 20px;
+  padding: 5px 14px;
+  text-align: center;
+  transition: all var(--trans-normal);
+}
+
 .sheet-close-btn {
   background: none;
   border: none;
@@ -1233,7 +1249,7 @@ dialog[open].bottom-sheet-dialog {
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   width: 100%;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .quick-add-grid > button:nth-child(n + 4) {
@@ -1268,7 +1284,15 @@ dialog[open].bottom-sheet-dialog {
   font-size: 11px;
   color: var(--text-secondary);
   opacity: 0.65;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+}
+
+.dialog-divider {
+  width: 100%;
+  height: 1px;
+  background-color: var(--border-light);
+  margin: 16px 0 20px;
+  border: none;
 }
 
 /* Calculator Active Row */
