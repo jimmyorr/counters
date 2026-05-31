@@ -1005,7 +1005,7 @@
         ? parseInt(selectedSwatch.getAttribute("data-color-id"))
         : 0;
 
-      const name = $("#edit-name").value.trim();
+      const name = $("#edit-label").value.trim();
       const score = parseInt($("#edit-score").value || "0");
       const increment = parseInt($("#edit-increment").value || "1");
       const resetValue = parseInt($("#edit-reset-val").value || "0");
@@ -1090,7 +1090,7 @@
     $("#edit-btn-delete").style.display = "none"; // Hide trash
 
     // Reset values to blank/defaults
-    $("#edit-name").value = "";
+    $("#edit-label").value = "";
     $("#edit-score").value = "0";
     $("#edit-increment").value = "1";
     $("#edit-reset-val").value = "0";
@@ -1121,7 +1121,7 @@
     $("#edit-btn-delete").style.display = "flex"; // Show trash
 
     // Populate form values
-    $("#edit-name").value = player.name;
+    $("#edit-label").value = player.name;
     $("#edit-score").value = player.score;
     $("#edit-increment").value = player.increment;
     $("#edit-reset-val").value = player.resetValue;
