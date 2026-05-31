@@ -417,6 +417,7 @@ html[data-layout="grid"] .player-card {
   padding: 0 12px;
   background-color: rgba(0, 0, 0, 0.12);
   z-index: 5;
+  touch-action: none;
 }
 
 /* Drag handle affordance — only shown when auto-sort is off */
@@ -436,13 +437,15 @@ html[data-layout="grid"] .player-card {
 /* Floating drag ghost clone */
 .drag-ghost {
   position: fixed;
+  top: 0;
+  left: 0;
   pointer-events: none;
   z-index: 9999;
   border-radius: 16px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
   opacity: 0.92;
   transform: rotate(1.5deg) scale(1.03);
-  transition: none;
+  transition: none !important;
   will-change: transform;
 }
 

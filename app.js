@@ -427,8 +427,6 @@
   // 8b. Card Drag-and-Drop Reorder (active only when auto-sort is disabled)
   // ------------------------------------------------------------------------
   const setupCardDragDrop = () => {
-    if (state.settings.autoSort) return; // Drag disabled when auto-sort is on
-
     const listWrapper = $("#counters-list-wrapper");
     if (!listWrapper) return;
 
@@ -445,16 +443,16 @@
       ghost.classList.add("drag-ghost");
       ghost.style.width = `${rect.width}px`;
       ghost.style.height = `${rect.height}px`;
-      ghost.style.left = `${rect.left}px`;
-      ghost.style.top = `${rect.top}px`;
+      ghost.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0) rotate(1.5deg) scale(1.03)`;
       document.body.appendChild(ghost);
       return { ghost, offsetX, offsetY };
     };
 
     // Moves the ghost to follow the pointer
     const moveGhost = (ghost, clientX, clientY, offsetX, offsetY) => {
-      ghost.style.left = `${clientX - offsetX}px`;
-      ghost.style.top = `${clientY - offsetY}px`;
+      const x = clientX - offsetX;
+      const y = clientY - offsetY;
+      ghost.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(1.5deg) scale(1.03)`;
     };
 
     // Infers which slot (before which card) the pointer is hovering over
@@ -501,6 +499,11 @@
       placeholder.style.minHeight = `${rect.height}px`;
       listWrapper.insertBefore(placeholder, card);
 
+      // Capture pointer first BEFORE hiding the original card to prevent browser pointer cancel!
+      try {
+        listWrapper.setPointerCapture(e.pointerId);
+      } catch (_) {}
+
       card.classList.add("dragging");
 
       dragState = {
@@ -511,11 +514,6 @@
         offsetY,
         moved: false,
       };
-
-      // Capture pointer for smooth touch drag outside origin
-      try {
-        listWrapper.setPointerCapture(e.pointerId);
-      } catch (_) {}
 
       e.preventDefault();
     });
@@ -1471,40 +1469,40 @@
       });
 
       listWrapper.addEventListener("pointerup", (e) => {
+        if (!scorePressActive) return;
+
+        scorePressActive = false;
+        if (scorePressTimer) {
+          clearTimeout(scorePressTimer);
+          scorePressTimer = null;
+        }
+
         const scoreBody = e.target.closest(".card-score-body");
         if (scoreBody) {
           e.preventDefault();
         }
 
-        if (scorePressActive) {
-          scorePressActive = false;
-          if (scorePressTimer) {
-            clearTimeout(scorePressTimer);
-            scorePressTimer = null;
-          }
+        if (!scorePressMoved) {
+          const player = state.counters.find((c) => c.id === scorePressPlayerId);
+          if (player) {
+            state.activePlayerIdForCalc = scorePressPlayerId;
+            state.calcPendingValue = "";
+            state.calcPendingOperation = "plus";
 
-          if (!scorePressMoved) {
-            const player = state.counters.find((c) => c.id === scorePressPlayerId);
-            if (player) {
-              state.activePlayerIdForCalc = scorePressPlayerId;
-              state.calcPendingValue = "";
-              state.calcPendingOperation = "plus";
+            $("#calc-dialog-title").textContent =
+              `${player.name}: ${formatNumber(player.score)}`;
+            $("#calc-number-input").value = "";
+            $(".math-op-indicator").textContent = "+";
+            $$(".op-btn").forEach((b) => b.classList.remove("active"));
+            $("#calc-op-plus").classList.add("active");
 
-              $("#calc-dialog-title").textContent =
-                `${player.name}: ${formatNumber(player.score)}`;
-              $("#calc-number-input").value = "";
-              $(".math-op-indicator").textContent = "+";
-              $$(".op-btn").forEach((b) => b.classList.remove("active"));
-              $("#calc-op-plus").classList.add("active");
-
-              const dialog = $("#calculator-dialog");
-              if (dialog) {
-                const swatch = colorSwatches[player.color] || colorSwatches[0];
-                dialog.style.setProperty("--sheet-theme", swatch.hex);
-                dialog.showModal();
-                playClickSound(600, 700, 0.08, 0.05);
-                triggerHaptic(15);
-              }
+            const dialog = $("#calculator-dialog");
+            if (dialog) {
+              const swatch = colorSwatches[player.color] || colorSwatches[0];
+              dialog.style.setProperty("--sheet-theme", swatch.hex);
+              dialog.showModal();
+              playClickSound(600, 700, 0.08, 0.05);
+              triggerHaptic(15);
             }
           }
         }
