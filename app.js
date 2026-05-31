@@ -1469,6 +1469,8 @@
       });
 
       listWrapper.addEventListener("pointerup", (e) => {
+        // Only handle releases originating from an active score-body press to prevent
+        // interfering with card reordering drags or other container gestures.
         if (!scorePressActive) return;
 
         scorePressActive = false;
