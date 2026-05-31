@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+
+    <!-- Premium PWA / Native Mobile App Fullscreen Mode -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Counters" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <title>Counters</title>
+
+    <!-- Custom premium ultra-bold vector favicon -->
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='15' fill='%233b9df8'/><path d='M16 8v16M8 16h16' stroke='white' stroke-width='5.5' stroke-linecap='round'/></svg>"
+    />
+
+    <meta
+      name="description"
+      content="A minimalist, premium counter application with beautiful colors, animations, and history logging."
+    />
+
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Modern CSS Stylesheet -->
+
+    <!-- Pre-load script to prevent Flash of Unstyled Content (FOUC) and handle theme -->
+    <script>
+      (function () {
+        const savedTheme = localStorage.getItem("counters-theme") || "system";
+        const root = document.documentElement;
+
+        const applyTheme = (theme) => {
+          if (theme === "dark") {
+            root.classList.add("dark-mode");
+            root.classList.remove("light-mode");
+          } else if (theme === "light") {
+            root.classList.add("light-mode");
+            root.classList.remove("dark-mode");
+          } else {
+            // System preference
+            const systemIsDark = window.matchMedia(
+              "(prefers-color-scheme: dark)",
+            ).matches;
+            if (systemIsDark) {
+              root.classList.add("dark-mode");
+              root.classList.remove("light-mode");
+            } else {
+              root.classList.add("light-mode");
+              root.classList.remove("dark-mode");
+            }
+          }
+        };
+
+        applyTheme(savedTheme);
+
+        // Load and apply grid layout option beforehand to prevent shifting
+        const savedLayout = localStorage.getItem("counters-layout") || "list";
+        root.setAttribute("data-layout", savedLayout);
+      })();
+    </script>
+    <script type="module" crossorigin src="./assets/index-DiXlvcBs.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BOzGK2Fb.css">
+  </head>
+  <body>
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="header-left" id="header-leader-container">
+        <span class="leader-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            fill="currentColor"
+          >
+            <path
+              d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"
+            />
+          </svg>
+        </span>
+        <span class="leader-text" id="header-leader-text">-</span>
+      </div>
+
+      <div class="header-center">
+        <h1 class="app-title" id="app-view-title">Counters</h1>
+      </div>
+
+      <div class="header-right">
+        <button
+          class="header-btn"
+          id="btn-open-history"
+          title="History"
+          aria-label="Open history"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="currentColor"
+          >
+            <path
+              d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"
+            />
+          </svg>
+        </button>
+        <button
+          class="header-btn"
+          id="btn-add-player"
+          title="Add counter"
+          aria-label="Add counter"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="currentColor"
+          >
+            <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2h6z" />
+          </svg>
+        </button>
+        <button
+          class="header-btn"
+          id="btn-open-options"
+          title="Display options"
+          aria-label="Open options"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            fill="currentColor"
+          >
+            <path
+              d="M5 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm14 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-7 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"
+            />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main View Screens -->
+    <main class="app-main">
+      <!-- Tab 1: Counters View -->
+      <section
+        class="tab-content active"
+        id="tab-counters"
+        data-view="counters"
+      >
+        <!-- Scrollable Counters Container -->
+        <div class="counters-container" id="counters-list-wrapper">
+          <!-- Injected Dynamically by JavaScript -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state hidden" id="empty-state-view">
+          <div class="empty-illustration">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <line x1="19" x2="19" y1="8" y2="14" />
+              <line x1="16" x2="22" y1="11" y2="11" />
+            </svg>
+          </div>
+          <h2>No counters added yet</h2>
+          <p>
+            Click the "+" icon in the top right, or the button below, to add
+            your first counter.
+          </p>
+          <button class="primary-btn" id="btn-empty-add-player">
+            Add first counter
+          </button>
+        </div>
+      </section>
+
+      <!-- Tab 2: Dice View Placeholder -->
+      <section class="tab-content" id="tab-dice" data-view="dice">
+        <div class="placeholder-container">
+          <div class="placeholder-icon shake-animation">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="64"
+              height="64"
+              fill="currentColor"
+            >
+              <path
+                d="M19 3H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2V5c0-1.103-.897-2-2-2zm-7 10c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5-.672 1.5-1.5 1.5zM7 9c-.828 0-1.5-.672-1.5-1.5S6.172 6 7 6s1.5.672 1.5 1.5S7.828 9 7 9zm0 9c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5S7.828 18 7 18zm10 0c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5-.672 1.5-1.5 1.5zm0-9c-.828 0-1.5-.672-1.5-1.5S16.172 6 17 6s1.5.672 1.5 1.5S17.828 9 17 9z"
+              />
+            </svg>
+          </div>
+          <h2>Dice</h2>
+          <p>Roll dice.</p>
+          <button class="primary-btn dice-roll-btn" id="btn-roll-placeholder">
+            Roll quick D6
+          </button>
+          <div class="quick-dice-result" id="placeholder-dice-result">-</div>
+        </div>
+      </section>
+
+      <!-- Tab 3: Timer View Placeholder -->
+      <section class="tab-content" id="tab-timer" data-view="timer">
+        <div class="placeholder-container">
+          <div class="placeholder-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="64"
+              height="64"
+              fill="currentColor"
+            >
+              <path
+                d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"
+              />
+              <path d="M13 7h-2v6h6v-2h-4z" />
+            </svg>
+          </div>
+          <h2>Timer</h2>
+          <p>Track turns, game clocks, or time limits.</p>
+          <div class="placeholder-timer-visual">
+            <span class="timer-tick" id="placeholder-stopwatch-display"
+              >00:00.0</span
+            >
+          </div>
+          <div class="timer-controls">
+            <button class="primary-btn" id="btn-timer-placeholder-start">
+              Start
+            </button>
+            <button class="secondary-btn" id="btn-timer-placeholder-reset">
+              Reset
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="app-nav">
+      <button
+        class="nav-item active"
+        data-tab-btn="counters"
+        aria-label="Counters list"
+      >
+        <span class="nav-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
+          </svg>
+        </span>
+        <span class="nav-text">Counters</span>
+      </button>
+
+      <button class="nav-item" data-tab-btn="dice" aria-label="Dice">
+        <span class="nav-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M19 3H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2V5c0-1.103-.897-2-2-2zm-7 10c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5-.672 1.5-1.5 1.5zM7 9c-.828 0-1.5-.672-1.5-1.5S6.172 6 7 6s1.5.672 1.5 1.5S7.828 9 7 9zm0 9c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5S7.828 18 7 18zm10 0c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5-.672 1.5-1.5 1.5zm0-9c-.828 0-1.5-.672-1.5-1.5S16.172 6 17 6s1.5.672 1.5 1.5S17.828 9 17 9z"
+            />
+          </svg>
+        </span>
+        <span class="nav-text">Dice</span>
+      </button>
+
+      <button class="nav-item" data-tab-btn="timer" aria-label="Timer">
+        <span class="nav-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm0-2a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm1-8h4v2h-6V7h2v5z"
+            />
+          </svg>
+        </span>
+        <span class="nav-text">Timer</span>
+      </button>
+    </nav>
+
+    <!-- ==================== DIALOGS & OVERLAYS ==================== -->
+
+    <!-- 1. Calculator Bottom Sheet Dialog -->
+    <dialog
+      id="calculator-dialog"
+      class="bottom-sheet-dialog"
+      aria-labelledby="calc-dialog-title"
+      closedby="any"
+    >
+      <div class="bottom-sheet-header">
+        <div class="drag-handle"></div>
+        <h2 id="calc-dialog-title" class="sheet-title">Name</h2>
+        <button
+          class="sheet-close-btn"
+          commandfor="calculator-dialog"
+          command="close"
+          aria-label="Close sheet"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            fill="currentColor"
+          >
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="bottom-sheet-body">
+        <!-- Calculator layout -->
+        <div class="calculator-wrapper">
+          <!-- Quick Add Buttons Grid -->
+          <div class="quick-add-grid" id="calc-quick-add-container">
+            <!-- Injected dynamically by JavaScript, e.g. +5, +10, +50 -->
+          </div>
+
+          <p class="tweak-caption">
+            You can tweak these values in the Settings
+          </p>
+
+          <!-- Interactive Math Area -->
+          <div class="math-entry-row">
+            <!-- Operation Toggles (+ / -) -->
+            <div class="operation-toggles">
+              <button class="op-btn" id="calc-op-minus" aria-label="Subtract">
+                −
+              </button>
+              <button class="op-btn active" id="calc-op-plus" aria-label="Add">
+                +
+              </button>
+            </div>
+            <!-- Numeric Display Screen -->
+            <div class="math-display-wrapper">
+              <span class="math-op-indicator">+</span>
+              <input
+                type="text"
+                class="math-number-input"
+                id="calc-number-input"
+                readonly
+                placeholder="0"
+                aria-label="Pending score adjustment"
+              />
+            </div>
+          </div>
+
+          <!-- Custom Numeric Pad -->
+          <div class="calc-numpad">
+            <button class="num-btn" data-key="1">1</button>
+            <button class="num-btn" data-key="2">2</button>
+            <button class="num-btn" data-key="3">3</button>
+            <button
+              class="num-btn op-key"
+              id="calc-btn-backspace"
+              title="Backspace"
+              aria-label="Backspace"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                fill="currentColor"
+              >
+                <path
+                  d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59 10.41 17z"
+                />
+              </svg>
+            </button>
+
+            <button class="num-btn" data-key="4">4</button>
+            <button class="num-btn" data-key="5">5</button>
+            <button class="num-btn" data-key="6">6</button>
+            <button
+              class="num-btn op-key"
+              id="calc-btn-clear"
+              aria-label="Clear entry"
+            >
+              C
+            </button>
+
+            <button class="num-btn" data-key="7">7</button>
+            <button class="num-btn" data-key="8">8</button>
+            <button class="num-btn" data-key="9">9</button>
+            <button
+              class="num-btn submit-key"
+              id="calc-btn-submit"
+              aria-label="Apply math"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                fill="currentColor"
+              >
+                <path
+                  d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
+                />
+              </svg>
+            </button>
+
+            <button class="num-btn double-key" data-key="00">00</button>
+            <button class="num-btn" data-key="0">0</button>
+            <button class="num-btn" data-key=".">.</button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- 2. Edit Player Dialog -->
+    <dialog
+      id="edit-player-dialog"
+      class="bottom-sheet-dialog full-sheet-dialog"
+      aria-labelledby="edit-dialog-title"
+      closedby="any"
+    >
+      <div class="bottom-sheet-header">
+        <div class="drag-handle"></div>
+        <h2 id="edit-dialog-title" class="sheet-title">Edit counter</h2>
+        <div class="header-actions">
+          <button
+            class="header-icon-btn danger-color"
+            id="edit-btn-delete"
+            title="Delete Counter"
+            aria-label="Delete Counter"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="22"
+              height="22"
+              fill="currentColor"
+            >
+              <path
+                d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+              />
+            </svg>
+          </button>
+          <button
+            class="sheet-close-btn"
+            commandfor="edit-player-dialog"
+            command="close"
+            aria-label="Close edit panel"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="currentColor"
+            >
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="bottom-sheet-body">
+        <form class="edit-form" id="edit-player-form" method="dialog">
+          <!-- Palette circular selectors -->
+          <div class="color-palette-wrapper">
+            <span class="palette-desc">Color</span>
+            <div class="palette-grid" id="edit-palette-container">
+              <!-- Circular color options injected dynamically -->
+            </div>
+          </div>
+
+          <!-- Text details -->
+          <div class="form-group">
+            <label for="edit-name">Name</label>
+            <input
+              type="text"
+              id="edit-name"
+              class="form-input"
+              required
+              autocomplete="off"
+              placeholder="Name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-score">Current value</label>
+            <input
+              type="number"
+              id="edit-score"
+              class="form-input"
+              required
+              placeholder="0"
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="edit-increment">Direct increment</label>
+              <input
+                type="number"
+                id="edit-increment"
+                class="form-input"
+                required
+                min="1"
+                placeholder="1"
+              />
+              <span class="field-hint">Triggered on card edges</span>
+            </div>
+            <div class="form-group">
+              <label for="edit-reset-val">Reset value</label>
+              <input
+                type="number"
+                id="edit-reset-val"
+                class="form-input"
+                required
+                placeholder="0"
+              />
+              <span class="field-hint">Triggered on reset</span>
+            </div>
+          </div>
+
+          <div class="sheet-action-row">
+            <button
+              type="submit"
+              class="primary-btn full-width"
+              id="edit-btn-save"
+            >
+              Save counter
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- 1. Main Options Menu Dialog -->
+    <dialog
+      id="main-menu-dialog"
+      class="options-menu-dialog"
+      aria-labelledby="main-menu-title"
+      closedby="any"
+    >
+      <div class="options-dialog-header">
+        <h2 id="main-menu-title">Menu</h2>
+        <button
+          class="options-close-btn"
+          commandfor="main-menu-dialog"
+          command="close"
+          aria-label="Close Menu"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            fill="currentColor"
+          >
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+            />
+          </svg>
+        </button>
+      </div>
+      <div class="options-dialog-body" style="padding-top: 8px">
+        <div class="selection-stack" style="gap: 8px">
+          <button class="select-row-btn" id="menu-btn-view-options">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="currentColor"
+            >
+              <path
+                d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"
+              />
+            </svg>
+            <span>Display options</span>
+          </button>
+
+          <button class="select-row-btn" id="menu-btn-open-settings">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="currentColor"
+            >
+              <path
+                d="M12 1l9.5 5.5v11L12 23l-9.5-5.5v-11L12 1zm0 2.309L4.5 7.636v8.728L12 20.69l7.5-4.327V7.636L12 3.31zM12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"
+              />
+            </svg>
+            <span>Settings</span>
+          </button>
+
+          <div
+            style="height: 1px; background: var(--border-light); margin: 4px 0"
+          ></div>
+
+          <button class="select-row-btn" id="menu-btn-reset-scores">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="currentColor"
+            >
+              <path
+                d="M5.828 7l2.536 2.536L6.95 10.95 2 6l4.95-4.95 1.414 1.414L5.828 5H13a8 8 0 1 1 0 16H4v-2h9a6 6 0 1 0 0-12H5.828z"
+              />
+            </svg>
+            <span>Reset scores</span>
+          </button>
+
+          <button
+            class="select-row-btn"
+            id="menu-btn-delete-all"
+            style="color: #f85c5c; border-color: rgba(248, 92, 92, 0.3)"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="currentColor"
+            >
+              <path
+                d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+              />
+            </svg>
+            <span>Delete all counters</span>
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- 6. Settings Bottom Sheet Dialog -->
+    <dialog
+      id="settings-dialog"
+      class="bottom-sheet-dialog full-sheet-dialog"
+      aria-labelledby="settings-dialog-title"
+      closedby="any"
+    >
+      <div class="bottom-sheet-header">
+        <div class="drag-handle"></div>
+        <h2 id="settings-dialog-title" class="sheet-title">Settings</h2>
+        <button
+          class="sheet-close-btn"
+          commandfor="settings-dialog"
+          command="close"
+          aria-label="Close settings"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            fill="currentColor"
+          >
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="bottom-sheet-body">
+        <div class="settings-wrapper">
+          <div class="settings-section">
+            <h3>Preferences</h3>
+
+            <!-- Sound Toggle -->
+            <div class="settings-row">
+              <div class="settings-info">
+                <span class="setting-title">Audio feedback</span>
+                <span class="setting-desc"
+                  >Play subtle click tones during score adjustments</span
+                >
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" id="setting-sound" checked />
+                <span class="slider-round"></span>
+              </label>
+            </div>
+
+            <!-- Haptic Toggle -->
+            <div class="settings-row">
+              <div class="settings-info">
+                <span class="setting-title">Haptic feedback</span>
+                <span class="setting-desc"
+                  >Subtle tactile vibrations on button clicks</span
+                >
+              </div>
+              <label class="switch-toggle">
+                <input type="checkbox" id="setting-haptic" checked />
+                <span class="slider-round"></span>
+              </label>
+            </div>
+
+            <!-- Theme selector -->
+            <div class="settings-row">
+              <div class="settings-info">
+                <span class="setting-title">Theme</span>
+                <span class="setting-desc"
+                  >Match system layout or pin dark/light mode</span
+                >
+              </div>
+              <select class="settings-select" id="setting-theme">
+                <option value="system">System</option>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Score customizations</h3>
+
+            <!-- Quick Add Editing -->
+            <div class="settings-column">
+              <div class="settings-info">
+                <span class="setting-title">Quick-add calculator values</span>
+                <span class="setting-desc"
+                  >Comma-separated numbers that appear on the calculator overlay
+                  sheet</span
+                >
+              </div>
+              <input
+                type="text"
+                class="settings-input"
+                id="setting-quick-add-values"
+                value="5, 10, 15, 20, 50, 100, 200"
+              />
+            </div>
+          </div>
+
+          <div class="about-version">
+            <span>Counters v0.0.2</span>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- 3. Options (Sorting & Layout) Dialog -->
+    <dialog
+      id="options-dialog"
+      class="options-menu-dialog"
+      aria-labelledby="options-dialog-title"
+      closedby="any"
+    >
+      <div class="options-dialog-header">
+        <h2 id="options-dialog-title">Display options</h2>
+        <button
+          class="options-close-btn"
+          commandfor="options-dialog"
+          command="close"
+          aria-label="Close dialog"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            fill="currentColor"
+          >
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="options-dialog-body">
+        <!-- Section 1: Appearance -->
+        <div class="options-group">
+          <h4>Appearance</h4>
+          <div class="toggle-buttons-row">
+            <button
+              class="toggle-btn active"
+              id="layout-opt-list"
+              aria-label="List layout"
+              title="List view"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                fill="currentColor"
+              >
+                <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
+              </svg>
+              <span>List</span>
+            </button>
+            <button
+              class="toggle-btn"
+              id="layout-opt-grid"
+              aria-label="Grid layout"
+              title="Grid view"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                fill="currentColor"
+              >
+                <path
+                  d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"
+                />
+              </svg>
+              <span>Grid</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Section 2: Top Bar Content -->
+        <div class="options-group">
+          <h4>Top bar display info</h4>
+          <div class="selection-stack">
+            <button class="select-row-btn active" id="topbar-opt-highest">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="currentColor"
+              >
+                <path
+                  d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"
+                />
+              </svg>
+              <span>Show the highest score</span>
+            </button>
+
+            <button class="select-row-btn" id="topbar-opt-lowest">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="currentColor"
+              >
+                <path
+                  d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"
+                />
+              </svg>
+              <span>Show the lowest score</span>
+            </button>
+
+            <button class="select-row-btn" id="topbar-opt-total">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                fill="currentColor"
+              >
+                <path
+                  d="M19 18v2H5v-2l6-6-6-6V4h14v2h-9.35L14 12l-4.35 6H19z"
+                />
+              </svg>
+              <span>Show the total score</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Section 3: Automatically Sort -->
+        <div class="options-group border-top">
+          <h4>Automatically sort counters</h4>
+
+          <div class="setting-switch-row">
+            <div class="switch-label">
+              <span class="switch-title">Turn on auto-sorting (3s delay)</span>
+            </div>
+            <label class="switch-toggle">
+              <input type="checkbox" id="options-auto-sort" />
+              <span class="slider-round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- 4. Custom Confirm Dialog -->
+    <dialog id="confirm-dialog" class="bottom-sheet-dialog">
+      <div class="sheet-content">
+        <div class="sheet-header">
+          <h2 class="sheet-title" id="confirm-dialog-title">Confirm action</h2>
+        </div>
+        <div class="sheet-body" style="padding-top: 10px">
+          <p
+            id="confirm-dialog-message"
+            style="
+              margin-bottom: 24px;
+              color: var(--text-secondary);
+              text-align: center;
+              font-size: 15px;
+              line-height: 1.5;
+            "
+          ></p>
+          <div style="display: flex; gap: 12px; width: 100%">
+            <button class="secondary-btn full-width" id="confirm-btn-cancel">
+              Cancel
+            </button>
+            <button
+              class="primary-btn full-width"
+              id="confirm-btn-ok"
+              style="background-color: #f85c5c; color: #ffffff"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- 5. History Log Dialog -->
+    <dialog
+      id="history-dialog"
+      class="history-log-dialog"
+      aria-labelledby="history-dialog-title"
+      closedby="any"
+    >
+      <div class="history-header">
+        <h2 id="history-dialog-title">History</h2>
+        <div class="history-actions">
+          <button
+            class="header-icon-btn danger-color"
+            id="history-btn-clear"
+            title="Clear history"
+            aria-label="Clear history"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="currentColor"
+            >
+              <path
+                d="M17 6h5v2h-2v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8H2V6h5V3a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v3zm1 2H6v12h12V8zm-9 3h2v6H9v-6zm4 0h2v6h-2v-6zM9 4v2h6V4H9z"
+              />
+            </svg>
+          </button>
+          <button
+            class="options-close-btn"
+            commandfor="history-dialog"
+            command="close"
+            aria-label="Close history"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="currentColor"
+            >
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="history-body">
+        <div class="history-list" id="history-items-wrapper">
+          <!-- History entries injected dynamically by JavaScript -->
+        </div>
+
+        <!-- History Empty state -->
+        <div class="history-empty hidden" id="history-empty-view">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            width="48"
+            height="48"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <p>No transactions logged yet.</p>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Subtle feedback toast -->
+    <div class="toast-notification hidden" id="toast-wrapper">
+      <span class="toast-message" id="toast-text">Counter deleted</span>
+    </div>
+
+    <!-- Main Application Logic Script -->
+  </body>
+</html>
