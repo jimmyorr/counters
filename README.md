@@ -13,20 +13,34 @@ A minimalist, premium web application for tracking scores, counters, and general
 - **Auto-sorting**: Automatically arrange counters by highest or lowest score with intelligent debounce timing to prevent UI jumping during active edits.
 - **Dark/light mode**: Full support for system-level color schemes or forced Dark/Light theming.
 
-## Development and usage
+## Development and deployment
 
-Because Counters is built with zero dependencies using pure vanilla web technologies, you don't need any complex build steps.
+Counters uses Vite for fast local development and optimized production bundling.
 
-To run the application locally, you can use any static server. For example:
+### 1. Install dependencies
+Install the required development tools:
 ```bash
-# If using Node.js
-npx serve .
-
-# Or using Python
-python -m http.server 3000
+npm install
 ```
 
-Then navigate to `http://localhost:3000` (or whatever port your server starts on) in your web browser.
+### 2. Run locally
+Start Vite's extremely fast development server with hot module replacement:
+```bash
+npm run dev
+```
+
+Then open the local URL (usually `http://localhost:5173`) in your web browser.
+
+### 3. Production release
+To bundle the application and output a production release to the `docs` directory (configured for easy hosting on GitHub Pages):
+```bash
+npm run build
+```
+
+Alternatively, you can run the release pipeline which increments the patch version in `package.json` and builds the production bundle in one step:
+```bash
+npm run release
+```
 
 ## Browser support
 
