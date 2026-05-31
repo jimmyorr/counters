@@ -184,7 +184,7 @@ body > .app-nav {
    -------------------------------------------------------------------------- */
 .app-header {
   top: 0;
-  height: var(--header-height);
+  height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
   background-color: rgba(var(--bg-primary), 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -192,7 +192,7 @@ body > .app-nav {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: 0 16px;
+  padding: env(safe-area-inset-top, 0px) 16px 0;
   z-index: 100;
 }
 
@@ -271,8 +271,8 @@ body > .app-nav {
    4. Main Content Area & Tab Control
    -------------------------------------------------------------------------- */
 .app-main {
-  top: var(--header-height);
-  bottom: var(--nav-height);
+  top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
+  bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
@@ -912,7 +912,7 @@ input:checked + .slider-round:before {
    -------------------------------------------------------------------------- */
 .app-nav {
   bottom: 0;
-  height: var(--nav-height);
+  height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
   background-color: rgba(var(--bg-primary), 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -920,7 +920,7 @@ input:checked + .slider-round:before {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   align-items: center;
-  padding-bottom: env(safe-area-inset-bottom, 0); /* Notch screen styling */
+  padding-bottom: env(safe-area-inset-bottom, 0px); /* Notch screen styling */
   z-index: 100;
 }
 
@@ -1014,6 +1014,7 @@ dialog[open]::backdrop {
   display: flex;
   flex-direction: column;
   max-height: 92vh;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
