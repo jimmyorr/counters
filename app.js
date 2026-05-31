@@ -766,10 +766,17 @@
             : formatNumber(state.calcPendingValue);
       }
 
+      const sign = state.calcPendingOperation === "plus" ? "+" : "−";
+
       if (opIndicator) {
-        opIndicator.textContent =
-          state.calcPendingOperation === "plus" ? "+" : "−";
+        opIndicator.textContent = sign;
       }
+
+      // Dynamically update quick add button signs (+ / -) to match toggled operator
+      $$("#calc-quick-add-container button").forEach((btn) => {
+        const val = btn.getAttribute("data-quick-val");
+        btn.textContent = `${sign}${formatNumber(parseFloat(val))}`;
+      });
 
       if (opMinus && opPlus) {
         opMinus.classList.toggle(
@@ -832,20 +839,40 @@
       triggerHaptic(5);
     });
 
-    // Quick Accumulating Buttons Taps (Adds to current screen value)
+    // Quick Accumulating Buttons Taps (Instant apply & close)
     $("#calc-quick-add-container").addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-quick-val]");
       if (!btn) return;
 
-      const val = parseFloat(btn.getAttribute("data-quick-val"));
+      if (state.activePlayerIdForCalc === null) return;
 
-      // Accumulate mathematical value
-      const current = parseFloat(state.calcPendingValue || "0");
-      state.calcPendingValue = (current + val).toString();
+      const player = state.counters.find(
+        (c) => c.id === state.activePlayerIdForCalc,
+      );
+      if (!player) return;
 
-      updateCalcDisplayDOM();
-      playClickSound(750, 500, 0.06, 0.05);
-      triggerHaptic(8);
+      const deltaValue = parseFloat(btn.getAttribute("data-quick-val") || "0");
+      if (deltaValue === 0) return;
+
+      const oldScore = player.score;
+      const signedDelta =
+        state.calcPendingOperation === "plus" ? deltaValue : -deltaValue;
+
+      player.score += signedDelta;
+      saveCounters();
+
+      // History logging
+      const label =
+        signedDelta > 0
+          ? `+${formatNumber(deltaValue)}`
+          : `−${formatNumber(deltaValue)}`;
+      addHistoryLog(player, label, oldScore, player.score);
+
+      dialog.close();
+      renderCountersList();
+      triggerAutoSortWithDebounce();
+      playSuccessSound();
+      triggerHaptic(18);
     });
 
     // Calculate Checkmark confirm submit button
