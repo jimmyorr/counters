@@ -291,6 +291,11 @@
     if (type === "highest") {
       // Find highest scoring player
       const leader = [...state.counters].sort((a, b) => b.score - a.score)[0];
+      const swatch = colorSwatches[leader.color] || colorSwatches[0];
+      leaderContainer.style.setProperty("--leader-color", swatch.hex);
+      leaderContainer.style.setProperty("--leader-bg", `${swatch.hex}15`);
+      leaderContainer.style.setProperty("--leader-border", `${swatch.hex}40`);
+
       leaderContainer.querySelector(".leader-icon svg").innerHTML =
         `<path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/>`;
       leaderText.textContent = leader.name;
@@ -299,6 +304,11 @@
       const lowLeader = [...state.counters].sort(
         (a, b) => a.score - b.score,
       )[0];
+      const swatch = colorSwatches[lowLeader.color] || colorSwatches[0];
+      leaderContainer.style.setProperty("--leader-color", swatch.hex);
+      leaderContainer.style.setProperty("--leader-bg", `${swatch.hex}15`);
+      leaderContainer.style.setProperty("--leader-border", `${swatch.hex}40`);
+
       leaderContainer.querySelector(".leader-icon svg").innerHTML =
         `<path d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"/>`;
       leaderText.textContent = lowLeader.name;
@@ -308,6 +318,10 @@
         (sum, item) => sum + item.score,
         0,
       );
+      leaderContainer.style.removeProperty("--leader-color");
+      leaderContainer.style.removeProperty("--leader-bg");
+      leaderContainer.style.removeProperty("--leader-border");
+
       leaderContainer.querySelector(".leader-icon svg").innerHTML =
         `<path d="M19 18v2H5v-2l6-6-6-6V4h14v2h-9.35L14 12l-4.35 6H19z"/>`;
       leaderText.textContent = `Total: ${formatNumber(totalScore)}`;
