@@ -357,16 +357,18 @@
             </button>
           </div>
           
-          <!-- Card Direct Click decrement zone -->
-          <div class="card-direct-zone card-direct-zone-minus" data-action="decrement" aria-label="Subtract direct increment">−</div>
-          
-          <!-- Middle Display -->
-          <div class="card-score-body data-action-calc">
-            <span class="score-display">${formatNumber(player.score)}</span>
+          <div class="card-body-wrapper">
+            <!-- Card Direct Click decrement zone -->
+            <div class="card-direct-zone card-direct-zone-minus" data-action="decrement" aria-label="Subtract direct increment">−</div>
+            
+            <!-- Middle Display -->
+            <div class="card-score-body data-action-calc">
+              <span class="score-display">${formatNumber(player.score)}</span>
+            </div>
+            
+            <!-- Card Direct Click increment zone -->
+            <div class="card-direct-zone card-direct-zone-plus" data-action="increment" aria-label="Add direct increment">+</div>
           </div>
-          
-          <!-- Card Direct Click increment zone -->
-          <div class="card-direct-zone card-direct-zone-plus" data-action="increment" aria-label="Add direct increment">+</div>
         </div>
       `;
       })
@@ -1363,89 +1365,6 @@
       addNewCounterStreamlined();
     });
 
-    // Pointer handlers for long press vs short press on card body
-    let pressTimer = null;
-    let isLongPress = false;
-    let longPressedPlayerId = null;
-
-    $("#counters-list-wrapper").addEventListener("pointerdown", (e) => {
-      const cardBody = e.target.closest(".card-score-body");
-      if (!cardBody) return;
-
-      isLongPress = false;
-      const card = cardBody.closest(".player-card");
-      if (!card) return;
-      longPressedPlayerId = card.getAttribute("data-player-id");
-
-      pressTimer = setTimeout(() => {
-        isLongPress = true;
-        const player = state.counters.find((c) => c.id === longPressedPlayerId);
-        if (!player) return;
-
-        // Long press logic: open calculator
-        state.activePlayerIdForCalc = longPressedPlayerId;
-        state.calcPendingValue = "";
-        state.calcPendingOperation = "plus";
-
-        $("#calc-dialog-title").textContent =
-          `${player.name}: ${formatNumber(player.score)}`;
-        $("#calc-number-input").value = "0";
-        $(".math-op-indicator").textContent = "+";
-        $$(".op-btn").forEach((b) => b.classList.remove("active"));
-        $("#calc-op-plus").classList.add("active");
-
-        const dialog = $("#calculator-dialog");
-        if (dialog) {
-          dialog.showModal();
-          playClickSound(600, 700, 0.08, 0.05); // variant for long press
-          triggerHaptic(15);
-        }
-      }, 500); // 500ms for long press
-    });
-
-    const cancelLongPress = () => {
-      if (pressTimer) clearTimeout(pressTimer);
-    };
-
-    $("#counters-list-wrapper").addEventListener(
-      "pointercancel",
-      cancelLongPress,
-    );
-
-    // Prevent long press trigger if user scrolls/moves pointer significantly
-    $("#counters-list-wrapper").addEventListener("pointermove", () => {
-      // Real robust implementations check distance, but cancel works as a baseline
-    });
-
-    $("#counters-list-wrapper").addEventListener("pointerup", (e) => {
-      cancelLongPress();
-
-      const cardBody = e.target.closest(".card-score-body");
-      if (!cardBody) return;
-
-      // Prevent triggering short press if it was a long press
-      if (!isLongPress && longPressedPlayerId) {
-        // Short press logic: increment score by 1
-        const player = state.counters.find((c) => c.id === longPressedPlayerId);
-        if (!player) return;
-
-        const oldScore = player.score;
-        player.score += 1;
-        saveCounters();
-        addHistoryLog(player, "+1", oldScore, player.score);
-
-        // Brief visual flash
-        cardBody.classList.add("zone-active-flash");
-        setTimeout(() => cardBody.classList.remove("zone-active-flash"), 300);
-
-        renderCountersList();
-        triggerAutoSortWithDebounce();
-        playClickSound(650, 350, 0.06, 0.05);
-        triggerHaptic(10);
-      }
-      longPressedPlayerId = null;
-    });
-
     // Counters List Delegated clicks (optimizing performance & garbage collection)
     $("#counters-list-wrapper").addEventListener("click", (e) => {
       const card = e.target.closest(".player-card");
@@ -1501,13 +1420,36 @@
         return;
       }
 
-      // 3. Edit details button click target
+      // 3. Middle display click target (opens calculator)
+      const scoreBody = e.target.closest(".card-score-body");
+      if (scoreBody) {
+        state.activePlayerIdForCalc = playerId;
+        state.calcPendingValue = "";
+        state.calcPendingOperation = "plus";
+
+        $("#calc-dialog-title").textContent =
+          `${player.name}: ${formatNumber(player.score)}`;
+        $("#calc-number-input").value = "0";
+        $(".math-op-indicator").textContent = "+";
+        $$(".op-btn").forEach((b) => b.classList.remove("active"));
+        $("#calc-op-plus").classList.add("active");
+
+        const dialog = $("#calculator-dialog");
+        if (dialog) {
+          dialog.showModal();
+          playClickSound(600, 700, 0.08, 0.05);
+          triggerHaptic(15);
+        }
+        return;
+      }
+
+      // 4. Edit details button click target
       if (e.target.closest(".btn-player-edit")) {
         openEditPlayerDetails(playerId);
         return;
       }
 
-      // 4. Quick Reset score target
+      // 5. Quick Reset score target
       if (e.target.closest(".btn-player-reset")) {
         showConfirmDialog(`Reset score for ${player.name} to 0?`, () => {
           const oldScore = player.score;

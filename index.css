@@ -492,18 +492,25 @@ html[data-layout="grid"] .player-card {
   text-align: center;
 }
 
+/* Card Body Wrapper */
+.card-body-wrapper {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  flex: 1;
+  width: 100%;
+  position: relative;
+}
+
 /* Card Score Center Display */
 .card-score-body {
-  position: absolute;
-  top: 36px;
-  left: 0;
-  right: 0;
-  bottom: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 2;
+  flex: 0 0 auto;
+  padding: 0 16px;
+  min-width: 60px;
 }
 
 .score-display {
@@ -526,10 +533,6 @@ html[data-layout="grid"] .score-display {
 
 /* Card Increment/Decrement direct active zones (Left/Right side buttons) */
 .card-direct-zone {
-  position: absolute;
-  top: 36px;
-  bottom: 0;
-  width: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -538,21 +541,16 @@ html[data-layout="grid"] .score-display {
   opacity: 0;
   background-color: rgba(255, 255, 255, 0);
   cursor: pointer;
-  z-index: 4;
+  flex: 1;
   transition: all var(--trans-normal);
 }
 
-/* Grid direct zones slightly smaller */
-html[data-layout="grid"] .card-direct-zone {
-  width: 44px;
-}
-
 .card-direct-zone-minus {
-  left: 0;
+  /* Naturally positioned left */
 }
 
 .card-direct-zone-plus {
-  right: 0;
+  /* Naturally positioned right */
 }
 
 /* Hovering shows subtle plus minus signs on edges */
