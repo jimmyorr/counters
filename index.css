@@ -134,6 +134,22 @@ svg,
   user-drag: none;
 }
 
+/* Focus reset: remove outline on active click/tap to feel like a native app, but preserve it for accessibility via keyboard */
+button:focus,
+a:focus,
+select:focus {
+  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+.nav-item:focus-visible,
+.player-card:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
 html,
 body {
   overscroll-behavior: none;
