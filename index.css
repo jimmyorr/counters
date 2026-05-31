@@ -1698,63 +1698,7 @@ dialog[open].options-menu-dialog {
 /* --------------------------------------------------------------------------
    13. History Logs Drawer (Large Dialog Box)
    -------------------------------------------------------------------------- */
-.history-log-dialog {
-  background-color: var(--overlay-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 20px;
-  border: 1px solid var(--border-light);
-  box-shadow: var(--card-shadow);
-  width: calc(100% - 32px);
-  max-width: 420px;
-  /* Use dvh so PWA/notch devices use the true visible viewport height */
-  max-height: min(70dvh, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 80px));
-  position: fixed;
-  /* Shift vertical center to account for top/bottom safe area asymmetry */
-  top: calc(50% + (env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) / 2);
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.92);
-  opacity: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  transition:
-    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 0.25s ease-out;
-  overflow: hidden;
-}
 
-dialog[open].history-log-dialog {
-  transform: translate(-50%, -50%) scale(1);
-  opacity: 1;
-}
-
-.history-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border-light);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.history-header h2 {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.history-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.history-body {
-  padding: 16px;
-  overflow-y: auto;
-  background-color: rgba(var(--bg-primary), 0.2);
-  flex: 1;
-}
 
 .history-list {
   display: flex;
