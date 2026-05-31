@@ -921,33 +921,32 @@
 
     <!-- 4. Custom Confirm Dialog -->
     <dialog id="confirm-dialog" class="bottom-sheet-dialog">
-      <div class="sheet-content">
-        <div class="sheet-header">
-          <h2 class="sheet-title" id="confirm-dialog-title">Confirm action</h2>
-        </div>
-        <div class="sheet-body" style="padding-top: 10px">
-          <p
-            id="confirm-dialog-message"
-            style="
-              margin-bottom: 24px;
-              color: var(--text-secondary);
-              text-align: center;
-              font-size: 15px;
-              line-height: 1.5;
-            "
-          ></p>
-          <div style="display: flex; gap: 12px; width: 100%">
-            <button class="secondary-btn full-width" id="confirm-btn-cancel">
-              Cancel
-            </button>
-            <button
-              class="primary-btn full-width"
-              id="confirm-btn-ok"
-              style="background-color: #f85c5c; color: #ffffff"
-            >
-              Confirm
-            </button>
-          </div>
+      <div class="bottom-sheet-header">
+        <div class="drag-handle"></div>
+        <h2 class="sheet-title" id="confirm-dialog-title">Confirm action</h2>
+      </div>
+      <div class="bottom-sheet-body" style="padding-top: 10px">
+        <p
+          id="confirm-dialog-message"
+          style="
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+            text-align: center;
+            font-size: 15px;
+            line-height: 1.5;
+          "
+        ></p>
+        <div style="display: flex; gap: 12px; width: 100%">
+          <button class="secondary-btn full-width" id="confirm-btn-cancel">
+            Cancel
+          </button>
+          <button
+            class="primary-btn full-width"
+            id="confirm-btn-ok"
+            style="background-color: #f85c5c; color: #ffffff"
+          >
+            Confirm
+          </button>
         </div>
       </div>
     </dialog>
