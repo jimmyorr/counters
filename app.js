@@ -1714,6 +1714,14 @@
     setupPlaceholdersInteractions();
     setupBottomSheetDragging();
     setupCardDragDrop();
+
+    // Set dynamic version from package.json via Vite define injection
+    if (typeof __APP_VERSION__ !== "undefined") {
+      const versionEl = document.getElementById("about-app-version");
+      if (versionEl) {
+        versionEl.textContent = `Counters v${__APP_VERSION__}`;
+      }
+    }
   };
 
   // Bootstrap when DOM ready
