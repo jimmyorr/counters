@@ -370,76 +370,24 @@
             <div class="math-display-wrapper">
               <span class="math-op-indicator">+</span>
               <input
-                type="text"
+                type="number"
                 class="math-number-input"
                 id="calc-number-input"
-                readonly
                 placeholder="0"
                 aria-label="Pending score adjustment"
               />
             </div>
           </div>
 
-          <!-- Custom Numeric Pad -->
-          <div class="calc-numpad">
-            <button class="num-btn" data-key="1">1</button>
-            <button class="num-btn" data-key="2">2</button>
-            <button class="num-btn" data-key="3">3</button>
-            <button
-              class="num-btn op-key"
-              id="calc-btn-backspace"
-              title="Backspace"
-              aria-label="Backspace"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="20"
-                height="20"
-                fill="currentColor"
-              >
-                <path
-                  d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59 10.41 17z"
-                />
-              </svg>
-            </button>
-
-            <button class="num-btn" data-key="4">4</button>
-            <button class="num-btn" data-key="5">5</button>
-            <button class="num-btn" data-key="6">6</button>
-            <button
-              class="num-btn op-key"
-              id="calc-btn-clear"
-              aria-label="Clear entry"
-            >
-              C
-            </button>
-
-            <button class="num-btn" data-key="7">7</button>
-            <button class="num-btn" data-key="8">8</button>
-            <button class="num-btn" data-key="9">9</button>
-            <button
-              class="num-btn submit-key"
-              id="calc-btn-submit"
-              aria-label="Apply math"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="24"
-                height="24"
-                fill="currentColor"
-              >
-                <path
-                  d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
-                />
-              </svg>
-            </button>
-
-            <button class="num-btn double-key" data-key="00">00</button>
-            <button class="num-btn" data-key="0">0</button>
-            <button class="num-btn" data-key=".">.</button>
-          </div>
+          <!-- Apply Adjustment Button -->
+          <button
+            type="submit"
+            class="primary-btn full-width"
+            id="calc-btn-submit"
+            style="margin-top: 20px; font-size: 16px; font-weight: 600; padding: 14px 24px;"
+          >
+            Apply adjustment
+          </button>
         </div>
       </div>
     </dialog>
@@ -748,7 +696,7 @@
                 type="text"
                 class="settings-input"
                 id="setting-quick-add-values"
-                value="5, 10, 15, 20, 50, 100, 200"
+                value="5, 10, 15, 20, 50, 100"
               />
             </div>
           </div>

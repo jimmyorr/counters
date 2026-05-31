@@ -18,7 +18,7 @@
       autoSort: false,
       soundEnabled: true,
       hapticEnabled: true,
-      quickAddValues: [5, 10, 15, 20, 50, 100, 200],
+      quickAddValues: [5, 10, 15, 20, 50, 100],
     },
     history: [],
     currentTab: "counters",
@@ -748,25 +748,10 @@
     const dialog = $("#calculator-dialog");
     if (!dialog) return;
 
-    // Reset current mathematical state
-    const resetCalculatorState = () => {
-      state.calcPendingValue = "";
-      state.calcPendingOperation = "plus";
-      updateCalcDisplayDOM();
-    };
-
     const updateCalcDisplayDOM = () => {
-      const display = $("#calc-number-input");
       const opIndicator = $(".math-op-indicator");
       const opMinus = $("#calc-op-minus");
       const opPlus = $("#calc-op-plus");
-
-      if (display) {
-        display.value =
-          state.calcPendingValue === ""
-            ? "0"
-            : formatNumber(state.calcPendingValue);
-      }
 
       const sign = state.calcPendingOperation === "plus" ? "+" : "−";
 
@@ -807,40 +792,6 @@
       triggerHaptic(5);
     });
 
-    // Numerical keypad actions
-    $$(".calc-numpad .num-btn[data-key]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const key = btn.getAttribute("data-key");
-
-        // Prevent multiple decimals
-        if (key === "." && state.calcPendingValue.includes(".")) return;
-
-        // Capping total entry size
-        if (state.calcPendingValue.length >= 8) return;
-
-        state.calcPendingValue += key;
-        updateCalcDisplayDOM();
-        playClickSound(650, 400, 0.05, 0.03);
-        triggerHaptic(5);
-      });
-    });
-
-    // Clear Calculator button
-    $("#calc-btn-clear").addEventListener("click", () => {
-      state.calcPendingValue = "";
-      updateCalcDisplayDOM();
-      playClickSound(350, 200, 0.06, 0.04);
-      triggerHaptic(5);
-    });
-
-    // Backspace button
-    $("#calc-btn-backspace").addEventListener("click", () => {
-      state.calcPendingValue = state.calcPendingValue.slice(0, -1);
-      updateCalcDisplayDOM();
-      playClickSound(400, 300, 0.05, 0.03);
-      triggerHaptic(5);
-    });
-
     // Quick Accumulating Buttons Taps (Instant apply & close)
     $("#calc-quick-add-container").addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-quick-val]");
@@ -858,7 +809,7 @@
 
       const oldScore = player.score;
       const signedDelta =
-        state.calcPendingOperation === "plus" ? deltaValue : -deltaValue;
+          state.calcPendingOperation === "plus" ? deltaValue : -deltaValue;
 
       player.score += signedDelta;
       saveCounters();
@@ -886,7 +837,7 @@
       );
       if (!player) return;
 
-      const deltaValue = parseFloat(state.calcPendingValue || "0");
+      const deltaValue = parseFloat($("#calc-number-input").value || "0");
       if (deltaValue === 0) {
         dialog.close();
         return;
@@ -1457,7 +1408,7 @@
 
         $("#calc-dialog-title").textContent =
           `${player.name}: ${formatNumber(player.score)}`;
-        $("#calc-number-input").value = "0";
+        $("#calc-number-input").value = "";
         $(".math-op-indicator").textContent = "+";
         $$(".op-btn").forEach((b) => b.classList.remove("active"));
         $("#calc-op-plus").classList.add("active");
