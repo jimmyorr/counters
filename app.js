@@ -408,7 +408,7 @@
     let dragState = null; // Tracks active drag session
 
     const getCardEls = () => [
-      ...listWrapper.querySelectorAll(".player-card:not(.drag-placeholder)"),
+      ...listWrapper.querySelectorAll(".player-card:not(.drag-placeholder):not(.dragging)"),
     ];
 
     // Creates a pixel-perfect clone of the dragged card to float under pointer

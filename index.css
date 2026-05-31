@@ -430,13 +430,7 @@ html[data-layout="grid"] .player-card {
 
 /* Card being actively dragged */
 .player-card.dragging {
-  opacity: 0.45;
-  transform: scale(0.98);
-  box-shadow: none !important;
-  pointer-events: none;
-  transition:
-    opacity 0.15s ease,
-    transform 0.15s ease;
+  display: none !important;
 }
 
 /* Floating drag ghost clone */
