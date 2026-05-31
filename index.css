@@ -402,9 +402,11 @@ html[data-layout="grid"] .player-card {
   height: auto;
 }
 
-.player-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+  .player-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+  }
 }
 
 /* Card Header elements */
@@ -530,7 +532,7 @@ html[data-layout="grid"] .score-display {
   font-size: 34px;
 }
 
-.player-card:active .score-display {
+.card-score-body:active .score-display {
   transform: scale(0.96);
 }
 
