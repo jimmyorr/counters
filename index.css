@@ -1852,7 +1852,21 @@ dialog[open].history-log-dialog {
 /* --------------------------------------------------------------------------
    15. Responsive Styling overrides
    -------------------------------------------------------------------------- */
-@media (min-width: 600px) {
+@media (min-width: 600px) and (max-width: 1024px) {
+  :root {
+    --max-app-width: 100%;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+  }
+}
+
+@media (min-width: 1025px) {
+  :root {
+    --max-app-width: 800px;
+  }
+
   body {
     background-color: var(--bg-primary);
   }
