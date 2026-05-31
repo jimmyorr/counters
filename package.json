@@ -1,11 +1,13 @@
 {
-  "name": "score-counter",
-  "version": "1.0.0",
-  "description": "Minimalist premium score keeping webapp",
+  "name": "counters",
+  "version": "0.0.2",
+  "description": "Minimalist score keeping app",
   "main": "index.html",
   "scripts": {
-    "dev": "npx -y serve .",
-    "start": "npx -y serve ."
+    "dev": "vite",
+    "build": "vite build",
+    "release": "npm version patch --no-git-tag-version && npm run build",
+    "preview": "vite preview"
   },
   "keywords": [
     "score",
@@ -15,5 +17,8 @@
     "vanilla"
   ],
   "author": "Jimmy Orr",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^8.0.14"
+  }
 }
