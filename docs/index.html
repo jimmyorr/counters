@@ -75,8 +75,8 @@
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-BnpJiWeS.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BvP8YlKx.css">
+    <script type="module" crossorigin src="./assets/index-BIeTWxk_.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-yx5uIGTI.css">
   </head>
   <body>
     <!-- App Header -->
@@ -189,13 +189,8 @@
               <line x1="16" x2="22" y1="11" y2="11" />
             </svg>
           </div>
-          <h2>No counters added yet</h2>
-          <p>
-            Click the "+" icon in the top right, or the button below, to add
-            your first counter.
-          </p>
           <button class="primary-btn" id="btn-empty-add-player">
-            Add first counter
+            Get started
           </button>
         </div>
       </section>
@@ -318,29 +313,30 @@
       id="calculator-dialog"
       class="bottom-sheet-dialog"
       aria-labelledby="calc-dialog-title"
-      closedby="any"
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
         <h2 id="calc-dialog-title" class="sheet-title">Name</h2>
-        <button
-          class="sheet-close-btn"
-          commandfor="calculator-dialog"
-          command="close"
-          aria-label="Close sheet"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="currentColor"
+        <div class="header-actions">
+          <button
+            class="sheet-close-btn"
+            commandfor="calculator-dialog"
+            command="close"
+            aria-label="Close sheet"
           >
-            <path
-              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
-            />
-          </svg>
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="currentColor"
+            >
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div class="bottom-sheet-body">
@@ -370,76 +366,24 @@
             <div class="math-display-wrapper">
               <span class="math-op-indicator">+</span>
               <input
-                type="text"
+                type="number"
                 class="math-number-input"
                 id="calc-number-input"
-                readonly
                 placeholder="0"
                 aria-label="Pending score adjustment"
               />
             </div>
           </div>
 
-          <!-- Custom Numeric Pad -->
-          <div class="calc-numpad">
-            <button class="num-btn" data-key="1">1</button>
-            <button class="num-btn" data-key="2">2</button>
-            <button class="num-btn" data-key="3">3</button>
-            <button
-              class="num-btn op-key"
-              id="calc-btn-backspace"
-              title="Backspace"
-              aria-label="Backspace"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="20"
-                height="20"
-                fill="currentColor"
-              >
-                <path
-                  d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59 10.41 17z"
-                />
-              </svg>
-            </button>
-
-            <button class="num-btn" data-key="4">4</button>
-            <button class="num-btn" data-key="5">5</button>
-            <button class="num-btn" data-key="6">6</button>
-            <button
-              class="num-btn op-key"
-              id="calc-btn-clear"
-              aria-label="Clear entry"
-            >
-              C
-            </button>
-
-            <button class="num-btn" data-key="7">7</button>
-            <button class="num-btn" data-key="8">8</button>
-            <button class="num-btn" data-key="9">9</button>
-            <button
-              class="num-btn submit-key"
-              id="calc-btn-submit"
-              aria-label="Apply math"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="24"
-                height="24"
-                fill="currentColor"
-              >
-                <path
-                  d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"
-                />
-              </svg>
-            </button>
-
-            <button class="num-btn double-key" data-key="00">00</button>
-            <button class="num-btn" data-key="0">0</button>
-            <button class="num-btn" data-key=".">.</button>
-          </div>
+          <!-- Apply Adjustment Button -->
+          <button
+            type="submit"
+            class="primary-btn full-width"
+            id="calc-btn-submit"
+            style="margin-top: 20px; font-size: 16px; font-weight: 600; padding: 14px 24px;"
+          >
+            Apply adjustment
+          </button>
         </div>
       </div>
     </dialog>
@@ -449,7 +393,6 @@
       id="edit-player-dialog"
       class="bottom-sheet-dialog full-sheet-dialog"
       aria-labelledby="edit-dialog-title"
-      closedby="any"
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
@@ -495,7 +438,7 @@
       </div>
 
       <div class="bottom-sheet-body">
-        <form class="edit-form" id="edit-player-form" method="dialog">
+        <form class="edit-form" id="edit-player-form" method="dialog" autocomplete="off">
           <!-- Palette circular selectors -->
           <div class="color-palette-wrapper">
             <span class="palette-desc">Color</span>
@@ -506,14 +449,14 @@
 
           <!-- Text details -->
           <div class="form-group">
-            <label for="edit-name">Name</label>
+            <label for="edit-label">Label</label>
             <input
               type="text"
-              id="edit-name"
+              id="edit-label"
               class="form-input"
               required
               autocomplete="new-password"
-              placeholder="Name"
+              placeholder="Label"
             />
           </div>
 
@@ -572,7 +515,6 @@
       id="main-menu-dialog"
       class="options-menu-dialog"
       aria-labelledby="main-menu-title"
-      closedby="any"
     >
       <div class="options-dialog-header">
         <h2 id="main-menu-title">Menu</h2>
@@ -597,20 +539,6 @@
       </div>
       <div class="options-dialog-body" style="padding-top: 8px">
         <div class="selection-stack" style="gap: 8px">
-          <button class="select-row-btn" id="menu-btn-view-options">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              fill="currentColor"
-            >
-              <path
-                d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"
-              />
-            </svg>
-            <span>Display options</span>
-          </button>
 
           <button class="select-row-btn" id="menu-btn-open-settings">
             <svg
@@ -643,7 +571,7 @@
                 d="M5.828 7l2.536 2.536L6.95 10.95 2 6l4.95-4.95 1.414 1.414L5.828 5H13a8 8 0 1 1 0 16H4v-2h9a6 6 0 1 0 0-12H5.828z"
               />
             </svg>
-            <span>Reset scores</span>
+            <span>Reset all counters</span>
           </button>
 
           <button
@@ -673,29 +601,30 @@
       id="settings-dialog"
       class="bottom-sheet-dialog full-sheet-dialog"
       aria-labelledby="settings-dialog-title"
-      closedby="any"
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
         <h2 id="settings-dialog-title" class="sheet-title">Settings</h2>
-        <button
-          class="sheet-close-btn"
-          commandfor="settings-dialog"
-          command="close"
-          aria-label="Close settings"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="currentColor"
+        <div class="header-actions">
+          <button
+            class="sheet-close-btn"
+            commandfor="settings-dialog"
+            command="close"
+            aria-label="Close settings"
           >
-            <path
-              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
-            />
-          </svg>
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="currentColor"
+            >
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div class="bottom-sheet-body">
@@ -763,7 +692,7 @@
                 type="text"
                 class="settings-input"
                 id="setting-quick-add-values"
-                value="5, 10, 15, 20, 50, 100, 200"
+                value="5, 10, 15, 20, 50, 100"
               />
             </div>
           </div>
@@ -780,7 +709,6 @@
       id="options-dialog"
       class="options-menu-dialog"
       aria-labelledby="options-dialog-title"
-      closedby="any"
     >
       <div class="options-dialog-header">
         <h2 id="options-dialog-title">Display options</h2>
@@ -918,33 +846,32 @@
 
     <!-- 4. Custom Confirm Dialog -->
     <dialog id="confirm-dialog" class="bottom-sheet-dialog">
-      <div class="sheet-content">
-        <div class="sheet-header">
-          <h2 class="sheet-title" id="confirm-dialog-title">Confirm action</h2>
-        </div>
-        <div class="sheet-body" style="padding-top: 10px">
-          <p
-            id="confirm-dialog-message"
-            style="
-              margin-bottom: 24px;
-              color: var(--text-secondary);
-              text-align: center;
-              font-size: 15px;
-              line-height: 1.5;
-            "
-          ></p>
-          <div style="display: flex; gap: 12px; width: 100%">
-            <button class="secondary-btn full-width" id="confirm-btn-cancel">
-              Cancel
-            </button>
-            <button
-              class="primary-btn full-width"
-              id="confirm-btn-ok"
-              style="background-color: #f85c5c; color: #ffffff"
-            >
-              Confirm
-            </button>
-          </div>
+      <div class="bottom-sheet-header">
+        <div class="drag-handle"></div>
+        <h2 class="sheet-title" id="confirm-dialog-title">Confirm action</h2>
+      </div>
+      <div class="bottom-sheet-body" style="padding-top: 10px">
+        <p
+          id="confirm-dialog-message"
+          style="
+            margin-bottom: 24px;
+            color: var(--text-secondary);
+            text-align: center;
+            font-size: 15px;
+            line-height: 1.5;
+          "
+        ></p>
+        <div style="display: flex; gap: 12px; width: 100%">
+          <button class="secondary-btn full-width" id="confirm-btn-cancel">
+            Cancel
+          </button>
+          <button
+            class="primary-btn full-width"
+            id="confirm-btn-ok"
+            style="background-color: #f85c5c; color: #ffffff"
+          >
+            Confirm
+          </button>
         </div>
       </div>
     </dialog>
@@ -954,7 +881,6 @@
       id="history-dialog"
       class="history-log-dialog"
       aria-labelledby="history-dialog-title"
-      closedby="any"
     >
       <div class="history-header">
         <h2 id="history-dialog-title">History</h2>
@@ -1021,6 +947,67 @@
           </svg>
           <p>No transactions logged yet.</p>
         </div>
+      </div>
+    </dialog>
+
+    <!-- 7. Minimal Edit Name Dialog -->
+    <dialog id="edit-name-dialog" class="bottom-sheet-dialog">
+      <div class="bottom-sheet-header">
+        <div class="drag-handle"></div>
+        <h2 class="sheet-title">Edit name</h2>
+      </div>
+      <div class="bottom-sheet-body" style="padding-top: 10px">
+        <form id="edit-name-form" method="dialog" autocomplete="off" style="width: 100%">
+          <div class="form-group" style="margin-bottom: 20px">
+            <input
+              type="text"
+              id="edit-name-input"
+              class="form-input"
+              required
+              autocomplete="new-password"
+              placeholder="Name"
+              style="width: 100%; box-sizing: border-box"
+            />
+          </div>
+          <div style="display: flex; gap: 12px; width: 100%">
+            <button type="button" class="secondary-btn full-width" commandfor="edit-name-dialog" command="close">
+              Cancel
+            </button>
+            <button type="submit" class="primary-btn full-width" id="edit-name-save-btn">
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- 8. Minimal Edit Value Dialog -->
+    <dialog id="edit-value-dialog" class="bottom-sheet-dialog">
+      <div class="bottom-sheet-header">
+        <div class="drag-handle"></div>
+        <h2 class="sheet-title">Edit value</h2>
+      </div>
+      <div class="bottom-sheet-body" style="padding-top: 10px">
+        <form id="edit-value-form" method="dialog" autocomplete="off" style="width: 100%">
+          <div class="form-group" style="margin-bottom: 20px">
+            <input
+              type="number"
+              id="edit-value-input"
+              class="form-input"
+              required
+              placeholder="Value"
+              style="width: 100%; box-sizing: border-box"
+            />
+          </div>
+          <div style="display: flex; gap: 12px; width: 100%">
+            <button type="button" class="secondary-btn full-width" commandfor="edit-value-dialog" command="close">
+              Cancel
+            </button>
+            <button type="submit" class="primary-btn full-width" id="edit-value-save-btn">
+              Save
+            </button>
+          </div>
+        </form>
       </div>
     </dialog>
 
