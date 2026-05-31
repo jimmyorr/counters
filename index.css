@@ -1679,9 +1679,11 @@ dialog[open].options-menu-dialog {
   box-shadow: var(--card-shadow);
   width: calc(100% - 32px);
   max-width: 420px;
-  max-height: 70vh;
+  /* Use dvh so PWA/notch devices use the true visible viewport height */
+  max-height: min(70dvh, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 80px));
   position: fixed;
-  top: 50%;
+  /* Shift vertical center to account for top/bottom safe area asymmetry */
+  top: calc(50% + (env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) / 2);
   left: 50%;
   transform: translate(-50%, -50%) scale(0.92);
   opacity: 0;
