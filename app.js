@@ -349,8 +349,10 @@
     listWrapper.innerHTML = state.counters
       .map((player) => {
         const swatch = colorSwatches[player.color] || colorSwatches[0];
+        const isNewClass = player.isNew ? " animate-entry" : "";
+        delete player.isNew;
         return `
-        <div class="player-card ${swatch.class}" data-player-id="${player.id}" style="--card-theme: ${swatch.hex}">
+        <div class="player-card ${swatch.class}${isNewClass}" data-player-id="${player.id}" style="--card-theme: ${swatch.hex}">
           <!-- Card Top Info Bar -->
           <div class="card-header">
             <button class="card-btn btn-player-reset" title="Reset score" aria-label="Reset score for ${player.name}">
@@ -995,6 +997,7 @@
           color: colorId,
           increment,
           resetValue,
+          isNew: true,
         };
         state.counters.push(newPlayer);
         saveCounters();
@@ -1044,12 +1047,38 @@
           (c) => c.id === state.activePlayerIdForEdit,
         );
         if (idx !== -1) {
-          state.counters.splice(idx, 1);
-          saveCounters();
+          const playerId = state.activePlayerIdForEdit;
+          const cardEl = $(`.player-card[data-player-id="${playerId}"]`);
+
+          const completeDeletion = () => {
+            state.counters.splice(idx, 1);
+            saveCounters();
+            renderCountersList();
+            showToast(`Counter deleted`);
+            playResetSound();
+          };
+
           dialog.close();
-          renderCountersList();
-          showToast(`Counter deleted`);
-          playResetSound();
+
+          if (cardEl) {
+            // Lock height to current actual pixel height to allow smooth CSS transition to 0
+            cardEl.style.height = `${cardEl.offsetHeight}px`;
+
+            // Force a reflow to make the height lock take effect
+            void cardEl.offsetHeight;
+
+            cardEl.classList.add("animate-exit");
+            const animations = cardEl.getAnimations();
+            if (animations.length > 0) {
+              Promise.allSettled(animations.map((a) => a.finished)).then(
+                completeDeletion,
+              );
+            } else {
+              setTimeout(completeDeletion, 300);
+            }
+          } else {
+            completeDeletion();
+          }
         }
       });
     });
@@ -1152,6 +1181,7 @@
       color: colorId,
       increment: 1,
       resetValue: 0,
+      isNew: true,
     };
 
     state.counters.push(newPlayer);
