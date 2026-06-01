@@ -156,7 +156,7 @@
         </button>
       </div>
     </header>
- 
+
     <!-- Main View Screens -->
     <main class="app-main">
       <!-- Tab 1: Counters View -->
@@ -169,7 +169,7 @@
         <div class="counters-container" id="counters-list-wrapper">
           <!-- Injected Dynamically by JavaScript -->
         </div>
- 
+
         <!-- Empty State -->
         <div class="empty-state hidden" id="empty-state-view">
           <div class="placeholder-icon">
@@ -202,10 +202,11 @@
         </div>
       </section>
 
-      <!-- Tab 2: Dice View Placeholder -->
+      <!-- Tab 2: Dice View -->
       <section class="tab-content" id="tab-dice" data-view="dice">
-        <div class="placeholder-container">
-          <div class="placeholder-icon shake-animation">
+        <div class="dice-container">
+          <!-- Static/Animated Dice Icon -->
+          <div class="placeholder-icon shake-animation" id="dice-shake-icon">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -219,11 +220,46 @@
             </svg>
           </div>
           <h2>Quick roll</h2>
-          <p>Roll a standard six-sided die.</p>
-          <button class="primary-btn dice-roll-btn" id="btn-roll-placeholder">
-            Roll quick 1D6
+
+          <!-- Component A: Dice Type Selector -->
+          <div class="dice-type-row" id="dice-type-selector">
+            <button class="dice-type-btn" data-type="4">d4</button>
+            <button class="dice-type-btn active" data-type="6">d6</button>
+            <button class="dice-type-btn" data-type="8">d8</button>
+            <button class="dice-type-btn" data-type="10">d10</button>
+            <button class="dice-type-btn" data-type="12">d12</button>
+            <button class="dice-type-btn" data-type="20">d20</button>
+          </div>
+
+          <!-- Component B: Dice Count Stepper -->
+          <div class="dice-stepper-row">
+            <button
+              class="stepper-btn"
+              id="btn-dice-minus"
+              aria-label="Decrease dice count"
+            >
+              −
+            </button>
+            <span class="stepper-value" id="dice-count-display">1</span>
+            <button
+              class="stepper-btn"
+              id="btn-dice-plus"
+              aria-label="Increase dice count"
+            >
+              +
+            </button>
+          </div>
+
+          <!-- Component C: Dynamic Action Button -->
+          <button class="primary-btn dice-roll-action-btn" id="btn-roll-action">
+            Roll 1d6
           </button>
-          <div class="quick-dice-result" id="placeholder-dice-result">-</div>
+
+          <!-- Component D: Result Container -->
+          <div class="dice-result-card" id="dice-result-card">
+            <div class="dice-result-breakdown" id="dice-result-breakdown"></div>
+            <div class="dice-result-total" id="dice-result-total">-</div>
+          </div>
         </div>
       </section>
 
@@ -354,7 +390,7 @@
             <!-- Injected dynamically by JavaScript, e.g. +5, +10, +50 -->
           </div>
 
-           <p class="tweak-caption">
+          <p class="tweak-caption">
             You can tweak these values in the Settings
           </p>
 
@@ -389,7 +425,7 @@
             type="submit"
             class="primary-btn full-width"
             id="calc-btn-submit"
-            style="font-size: 16px; font-weight: 600; padding: 14px 24px;"
+            style="font-size: 16px; font-weight: 600; padding: 14px 24px"
           >
             Apply
           </button>
@@ -447,7 +483,12 @@
       </div>
 
       <div class="bottom-sheet-body">
-        <form class="edit-form" id="edit-counter-form" method="dialog" autocomplete="off">
+        <form
+          class="edit-form"
+          id="edit-counter-form"
+          method="dialog"
+          autocomplete="off"
+        >
           <!-- Palette circular selectors -->
           <div class="color-palette-wrapper">
             <span class="palette-desc">Color</span>
@@ -548,7 +589,6 @@
       </div>
       <div class="options-dialog-body" style="padding-top: 8px">
         <div class="selection-stack" style="gap: 8px">
-
           <button class="select-row-btn" id="menu-btn-open-settings">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -654,9 +694,7 @@
                 <span class="slider-round"></span>
               </label>
             </div>
- 
- 
- 
+
             <!-- Theme selector -->
             <div class="settings-row">
               <div class="settings-info">
@@ -672,7 +710,7 @@
               </select>
             </div>
           </div>
- 
+
           <div class="settings-section">
             <h3>Value customizations</h3>
 
@@ -955,7 +993,12 @@
         <h2 class="sheet-title">Edit name</h2>
       </div>
       <div class="bottom-sheet-body" style="padding-top: 10px">
-        <form id="edit-name-form" method="dialog" autocomplete="off" style="width: 100%">
+        <form
+          id="edit-name-form"
+          method="dialog"
+          autocomplete="off"
+          style="width: 100%"
+        >
           <div class="form-group" style="margin-bottom: 20px">
             <input
               type="text"
@@ -968,10 +1011,19 @@
             />
           </div>
           <div style="display: flex; gap: 12px; width: 100%">
-            <button type="button" class="secondary-btn full-width" commandfor="edit-name-dialog" command="close">
+            <button
+              type="button"
+              class="secondary-btn full-width"
+              commandfor="edit-name-dialog"
+              command="close"
+            >
               Cancel
             </button>
-            <button type="submit" class="primary-btn full-width" id="edit-name-save-btn">
+            <button
+              type="submit"
+              class="primary-btn full-width"
+              id="edit-name-save-btn"
+            >
               Save
             </button>
           </div>
@@ -986,7 +1038,12 @@
         <h2 class="sheet-title">Edit value</h2>
       </div>
       <div class="bottom-sheet-body" style="padding-top: 10px">
-        <form id="edit-value-form" method="dialog" autocomplete="off" style="width: 100%">
+        <form
+          id="edit-value-form"
+          method="dialog"
+          autocomplete="off"
+          style="width: 100%"
+        >
           <div class="form-group" style="margin-bottom: 20px">
             <input
               type="number"
@@ -998,10 +1055,19 @@
             />
           </div>
           <div style="display: flex; gap: 12px; width: 100%">
-            <button type="button" class="secondary-btn full-width" commandfor="edit-value-dialog" command="close">
+            <button
+              type="button"
+              class="secondary-btn full-width"
+              commandfor="edit-value-dialog"
+              command="close"
+            >
               Cancel
             </button>
-            <button type="submit" class="primary-btn full-width" id="edit-value-save-btn">
+            <button
+              type="submit"
+              class="primary-btn full-width"
+              id="edit-value-save-btn"
+            >
               Save
             </button>
           </div>

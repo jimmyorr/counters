@@ -1676,27 +1676,107 @@
   // 18. Placeholders Interactive Actions (Extra Premium Polish!)
   // ------------------------------------------------------------------------
   const setupPlaceholdersInteractions = () => {
-    // 1. Dice Roller
-    const diceBtn = $("#btn-roll-placeholder");
-    const diceResult = $("#placeholder-dice-result");
-    const diceIcon = $(".placeholder-icon.shake-animation");
+    // 1. Redesigned Dice Roller
+    const diceShakeIcon = $("#dice-shake-icon");
+    const diceTypeSelector = $("#dice-type-selector");
+    const diceCountDisplay = $("#dice-count-display");
+    const btnDiceMinus = $("#btn-dice-minus");
+    const btnDicePlus = $("#btn-dice-plus");
+    const btnRollAction = $("#btn-roll-action");
+    const diceResultCard = $("#dice-result-card");
+    const diceResultBreakdown = $("#dice-result-breakdown");
+    const diceResultTotal = $("#dice-result-total");
 
-    if (diceBtn && diceResult && diceIcon) {
-      diceBtn.addEventListener("click", () => {
+    // Tracks dice configuration
+    let currentDiceType = 6;
+    let currentDiceCount = 1;
+
+    const updateRollButtonLabel = () => {
+      if (btnRollAction) {
+        btnRollAction.textContent = `Roll ${currentDiceCount}d${currentDiceType}`;
+      }
+    };
+
+    if (diceTypeSelector) {
+      const typeButtons = diceTypeSelector.querySelectorAll(".dice-type-btn");
+      typeButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          typeButtons.forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentDiceType = parseInt(btn.getAttribute("data-type")) || 6;
+          updateRollButtonLabel();
+          playClickSound(650, 500, 0.05, 0.04);
+        });
+      });
+    }
+
+    if (btnDiceMinus) {
+      btnDiceMinus.addEventListener("click", () => {
+        if (currentDiceCount > 1) {
+          currentDiceCount--;
+          if (diceCountDisplay) {
+            diceCountDisplay.textContent = currentDiceCount;
+          }
+          updateRollButtonLabel();
+          playClickSound(550, 450, 0.05, 0.04);
+        }
+      });
+    }
+
+    if (btnDicePlus) {
+      btnDicePlus.addEventListener("click", () => {
+        if (currentDiceCount < 20) {
+          currentDiceCount++;
+          if (diceCountDisplay) {
+            diceCountDisplay.textContent = currentDiceCount;
+          }
+          updateRollButtonLabel();
+          playClickSound(650, 750, 0.05, 0.04);
+        }
+      });
+    }
+
+    if (
+      btnRollAction &&
+      diceResultTotal &&
+      diceResultBreakdown &&
+      diceShakeIcon &&
+      diceResultCard
+    ) {
+      btnRollAction.addEventListener("click", () => {
         // Trigger shaking animation
-        diceIcon.classList.add("active");
-        diceBtn.disabled = true;
-        diceResult.textContent = "...";
-        diceResult.classList.remove("rolled");
+        diceShakeIcon.classList.add("active");
+        btnRollAction.disabled = true;
+        diceResultTotal.textContent = "...";
+        diceResultTotal.classList.remove("animate-pop");
+        diceResultBreakdown.textContent = "";
+        diceResultCard.classList.remove("rolled");
 
         playDiceSound();
 
         setTimeout(() => {
-          diceIcon.classList.remove("active");
-          const roll = Math.floor(Math.random() * 6) + 1;
-          diceResult.textContent = roll;
-          diceResult.classList.add("rolled");
-          diceBtn.disabled = false;
+          diceShakeIcon.classList.remove("active");
+
+          let total = 0;
+          const rolls = [];
+          for (let i = 0; i < currentDiceCount; i++) {
+            const roll = Math.floor(Math.random() * currentDiceType) + 1;
+            rolls.push(roll);
+            total += roll;
+          }
+
+          // State 2: Roll Result
+          diceResultTotal.textContent = total;
+          diceResultTotal.classList.add("animate-pop");
+          diceResultCard.classList.add("rolled");
+
+          if (currentDiceCount > 1) {
+            diceResultBreakdown.textContent = `(${rolls.join(" + ")})`;
+          } else {
+            diceResultBreakdown.textContent = "";
+          }
+
+          btnRollAction.disabled = false;
           playClickSound(600, 800, 0.08, 0.05);
         }, 400);
       });
