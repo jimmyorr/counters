@@ -1047,10 +1047,14 @@
           (c) => c.id === state.activePlayerIdForEdit,
         );
         if (idx !== -1) {
+          const player = state.counters[idx];
           const playerId = state.activePlayerIdForEdit;
           const cardEl = $(`.player-card[data-player-id="${playerId}"]`);
 
           const completeDeletion = () => {
+            if (player) {
+              addHistoryLog(player, "Deleted counter", player.score, player.score);
+            }
             state.counters.splice(idx, 1);
             saveCounters();
             renderCountersList();
