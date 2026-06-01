@@ -1370,12 +1370,19 @@
 
   // Helper: History Log Writer
   const addHistoryLog = (counter, actionLabel, oldValue, newValue) => {
+    let progressionVal = "";
+    if (typeof oldValue === "string" && newValue === undefined) {
+      progressionVal = oldValue;
+    } else {
+      progressionVal = `${formatNumber(oldValue)} → ${formatNumber(newValue)}`;
+    }
+
     const log = {
       id: Date.now().toString(),
       counterName: counter.name,
       color: counter.color,
       actionLabel: actionLabel,
-      progression: `${formatNumber(oldValue)} → ${formatNumber(newValue)}`,
+      progression: progressionVal,
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -1775,6 +1782,17 @@
           } else {
             diceResultBreakdown.textContent = "";
           }
+
+          // Log dice roll to history
+          let progressionText = `Result: ${total}`;
+          if (currentDiceCount > 1 && currentDiceCount <= 5) {
+            progressionText += ` (${rolls.join(" + ")})`;
+          }
+          addHistoryLog(
+            { name: "Dice roll", color: 3 },
+            `Rolled ${currentDiceCount}d${currentDiceType}`,
+            progressionText
+          );
 
           btnRollAction.disabled = false;
           playClickSound(600, 800, 0.08, 0.05);
