@@ -67,13 +67,6 @@
 
       if (savedCounters) {
         state.counters = JSON.parse(savedCounters);
-        // Seamless migration: migrate score -> value
-        state.counters.forEach((c) => {
-          if (c.score !== undefined && c.value === undefined) {
-            c.value = c.score;
-            delete c.score;
-          }
-        });
       } else {
         state.counters = [];
         saveCounters();
@@ -85,13 +78,6 @@
 
       if (savedHistory) {
         state.history = JSON.parse(savedHistory);
-        // Seamless migration: migrate playerName -> counterName
-        state.history.forEach((h) => {
-          if (h.playerName !== undefined && h.counterName === undefined) {
-            h.counterName = h.playerName;
-            delete h.playerName;
-          }
-        });
       } else {
         state.history = [];
       }
