@@ -473,6 +473,12 @@
       const card = header.closest(".counter-card");
       if (!card) return;
 
+      // If the entry animation is still running, strip it immediately
+      // so that getBoundingClientRect captures the true un-transformed bounds.
+      if (card.classList.contains("animate-entry")) {
+        card.classList.remove("animate-entry");
+      }
+
       // Measure pointer offset relative to card top-left
       const rect = card.getBoundingClientRect();
       const offsetX = e.clientX - rect.left;
