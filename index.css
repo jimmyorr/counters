@@ -1136,7 +1136,7 @@ input:checked + .slider-round:before {
 
 .danger-btn-outline {
   background-color: transparent;
-  border: 1.5px solid #f85c5c;
+  box-shadow: inset 0 0 0 1.5px #f85c5c;
   color: #f85c5c;
 }
 
