@@ -122,7 +122,7 @@
         </button>
         <button
           class="header-btn"
-          id="btn-add-player"
+          id="btn-add-counter"
           title="Add counter"
           aria-label="Add counter"
         >
@@ -156,7 +156,7 @@
         </button>
       </div>
     </header>
-
+ 
     <!-- Main View Screens -->
     <main class="app-main">
       <!-- Tab 1: Counters View -->
@@ -169,7 +169,7 @@
         <div class="counters-container" id="counters-list-wrapper">
           <!-- Injected Dynamically by JavaScript -->
         </div>
-
+ 
         <!-- Empty State -->
         <div class="empty-state hidden" id="empty-state-view">
           <div class="empty-illustration">
@@ -188,7 +188,7 @@
               <line x1="16" x2="22" y1="11" y2="11" />
             </svg>
           </div>
-          <button class="primary-btn" id="btn-empty-add-player">
+          <button class="primary-btn" id="btn-empty-add-counter">
             Get started
           </button>
         </div>
@@ -371,7 +371,7 @@
                 class="math-number-input"
                 id="calc-number-input"
                 placeholder="0"
-                aria-label="Pending score adjustment"
+                aria-label="Pending value adjustment"
               />
             </div>
           </div>
@@ -389,9 +389,9 @@
       </div>
     </dialog>
 
-    <!-- 2. Edit Player Dialog -->
+    <!-- 2. Edit Counter Dialog -->
     <dialog
-      id="edit-player-dialog"
+      id="edit-counter-dialog"
       class="bottom-sheet-dialog full-sheet-dialog"
       aria-labelledby="edit-dialog-title"
     >
@@ -419,7 +419,7 @@
           </button>
           <button
             class="sheet-close-btn"
-            commandfor="edit-player-dialog"
+            commandfor="edit-counter-dialog"
             command="close"
             aria-label="Close edit panel"
           >
@@ -439,7 +439,7 @@
       </div>
 
       <div class="bottom-sheet-body">
-        <form class="edit-form" id="edit-player-form" method="dialog" autocomplete="off">
+        <form class="edit-form" id="edit-counter-form" method="dialog" autocomplete="off">
           <!-- Palette circular selectors -->
           <div class="color-palette-wrapper">
             <span class="palette-desc">Color</span>
@@ -462,10 +462,10 @@
           </div>
 
           <div class="form-group">
-            <label for="edit-score">Current value</label>
+            <label for="edit-value-input-details">Current value</label>
             <input
               type="number"
-              id="edit-score"
+              id="edit-value-input-details"
               class="form-input"
               required
               placeholder="0"
@@ -560,7 +560,7 @@
             style="height: 1px; background: var(--border-light); margin: 4px 0"
           ></div>
 
-          <button class="select-row-btn" id="menu-btn-reset-scores">
+          <button class="select-row-btn" id="menu-btn-reset-counters">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -638,7 +638,7 @@
               <div class="settings-info">
                 <span class="setting-title">Audio feedback</span>
                 <span class="setting-desc"
-                  >Play subtle click tones during score adjustments</span
+                  >Play subtle click tones during value adjustments</span
                 >
               </div>
               <label class="switch-toggle">
@@ -646,9 +646,9 @@
                 <span class="slider-round"></span>
               </label>
             </div>
-
-
-
+ 
+ 
+ 
             <!-- Theme selector -->
             <div class="settings-row">
               <div class="settings-info">
@@ -664,9 +664,9 @@
               </select>
             </div>
           </div>
-
+ 
           <div class="settings-section">
-            <h3>Score customizations</h3>
+            <h3>Value customizations</h3>
 
             <!-- Quick Add Editing -->
             <div class="settings-column">
@@ -781,7 +781,7 @@
                   d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"
                 />
               </svg>
-              <span>Show the highest score</span>
+              <span>Show the highest value</span>
             </button>
 
             <button class="select-row-btn" id="topbar-opt-lowest">
@@ -796,7 +796,7 @@
                   d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"
                 />
               </svg>
-              <span>Show the lowest score</span>
+              <span>Show the lowest value</span>
             </button>
 
             <button class="select-row-btn" id="topbar-opt-total">
@@ -811,7 +811,7 @@
                   d="M19 18v2H5v-2l6-6-6-6V4h14v2h-9.35L14 12l-4.35 6H19z"
                 />
               </svg>
-              <span>Show the total score</span>
+              <span>Show the total value</span>
             </button>
           </div>
         </div>

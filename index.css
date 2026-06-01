@@ -64,7 +64,7 @@
   --accent-light: rgba(85, 177, 249, 0.15);
 }
 
-/* HSL Player Swatch Presets (Vibrant, high-contrast, premium) */
+/* HSL Counter Swatch Presets (Vibrant, high-contrast, premium) */
 .card-color-0 {
   --card-theme: hsl(224, 76%, 36%);
   --card-text: #ffffff;
@@ -129,7 +129,7 @@ a,
 img,
 svg,
 .nav-item,
-.player-card {
+.counter-card {
   -webkit-user-drag: none;
   user-drag: none;
 }
@@ -145,7 +145,7 @@ button:focus-visible,
 a:focus-visible,
 select:focus-visible,
 .nav-item:focus-visible,
-.player-card:focus-visible {
+.counter-card:focus-visible {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
 }
@@ -377,8 +377,8 @@ html[data-layout="grid"] .counters-container {
   gap: 12px;
 }
 
-/* Individual Player Cards */
-.player-card {
+/* Individual Counter Cards */
+.counter-card {
   position: relative;
   background-color: var(--card-theme, var(--bg-secondary));
   color: var(--card-text, var(--text-primary));
@@ -398,12 +398,12 @@ html[data-layout="grid"] .counters-container {
 }
 
 /* Adjust card height slightly in grid mode */
-html[data-layout="grid"] .player-card {
+html[data-layout="grid"] .counter-card {
   height: auto;
 }
 
 @media (hover: hover) {
-  .player-card:hover {
+  .counter-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
   }
@@ -432,7 +432,7 @@ html[data-layout="grid"] .player-card {
 }
 
 /* Card being actively dragged */
-.player-card.dragging {
+.counter-card.dragging {
   display: none !important;
 }
 
@@ -485,7 +485,7 @@ html[data-layout="grid"] .player-card {
   transform: scale(0.88);
 }
 
-.player-name {
+.counter-name {
   font-family: var(--font-secondary);
   font-size: 14px;
   font-weight: 600;
@@ -507,8 +507,8 @@ html[data-layout="grid"] .player-card {
   position: relative;
 }
 
-/* Card Score Center Display */
-.card-score-body {
+/* Card Value Center Display */
+.card-value-body {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -517,7 +517,7 @@ html[data-layout="grid"] .player-card {
   padding: 0;
 }
 
-.score-display {
+.value-display {
   font-family: var(--font-primary);
   font-size: 46px;
   font-weight: 400;
@@ -527,11 +527,11 @@ html[data-layout="grid"] .player-card {
 }
 
 /* Grid display resizing */
-html[data-layout="grid"] .score-display {
+html[data-layout="grid"] .value-display {
   font-size: 34px;
 }
 
-.card-score-body:active .score-display {
+.card-value-body:active .value-display {
   transform: scale(0.96);
 }
 
@@ -560,7 +560,7 @@ html[data-layout="grid"] .score-display {
 
 /* Hovering card brightens the signs slightly */
 @media (hover: hover) {
-  .player-card:hover .card-direct-zone {
+  .counter-card:hover .card-direct-zone {
     opacity: 0.7;
   }
 
@@ -1442,7 +1442,7 @@ dialog[open].bottom-sheet-dialog {
 }
 
 /* --------------------------------------------------------------------------
-   11. Edit Player Details Sheet
+   11. Edit Counter Details Sheet
    -------------------------------------------------------------------------- */
 .edit-form {
   display: flex;
@@ -1759,7 +1759,7 @@ dialog[open].options-menu-dialog {
   align-items: baseline;
 }
 
-.history-player {
+.history-counter {
   font-size: 13.5px;
   font-weight: 600;
   color: var(--text-primary);
@@ -1875,13 +1875,13 @@ dialog[open].options-menu-dialog {
 }
 
 /* --------------------------------------------------------------------------
-   16. Entry and Exit Animations for Player Cards & Reduced Motion Preference
+   16. Entry and Exit Animations for Counter Cards & Reduced Motion Preference
    -------------------------------------------------------------------------- */
-.player-card.animate-entry {
+.counter-card.animate-entry {
   animation: card-fade-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-.player-card.animate-exit {
+.counter-card.animate-exit {
   opacity: 0 !important;
   transform: scale(0.85) translateY(-8px) !important;
   height: 0 !important;
@@ -1944,10 +1944,10 @@ dialog[open].options-menu-dialog {
     }
   }
 
-  .player-card.animate-entry {
+  .counter-card.animate-entry {
     animation: card-fade-in-reduced 0.15s ease-out forwards;
   }
-  .player-card.animate-exit {
+  .counter-card.animate-exit {
     animation: card-fade-out-reduced 0.15s ease-out forwards;
   }
 

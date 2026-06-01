@@ -33,14 +33,14 @@
     currentTab: "counters",
 
     // Active actions/focus states
-    activePlayerIdForCalc: null,
-    activePlayerIdForEdit: null,
+    activeCounterIdForCalc: null,
+    activeCounterIdForEdit: null,
     calcPendingOperation: "plus", // 'plus' or 'minus'
     calcPendingValue: "",
     autoSortTimeout: null,
   };
 
-  // Pre-configured player palette color swatches
+  // Pre-configured counter palette color swatches
   const colorSwatches = [
     { id: 0, class: "card-color-0", hex: "#162e8a" }, // Deep Blue
     { id: 1, class: "card-color-1", hex: "#e86a1a" }, // Bright Orange
@@ -67,6 +67,13 @@
 
       if (savedCounters) {
         state.counters = JSON.parse(savedCounters);
+        // Seamless migration: migrate score -> value
+        state.counters.forEach((c) => {
+          if (c.score !== undefined && c.value === undefined) {
+            c.value = c.score;
+            delete c.score;
+          }
+        });
       } else {
         state.counters = [];
         saveCounters();
@@ -78,6 +85,13 @@
 
       if (savedHistory) {
         state.history = JSON.parse(savedHistory);
+        // Seamless migration: migrate playerName -> counterName
+        state.history.forEach((h) => {
+          if (h.playerName !== undefined && h.counterName === undefined) {
+            h.counterName = h.playerName;
+            delete h.playerName;
+          }
+        });
       } else {
         state.history = [];
       }
@@ -266,7 +280,7 @@
   // 7. Dynamic View Renderers (Counters List, Leader Top Bar)
   // ------------------------------------------------------------------------
 
-  // Re-calculate the leader bar metrics (Highest, Lowest, or Total score)
+  // Re-calculate the leader bar metrics (Highest, Lowest, or Total value)
   const renderLeaderBar = () => {
     const leaderContainer = $("#header-leader-container");
     const leaderText = $("#header-leader-text");
@@ -284,8 +298,8 @@
     const type = state.settings.topBarContent;
 
     if (type === "highest") {
-      // Find highest scoring player
-      const leader = [...state.counters].sort((a, b) => b.score - a.score)[0];
+      // Find highest value counter
+      const leader = [...state.counters].sort((a, b) => b.value - a.value)[0];
       const swatch = colorSwatches[leader.color] || colorSwatches[0];
       leaderContainer.style.setProperty("--leader-color", swatch.hex);
       leaderContainer.style.setProperty("--leader-bg", `${swatch.hex}15`);
@@ -295,9 +309,9 @@
         `<path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/>`;
       leaderText.textContent = leader.name;
     } else if (type === "lowest") {
-      // Find lowest scoring player
+      // Find lowest value counter
       const lowLeader = [...state.counters].sort(
-        (a, b) => a.score - b.score,
+        (a, b) => a.value - b.value,
       )[0];
       const swatch = colorSwatches[lowLeader.color] || colorSwatches[0];
       leaderContainer.style.setProperty("--leader-color", swatch.hex);
@@ -308,9 +322,9 @@
         `<path d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"/>`;
       leaderText.textContent = lowLeader.name;
     } else if (type === "total") {
-      // Find sum of all scores
-      const totalScore = state.counters.reduce(
-        (sum, item) => sum + item.score,
+      // Find sum of all values
+      const totalValue = state.counters.reduce(
+        (sum, item) => sum + item.value,
         0,
       );
       leaderContainer.style.removeProperty("--leader-color");
@@ -319,11 +333,11 @@
 
       leaderContainer.querySelector(".leader-icon svg").innerHTML =
         `<path d="M19 18v2H5v-2l6-6-6-6V4h14v2h-9.35L14 12l-4.35 6H19z"/>`;
-      leaderText.textContent = `Total: ${formatNumber(totalScore)}`;
+      leaderText.textContent = `Total: ${formatNumber(totalValue)}`;
     }
   };
 
-  // Compile individual player card templates into the wrapper list
+  // Compile individual counter card templates into the wrapper list
   const renderCountersList = () => {
     const listWrapper = $("#counters-list-wrapper");
     const emptyState = $("#empty-state-view");
@@ -347,21 +361,21 @@
 
     // Inject rendered HTML for each array item
     listWrapper.innerHTML = state.counters
-      .map((player) => {
-        const swatch = colorSwatches[player.color] || colorSwatches[0];
-        const isNewClass = player.isNew ? " animate-entry" : "";
-        delete player.isNew;
+      .map((counter) => {
+        const swatch = colorSwatches[counter.color] || colorSwatches[0];
+        const isNewClass = counter.isNew ? " animate-entry" : "";
+        delete counter.isNew;
         return `
-        <div class="player-card ${swatch.class}${isNewClass}" data-player-id="${player.id}" style="--card-theme: ${swatch.hex}">
+        <div class="counter-card ${swatch.class}${isNewClass}" data-counter-id="${counter.id}" style="--card-theme: ${swatch.hex}">
           <!-- Card Top Info Bar -->
           <div class="card-header">
-            <button class="card-btn btn-player-reset" title="Reset score" aria-label="Reset score for ${player.name}">
+            <button class="card-btn btn-counter-reset" title="Reset value" aria-label="Reset value for ${counter.name}">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                 <path d="M5.828 7l2.536 2.536L6.95 10.95 2 6l4.95-4.95 1.414 1.414L5.828 5H13a8 8 0 1 1 0 16H4v-2h9a6 6 0 1 0 0-12H5.828z"/>
               </svg>
             </button>
-            <span class="player-name">${player.name}</span>
-            <button class="card-btn btn-player-edit" title="Edit details" aria-label="Edit details for ${player.name}">
+            <span class="counter-name">${counter.name}</span>
+            <button class="card-btn btn-counter-edit" title="Edit details" aria-label="Edit details for ${counter.name}">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                 <path d="M5 18.084V22h3.916L21.416 9.497l-3.916-3.916L5 18.084zm3.084 1.916H7v-1.084l11.5-11.5 1.084 1.084L8.084 20zM19.416 3.584L21.416 5.584a2 2 0 0 1 0 2.828L20.416 9.412l-3.916-3.916L17.5 4.5a2 2 0 0 1 2.828 0z"/>
               </svg>
@@ -373,8 +387,8 @@
             <div class="card-direct-zone card-direct-zone-minus" data-action="decrement" aria-label="Subtract direct increment">−</div>
             
             <!-- Middle Display -->
-            <div class="card-score-body data-action-calc">
-              <span class="score-display">${formatNumber(player.score)}</span>
+            <div class="card-value-body data-action-calc">
+              <span class="value-display">${formatNumber(counter.value)}</span>
             </div>
             
             <!-- Card Direct Click increment zone -->
@@ -400,9 +414,9 @@
 
     state.autoSortTimeout = setTimeout(() => {
       if (state.settings.topBarContent === "lowest") {
-        state.counters.sort((a, b) => a.score - b.score);
+        state.counters.sort((a, b) => a.value - b.value);
       } else {
-        state.counters.sort((a, b) => b.score - a.score);
+        state.counters.sort((a, b) => b.value - a.value);
       }
       saveCounters();
       renderCountersList();
@@ -420,7 +434,7 @@
 
     const getCardEls = () => [
       ...listWrapper.querySelectorAll(
-        ".player-card:not(.drag-placeholder):not(.dragging)",
+        ".counter-card:not(.drag-placeholder):not(.dragging)",
       ),
     ];
 
@@ -467,11 +481,11 @@
       if (state.settings.autoSort) return;
       const header = e.target.closest(".card-header");
       if (!header) return;
-      // Skip if tapping a button or the player name inside the header
-      if (e.target.closest("button") || e.target.closest(".player-name"))
+      // Skip if tapping a button or the counter name inside the header
+      if (e.target.closest("button") || e.target.closest(".counter-name"))
         return;
 
-      const card = header.closest(".player-card");
+      const card = header.closest(".counter-card");
       if (!card) return;
 
       // Measure pointer offset relative to card top-left
@@ -545,8 +559,8 @@
       placeholder.remove();
 
       // Determine original index to remove from
-      const playerId = card.getAttribute("data-player-id");
-      const fromIdx = state.counters.findIndex((c) => c.id === playerId);
+      const counterId = card.getAttribute("data-counter-id");
+      const fromIdx = state.counters.findIndex((c) => c.id === counterId);
       if (fromIdx === -1) return;
 
       // Count how many real cards are before the placeholder position to get target index
@@ -558,7 +572,7 @@
         if (
           child !== card &&
           child !== placeholder &&
-          child.classList.contains("player-card")
+          child.classList.contains("counter-card")
         ) {
           seen++;
         }
@@ -615,7 +629,7 @@
           <div class="history-badge"></div>
           <div class="history-details">
             <div class="history-row-top">
-              <span class="history-player">${log.playerName}</span>
+              <span class="history-counter">${log.counterName}</span>
               <span class="history-time">${log.timestamp}</span>
             </div>
             <div class="history-row-bottom">
@@ -801,21 +815,21 @@
       const btn = e.target.closest("button[data-quick-val]");
       if (!btn) return;
 
-      if (state.activePlayerIdForCalc === null) return;
+      if (state.activeCounterIdForCalc === null) return;
 
-      const player = state.counters.find(
-        (c) => c.id === state.activePlayerIdForCalc,
+      const counter = state.counters.find(
+        (c) => c.id === state.activeCounterIdForCalc,
       );
-      if (!player) return;
+      if (!counter) return;
 
       const deltaValue = parseFloat(btn.getAttribute("data-quick-val") || "0");
       if (deltaValue === 0) return;
 
-      const oldScore = player.score;
+      const oldValue = counter.value;
       const signedDelta =
         state.calcPendingOperation === "plus" ? deltaValue : -deltaValue;
 
-      player.score += signedDelta;
+      counter.value += signedDelta;
       saveCounters();
 
       // History logging
@@ -823,7 +837,7 @@
         signedDelta > 0
           ? `+${formatNumber(deltaValue)}`
           : `−${formatNumber(deltaValue)}`;
-      addHistoryLog(player, label, oldScore, player.score);
+      addHistoryLog(counter, label, oldValue, counter.value);
 
       dialog.close();
       renderCountersList();
@@ -833,12 +847,12 @@
 
     // Calculate Checkmark confirm submit button
     $("#calc-btn-submit").addEventListener("click", () => {
-      if (state.activePlayerIdForCalc === null) return;
+      if (state.activeCounterIdForCalc === null) return;
 
-      const player = state.counters.find(
-        (c) => c.id === state.activePlayerIdForCalc,
+      const counter = state.counters.find(
+        (c) => c.id === state.activeCounterIdForCalc,
       );
-      if (!player) return;
+      if (!counter) return;
 
       const deltaValue = parseFloat($("#calc-number-input").value || "0");
       if (deltaValue === 0) {
@@ -846,11 +860,11 @@
         return;
       }
 
-      const oldScore = player.score;
+      const oldValue = counter.value;
       const signedDelta =
         state.calcPendingOperation === "plus" ? deltaValue : -deltaValue;
 
-      player.score += signedDelta;
+      counter.value += signedDelta;
       saveCounters();
 
       // History logging
@@ -858,7 +872,7 @@
         signedDelta > 0
           ? `+${formatNumber(deltaValue)}`
           : `−${formatNumber(deltaValue)}`;
-      addHistoryLog(player, label, oldScore, player.score);
+      addHistoryLog(counter, label, oldValue, counter.value);
 
       dialog.close();
       renderCountersList();
@@ -890,16 +904,16 @@
       }
     });
 
-    $("#menu-btn-reset-scores")?.addEventListener("click", () => {
+    $("#menu-btn-reset-counters")?.addEventListener("click", () => {
       dialog.close();
       if (state.counters.length === 0) return;
       showConfirmDialog(
         "Reset all counters to their base target values?",
         () => {
-          state.counters.forEach((player) => {
-            const oldScore = player.score;
-            player.score = player.resetValue || 0;
-            addHistoryLog(player, "Reset counter", oldScore, player.score);
+          state.counters.forEach((counter) => {
+            const oldValue = counter.value;
+            counter.value = counter.resetValue || 0;
+            addHistoryLog(counter, "Reset counter", oldValue, counter.value);
           });
           saveCounters();
           renderCountersList();
@@ -938,11 +952,11 @@
   };
 
   // ------------------------------------------------------------------------
-  // 13. Edit / Add player Panel Logic
+  // 13. Edit / Add counter Panel Logic
   // ------------------------------------------------------------------------
-  const setupEditPlayerDialog = () => {
-    const dialog = $("#edit-player-dialog");
-    const form = $("#edit-player-form");
+  const setupEditCounterDialog = () => {
+    const dialog = $("#edit-counter-dialog");
+    const form = $("#edit-counter-form");
 
     if (!dialog || !form) return;
 
@@ -974,7 +988,7 @@
       });
     }
 
-    // Form submission (Save player adjustments or Add player)
+    // Form submission (Save counter adjustments or Add counter)
     form.addEventListener("submit", (e) => {
       e.preventDefault();
 
@@ -984,43 +998,43 @@
         : 0;
 
       const name = $("#edit-label").value.trim();
-      const score = parseInt($("#edit-score").value || "0");
+      const value = parseInt($("#edit-value-input-details").value || "0");
       const increment = parseInt($("#edit-increment").value || "1");
       const resetValue = parseInt($("#edit-reset-val").value || "0");
 
-      if (state.activePlayerIdForEdit === "new") {
+      if (state.activeCounterIdForEdit === "new") {
         // Create new counter
-        const newPlayer = {
+        const newCounter = {
           id: Date.now().toString(),
           name,
-          score,
+          value,
           color: colorId,
           increment,
           resetValue,
           isNew: true,
         };
-        state.counters.push(newPlayer);
+        state.counters.push(newCounter);
         saveCounters();
-        addHistoryLog(newPlayer, "Added counter", 0, score);
+        addHistoryLog(newCounter, "Added counter", 0, value);
         showToast(`Counter "${name}" added`);
       } else {
         // Edit existing counter
-        const player = state.counters.find(
-          (c) => c.id === state.activePlayerIdForEdit,
+        const counter = state.counters.find(
+          (c) => c.id === state.activeCounterIdForEdit,
         );
-        if (player) {
-          const oldScore = player.score;
-          player.name = name;
-          player.score = score;
-          player.color = colorId;
-          player.increment = increment;
-          player.resetValue = resetValue;
+        if (counter) {
+          const oldValue = counter.value;
+          counter.name = name;
+          counter.value = value;
+          counter.color = colorId;
+          counter.increment = increment;
+          counter.resetValue = resetValue;
           saveCounters();
 
-          if (oldScore !== score) {
-            addHistoryLog(player, "Edited score", oldScore, score);
+          if (oldValue !== value) {
+            addHistoryLog(counter, "Edited value", oldValue, value);
           } else {
-            addHistoryLog(player, "Edited details", oldScore, score);
+            addHistoryLog(counter, "Edited details", oldValue, value);
           }
           showToast(`Counter saved`);
         }
@@ -1032,28 +1046,28 @@
       playSuccessSound();
     });
 
-    // Delete player trash bin button
+    // Delete counter trash bin button
     $("#edit-btn-delete").addEventListener("click", () => {
       if (
-        state.activePlayerIdForEdit === "new" ||
-        state.activePlayerIdForEdit === null
+        state.activeCounterIdForEdit === "new" ||
+        state.activeCounterIdForEdit === null
       ) {
         dialog.close();
         return;
       }
 
-      showConfirmDialog("Delete this player?", () => {
+      showConfirmDialog("Delete this counter?", () => {
         const idx = state.counters.findIndex(
-          (c) => c.id === state.activePlayerIdForEdit,
+          (c) => c.id === state.activeCounterIdForEdit,
         );
         if (idx !== -1) {
-          const player = state.counters[idx];
-          const playerId = state.activePlayerIdForEdit;
-          const cardEl = $(`.player-card[data-player-id="${playerId}"]`);
+          const counter = state.counters[idx];
+          const counterId = state.activeCounterIdForEdit;
+          const cardEl = $(`.counter-card[data-counter-id="${counterId}"]`);
 
           const completeDeletion = () => {
-            if (player) {
-              addHistoryLog(player, "Deleted counter", player.score, player.score);
+            if (counter) {
+              addHistoryLog(counter, "Deleted counter", counter.value, counter.value);
             }
             state.counters.splice(idx, 1);
             saveCounters();
@@ -1100,13 +1114,13 @@
       const newName = $("#edit-name-input").value.trim();
       if (!newName) return;
 
-      const player = state.counters.find(
-        (c) => c.id === state.activePlayerIdForEdit,
+      const counter = state.counters.find(
+        (c) => c.id === state.activeCounterIdForEdit,
       );
-      if (player) {
-        player.name = newName;
+      if (counter) {
+        counter.name = newName;
         saveCounters();
-        addHistoryLog(player, "Edited name", player.score, player.score);
+        addHistoryLog(counter, "Edited name", counter.value, counter.value);
         showToast("Name updated");
       }
 
@@ -1129,14 +1143,14 @@
       if (newValueStr === "") return;
       const newValue = parseInt(newValueStr);
 
-      const player = state.counters.find(
-        (c) => c.id === state.activePlayerIdForEdit,
+      const counter = state.counters.find(
+        (c) => c.id === state.activeCounterIdForEdit,
       );
-      if (player) {
-        const oldScore = player.score;
-        player.score = newValue;
+      if (counter) {
+        const oldValue = counter.value;
+        counter.value = newValue;
         saveCounters();
-        addHistoryLog(player, "Edited score", oldScore, player.score);
+        addHistoryLog(counter, "Edited value", oldValue, counter.value);
         showToast("Value updated");
       }
 
@@ -1178,19 +1192,19 @@
         ? unusedNames[Math.floor(Math.random() * unusedNames.length)]
         : nameChoices[Math.floor(Math.random() * nameChoices.length)];
 
-    const newPlayer = {
+    const newCounter = {
       id: Date.now().toString(),
       name,
-      score: 0,
+      value: 0,
       color: colorId,
       increment: 1,
       resetValue: 0,
       isNew: true,
     };
 
-    state.counters.push(newPlayer);
+    state.counters.push(newCounter);
     saveCounters();
-    addHistoryLog(newPlayer, "Added counter", 0, 0);
+    addHistoryLog(newCounter, "Added counter", 0, 0);
     showToast(`Counter "${name}" added`);
     renderCountersList();
     triggerAutoSortWithDebounce();
@@ -1198,30 +1212,30 @@
   };
 
   // Open Edit Dialog wrapper for editing counter details
-  const openEditPlayerDetails = (playerId) => {
-    const player = state.counters.find((c) => c.id === playerId);
-    if (!player) return;
+  const openEditCounterDetails = (counterId) => {
+    const counter = state.counters.find((c) => c.id === counterId);
+    if (!counter) return;
 
-    state.activePlayerIdForEdit = playerId;
+    state.activeCounterIdForEdit = counterId;
 
-    $("#edit-dialog-title").textContent = `Edit ${player.name}`;
+    $("#edit-dialog-title").textContent = `Edit ${counter.name}`;
     $("#edit-btn-delete").style.display = "flex"; // Show trash
 
     // Populate form values
-    $("#edit-label").value = player.name;
-    $("#edit-score").value = player.score;
-    $("#edit-increment").value = player.increment;
-    $("#edit-reset-val").value = player.resetValue;
+    $("#edit-label").value = counter.name;
+    $("#edit-value-input-details").value = counter.value;
+    $("#edit-increment").value = counter.increment;
+    $("#edit-reset-val").value = counter.resetValue;
 
     // Set palette swatch selected
     $$(".palette-swatch").forEach((swatch) => {
       const id = parseInt(swatch.getAttribute("data-color-id"));
-      swatch.classList.toggle("active", id === player.color);
+      swatch.classList.toggle("active", id === counter.color);
     });
 
-    const dialog = $("#edit-player-dialog");
+    const dialog = $("#edit-counter-dialog");
     if (dialog) {
-      const swatch = colorSwatches[player.color] || colorSwatches[0];
+      const swatch = colorSwatches[counter.color] || colorSwatches[0];
       dialog.style.setProperty("--sheet-theme", swatch.hex);
       dialog.showModal();
       playClickSound();
@@ -1342,13 +1356,13 @@
   };
 
   // Helper: History Log Writer
-  const addHistoryLog = (player, actionLabel, oldScore, newScore) => {
+  const addHistoryLog = (counter, actionLabel, oldValue, newValue) => {
     const log = {
       id: Date.now().toString(),
-      playerName: player.name,
-      color: player.color,
+      counterName: counter.name,
+      color: counter.color,
       actionLabel: actionLabel,
-      progression: `${formatNumber(oldScore)} → ${formatNumber(newScore)}`,
+      progression: `${formatNumber(oldValue)} → ${formatNumber(newValue)}`,
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -1369,12 +1383,12 @@
   // 17. Event Delegation & Interactions
   // ------------------------------------------------------------------------
   const bindDOMEvents = () => {
-    let scorePressTimer = null;
-    let scorePressActive = false;
-    let scorePressMoved = false;
-    let scorePressStartX = 0;
-    let scorePressStartY = 0;
-    let scorePressPlayerId = null;
+    let valuePressTimer = null;
+    let valuePressActive = false;
+    let valuePressMoved = false;
+    let valuePressStartX = 0;
+    let valuePressStartY = 0;
+    let valuePressCounterId = null;
 
     // Prevent long press context menu globally except on text inputs to feel like a native app
     window.addEventListener("contextmenu", (e) => {
@@ -1399,44 +1413,44 @@
     });
 
     // Header buttons
-    $("#btn-add-player").addEventListener("click", () => {
+    $("#btn-add-counter").addEventListener("click", () => {
       addNewCounterStreamlined();
     });
 
-    $("#btn-empty-add-player").addEventListener("click", () => {
+    $("#btn-empty-add-counter").addEventListener("click", () => {
       addNewCounterStreamlined();
     });
 
     const listWrapper = $("#counters-list-wrapper");
     if (listWrapper) {
       listWrapper.addEventListener("pointerdown", (e) => {
-        const scoreBody = e.target.closest(".card-score-body");
-        if (!scoreBody) return;
+        const valueBody = e.target.closest(".card-value-body");
+        if (!valueBody) return;
 
-        const card = scoreBody.closest(".player-card");
+        const card = valueBody.closest(".counter-card");
         if (!card) return;
 
-        scorePressPlayerId = card.getAttribute("data-player-id");
-        scorePressActive = true;
-        scorePressMoved = false;
-        scorePressStartX = e.clientX;
-        scorePressStartY = e.clientY;
+        valuePressCounterId = card.getAttribute("data-counter-id");
+        valuePressActive = true;
+        valuePressMoved = false;
+        valuePressStartX = e.clientX;
+        valuePressStartY = e.clientY;
 
-        scorePressTimer = setTimeout(() => {
-          if (scorePressActive && !scorePressMoved) {
-            scorePressActive = false;
-            const player = state.counters.find(
-              (c) => c.id === scorePressPlayerId,
+        valuePressTimer = setTimeout(() => {
+          if (valuePressActive && !valuePressMoved) {
+            valuePressActive = false;
+            const counter = state.counters.find(
+              (c) => c.id === valuePressCounterId,
             );
-            if (player) {
-              state.activePlayerIdForEdit = scorePressPlayerId;
+            if (counter) {
+              state.activeCounterIdForEdit = valuePressCounterId;
               const valueInput = $("#edit-value-input");
               if (valueInput) {
-                valueInput.value = player.score;
+                valueInput.value = counter.value;
               }
               const dialog = $("#edit-value-dialog");
               if (dialog) {
-                const swatch = colorSwatches[player.color] || colorSwatches[0];
+                const swatch = colorSwatches[counter.color] || colorSwatches[0];
                 dialog.style.setProperty("--sheet-theme", swatch.hex);
                 setTimeout(() => {
                   dialog.showModal();
@@ -1449,47 +1463,47 @@
       });
 
       listWrapper.addEventListener("pointermove", (e) => {
-        if (!scorePressActive) return;
+        if (!valuePressActive) return;
         const dist = Math.hypot(
-          e.clientX - scorePressStartX,
-          e.clientY - scorePressStartY,
+          e.clientX - valuePressStartX,
+          e.clientY - valuePressStartY,
         );
         if (dist > 10) {
-          scorePressMoved = true;
-          if (scorePressTimer) {
-            clearTimeout(scorePressTimer);
-            scorePressTimer = null;
+          valuePressMoved = true;
+          if (valuePressTimer) {
+            clearTimeout(valuePressTimer);
+            valuePressTimer = null;
           }
         }
       });
 
       listWrapper.addEventListener("pointerup", (e) => {
-        // Only handle releases originating from an active score-body press to prevent
+        // Only handle releases originating from an active value-body press to prevent
         // interfering with card reordering drags or other container gestures.
-        if (!scorePressActive) return;
+        if (!valuePressActive) return;
 
-        scorePressActive = false;
-        if (scorePressTimer) {
-          clearTimeout(scorePressTimer);
-          scorePressTimer = null;
+        valuePressActive = false;
+        if (valuePressTimer) {
+          clearTimeout(valuePressTimer);
+          valuePressTimer = null;
         }
 
-        const scoreBody = e.target.closest(".card-score-body");
-        if (scoreBody) {
+        const valueBody = e.target.closest(".card-value-body");
+        if (valueBody) {
           e.preventDefault();
         }
 
-        if (!scorePressMoved) {
-          const player = state.counters.find(
-            (c) => c.id === scorePressPlayerId,
+        if (!valuePressMoved) {
+          const counter = state.counters.find(
+            (c) => c.id === valuePressCounterId,
           );
-          if (player) {
-            state.activePlayerIdForCalc = scorePressPlayerId;
+          if (counter) {
+            state.activeCounterIdForCalc = valuePressCounterId;
             state.calcPendingValue = "";
             state.calcPendingOperation = "plus";
 
             $("#calc-dialog-title").textContent =
-              `${player.name}: ${formatNumber(player.score)}`;
+              `${counter.name}: ${formatNumber(counter.value)}`;
             $("#calc-number-input").value = "";
             $(".math-op-indicator").textContent = "+";
             $$(".op-btn").forEach((b) => b.classList.remove("active"));
@@ -1497,7 +1511,7 @@
 
             const dialog = $("#calculator-dialog");
             if (dialog) {
-              const swatch = colorSwatches[player.color] || colorSwatches[0];
+              const swatch = colorSwatches[counter.color] || colorSwatches[0];
               dialog.style.setProperty("--sheet-theme", swatch.hex);
 
               const titleEl = $("#calc-dialog-title");
@@ -1516,22 +1530,22 @@
       });
 
       listWrapper.addEventListener("pointercancel", () => {
-        scorePressActive = false;
-        if (scorePressTimer) {
-          clearTimeout(scorePressTimer);
-          scorePressTimer = null;
+        valuePressActive = false;
+        if (valuePressTimer) {
+          clearTimeout(valuePressTimer);
+          valuePressTimer = null;
         }
       });
     }
 
     // Counters List Delegated clicks (optimizing performance & garbage collection)
     $("#counters-list-wrapper").addEventListener("click", (e) => {
-      const card = e.target.closest(".player-card");
+      const card = e.target.closest(".counter-card");
       if (!card) return;
 
-      const playerId = card.getAttribute("data-player-id");
-      const player = state.counters.find((c) => c.id === playerId);
-      if (!player) return;
+      const counterId = card.getAttribute("data-counter-id");
+      const counter = state.counters.find((c) => c.id === counterId);
+      if (!counter) return;
 
       // 1. Direct Edge Subtract click target
       const zoneMinus = e.target.closest(".card-direct-zone-minus");
@@ -1539,14 +1553,14 @@
         zoneMinus.classList.add("zone-active-flash");
         setTimeout(() => zoneMinus.classList.remove("zone-active-flash"), 300);
 
-        const oldScore = player.score;
-        player.score -= player.increment || 1;
+        const oldValue = counter.value;
+        counter.value -= counter.increment || 1;
         saveCounters();
         addHistoryLog(
-          player,
-          `−${formatNumber(player.increment)}`,
-          oldScore,
-          player.score,
+          counter,
+          `−${formatNumber(counter.increment)}`,
+          oldValue,
+          counter.value,
         );
 
         renderCountersList();
@@ -1561,14 +1575,14 @@
         zonePlus.classList.add("zone-active-flash");
         setTimeout(() => zonePlus.classList.remove("zone-active-flash"), 300);
 
-        const oldScore = player.score;
-        player.score += player.increment || 1;
+        const oldValue = counter.value;
+        counter.value += counter.increment || 1;
         saveCounters();
         addHistoryLog(
-          player,
-          `+${formatNumber(player.increment)}`,
-          oldScore,
-          player.score,
+          counter,
+          `+${formatNumber(counter.increment)}`,
+          oldValue,
+          counter.value,
         );
 
         renderCountersList();
@@ -1577,17 +1591,17 @@
         return;
       }
 
-      // 3.5. Click on the player name (opens minimal edit name dialog)
-      const playerName = e.target.closest(".player-name");
-      if (playerName) {
-        state.activePlayerIdForEdit = playerId;
+      // 3.5. Click on the counter name (opens minimal edit name dialog)
+      const counterName = e.target.closest(".counter-name");
+      if (counterName) {
+        state.activeCounterIdForEdit = counterId;
         const nameInput = $("#edit-name-input");
         if (nameInput) {
-          nameInput.value = player.name;
+          nameInput.value = counter.name;
         }
         const dialog = $("#edit-name-dialog");
         if (dialog) {
-          const swatch = colorSwatches[player.color] || colorSwatches[0];
+          const swatch = colorSwatches[counter.color] || colorSwatches[0];
           dialog.style.setProperty("--sheet-theme", swatch.hex);
           dialog.showModal();
           playClickSound();
@@ -1596,18 +1610,18 @@
       }
 
       // 4. Edit details button click target
-      if (e.target.closest(".btn-player-edit")) {
-        openEditPlayerDetails(playerId);
+      if (e.target.closest(".btn-counter-edit")) {
+        openEditCounterDetails(counterId);
         return;
       }
 
-      // 5. Quick Reset score target
-      if (e.target.closest(".btn-player-reset")) {
-        showConfirmDialog(`Reset score for ${player.name} to 0?`, () => {
-          const oldScore = player.score;
-          player.score = 0;
+      // 5. Quick Reset value target
+      if (e.target.closest(".btn-counter-reset")) {
+        showConfirmDialog(`Reset value for ${counter.name} to 0?`, () => {
+          const oldValue = counter.value;
+          counter.value = 0;
           saveCounters();
-          addHistoryLog(player, "Reset score", oldScore, player.score);
+          addHistoryLog(counter, "Reset value", oldValue, counter.value);
 
           renderCountersList();
           triggerAutoSortWithDebounce();
@@ -1824,7 +1838,7 @@
     setupOptionsDialog();
     setupMainMenuDialog();
     setupCalculatorDialog();
-    setupEditPlayerDialog();
+    setupEditCounterDialog();
     setupEditNameDialog();
     setupEditValueDialog();
     setupHistoryDialog();
