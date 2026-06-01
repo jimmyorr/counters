@@ -702,6 +702,12 @@ html[data-layout="grid"] .value-display {
   margin-bottom: 24px;
 }
 
+.placeholder-icon svg {
+  width: 64px;
+  height: 64px;
+  display: block;
+}
+
 .placeholder-container h2 {
   font-size: 22px;
   color: var(--text-primary);
