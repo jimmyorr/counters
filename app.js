@@ -208,7 +208,6 @@
     }
   };
 
-
   // ------------------------------------------------------------------------
   // 5. Toast Notification System
   // ------------------------------------------------------------------------
@@ -1053,7 +1052,12 @@
 
           const completeDeletion = () => {
             if (counter) {
-              addHistoryLog(counter, "Deleted counter", counter.value, counter.value);
+              addHistoryLog(
+                counter,
+                "Deleted counter",
+                counter.value,
+                counter.value,
+              );
             }
             state.counters.splice(idx, 1);
             saveCounters();
@@ -1170,6 +1174,24 @@
       "Sparrow",
       "Heron",
       "Egret",
+      "Piper",
+      "Merlin",
+      "Kite",
+      "Lark",
+      "Swift",
+      "Jay",
+      "Phoebe",
+      "Starling",
+      "Dunlin",
+      "Thrush",
+      "Vesper",
+      "Magpie",
+      "Tern",
+      "Puffin",
+      "Gull",
+      "Crane",
+      "Plover",
+      "Stilt",
     ];
     const usedNames = state.counters.map((c) => c.name);
     const unusedNames = nameChoices.filter((name) => !usedNames.includes(name));
@@ -1246,7 +1268,6 @@
       saveSettings();
       playClickSound();
     });
-
 
     // Theme selector
     $("#setting-theme").addEventListener("change", (e) => {
