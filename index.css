@@ -43,6 +43,7 @@
   --overlay-bg: rgba(255, 255, 255, 0.96);
   --accent-color: #3b9df8;
   --accent-light: #e6f2fe;
+  --glass-bg: rgba(242, 243, 247, 0.75);
 }
 
 /* Dark Theme Variables (Default) */
@@ -62,6 +63,7 @@
   --overlay-bg: rgba(22, 23, 29, 0.96);
   --accent-color: #55b1f9;
   --accent-light: rgba(85, 177, 249, 0.15);
+  --glass-bg: rgba(13, 14, 17, 0.75);
 }
 
 /* HSL Counter Swatch Presets (Vibrant, high-contrast, premium) */
@@ -236,7 +238,7 @@ body > .app-nav {
 .app-header {
   top: 0;
   height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
-  background-color: rgba(var(--bg-primary), 0.75);
+  background-color: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-light);
@@ -659,6 +661,20 @@ html[data-layout="grid"] .value-display {
   line-height: 1.5;
 }
 
+.empty-state-text-btn {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  cursor: pointer;
+  font-family: var(--font-primary);
+  font-weight: 500;
+  transition: color var(--trans-fast);
+}
+
+.empty-state-text-btn:hover {
+  color: var(--text-primary);
+}
+
 /* Buttons */
 .primary-btn {
   background-color: var(--accent-color);
@@ -755,7 +771,7 @@ html[data-layout="grid"] .value-display {
   color: var(--text-secondary);
   height: 100%;
   box-sizing: border-box;
-  gap: 24px;
+  gap: 16px;
 }
 
 .dice-container .placeholder-icon {
@@ -771,9 +787,10 @@ html[data-layout="grid"] .value-display {
 }
 
 .dice-type-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
   width: 100%;
   max-width: 280px;
 }
@@ -782,7 +799,11 @@ html[data-layout="grid"] .value-display {
   background-color: var(--bg-secondary);
   border: 1.5px solid var(--border-strong);
   color: var(--text-primary);
-  padding: 10px 0;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 12px;
   font-family: var(--font-primary);
   font-weight: 600;
@@ -948,19 +969,19 @@ html[data-layout="grid"] .value-display {
 .timer-increment-row {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 16px;
   margin-bottom: 24px;
   width: 100%;
 }
 
 .timer-inc-btn {
-  background-color: #1e1e24;
-  color: var(--accent-color);
-  border: none;
+  background-color: var(--bg-tertiary);
+  border: 1.5px solid var(--border-light);
+  color: var(--text-primary);
   font-family: var(--font-primary);
   font-weight: 600;
   font-size: 14px;
-  padding: 8px 16px;
+  padding: 10px 16px;
   border-radius: 9999px;
   cursor: pointer;
   transition: all var(--trans-fast);
@@ -1223,7 +1244,7 @@ input:checked + .slider-round:before {
 .app-nav {
   bottom: 0;
   height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
-  background-color: rgba(var(--bg-primary), 0.75);
+  background-color: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-top: 1px solid var(--border-light);
