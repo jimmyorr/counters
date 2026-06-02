@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.0.6
+
+- **Timer:** Implemented a dual-mode stopwatch and dynamic countdown timer with adjustable time increments and increased update frequency.
+- **User interface:** Refined the dice layout, standardized glassmorphic backgrounds for navigation bars, and simplified the empty state UI.
+- **Analytics & improvements:** Added Google Analytics tracking, updated the calculator submit button to dynamically reflect values, and resolved timer reset bugs.
+
 ## 0.0.5
 
 - **Animations:** Added smooth entry and exit transitions for cards and dialogs using discrete transition behaviors.
