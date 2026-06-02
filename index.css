@@ -787,8 +787,8 @@ html[data-layout="grid"] .value-display {
 }
 
 .dice-type-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, auto);
   justify-content: center;
   gap: 12px;
   width: 100%;
