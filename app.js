@@ -1860,6 +1860,9 @@
             clearInterval(timerInterval);
             swStart.textContent = "Start";
             swStart.classList.remove("danger-btn-outline");
+            timerMode = "stopwatch";
+            stopwatchElapsedMs = 0;
+            countdownRemainingMs = 0;
             playSuccessSound();
           }
         }
