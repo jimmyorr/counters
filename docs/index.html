@@ -85,8 +85,8 @@
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-kOgJi2Vc.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-m0nWHCEy.css">
+    <script type="module" crossorigin src="./assets/index-DcRsu9Ro.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-C4at1jCN.css">
   </head>
   <body>
     <!-- App Header -->
@@ -299,6 +299,11 @@
               >00:00.0</span
             >
           </div>
+          <div class="timer-increment-row">
+            <button class="timer-inc-btn" data-secs="10">[+10s]</button>
+            <button class="timer-inc-btn" data-secs="30">[+30s]</button>
+            <button class="timer-inc-btn" data-secs="60">[+60s]</button>
+          </div>
           <div class="timer-controls">
             <button class="primary-btn" id="btn-timer-placeholder-start">
               Start
@@ -324,7 +329,18 @@
             viewBox="0 0 24 24"
             fill="currentColor"
           >
-            <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z" />
+            <defs>
+              <mask id="plus-mask-nav">
+                <rect width="24" height="24" fill="white" />
+                <path
+                  d="M12 6v12M6 12h12"
+                  stroke="black"
+                  stroke-width="2.625"
+                  stroke-linecap="round"
+                />
+              </mask>
+            </defs>
+            <circle cx="12" cy="12" r="11.25" mask="url(#plus-mask-nav)" />
           </svg>
         </span>
         <span class="nav-text">Counters</span>
