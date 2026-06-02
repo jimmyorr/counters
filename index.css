@@ -934,7 +934,7 @@ html[data-layout="grid"] .value-display {
   border: 1px solid var(--border-strong);
   padding: 16px 36px;
   border-radius: 20px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   box-shadow: var(--card-shadow);
 }
 
@@ -945,9 +945,46 @@ html[data-layout="grid"] .value-display {
   color: var(--accent-color);
 }
 
+.timer-increment-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.timer-inc-btn {
+  background-color: #1e1e24;
+  color: var(--accent-color);
+  border: none;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.timer-inc-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.timer-inc-btn:active {
+  transform: scale(0.95);
+}
+
 .timer-controls {
   display: flex;
   gap: 12px;
+}
+
+.secondary-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .shake-animation.active {

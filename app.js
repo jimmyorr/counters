@@ -1834,19 +1834,37 @@
       });
     }
 
-    // 2. Stopwatch
+    // 2. Stopwatch & Countdown Timer
     const swStart = $("#btn-timer-placeholder-start");
     const swReset = $("#btn-timer-placeholder-reset");
     const swDisplay = $("#placeholder-stopwatch-display");
+    const incButtons = $$(".timer-inc-btn");
 
     let timerInterval = null;
     let timerStartTime = 0;
-    let timerElapsedTime = 0;
+    let stopwatchElapsedMs = 0;
+    let countdownRemainingMs = 0;
     let timerRunning = false;
+    let timerMode = "stopwatch"; // "stopwatch" or "countdown"
 
     const updateTimerDisplay = () => {
-      const totalMs =
-        timerElapsedTime + (timerRunning ? Date.now() - timerStartTime : 0);
+      let totalMs = 0;
+      if (timerMode === "stopwatch") {
+        totalMs = stopwatchElapsedMs + (timerRunning ? Date.now() - timerStartTime : 0);
+      } else {
+        totalMs = countdownRemainingMs - (timerRunning ? Date.now() - timerStartTime : 0);
+        if (totalMs <= 0) {
+          totalMs = 0;
+          if (timerRunning) {
+            timerRunning = false;
+            clearInterval(timerInterval);
+            swStart.textContent = "Start";
+            swStart.classList.remove("danger-btn-outline");
+            playSuccessSound();
+          }
+        }
+      }
+
       const minutes = Math.floor(totalMs / 60000);
       const seconds = Math.floor((totalMs % 60000) / 1000);
       const ms = Math.floor((totalMs % 1000) / 100);
@@ -1857,10 +1875,34 @@
       if (swDisplay) {
         swDisplay.textContent = `${mm}:${ss}.${ms}`;
       }
+
+      // Disabled / visually dimmed if timer is at 0
+      if (swReset) {
+        swReset.disabled = (totalMs === 0);
+      }
     };
+
+    // Initialize reset button state
+    if (swReset) {
+      swReset.disabled = true;
+    }
 
     if (swStart && swReset) {
       swStart.addEventListener("click", () => {
+        let currentDisplayMs = 0;
+        if (timerMode === "stopwatch") {
+          currentDisplayMs = stopwatchElapsedMs + (timerRunning ? Date.now() - timerStartTime : 0);
+        } else {
+          currentDisplayMs = countdownRemainingMs - (timerRunning ? Date.now() - timerStartTime : 0);
+        }
+
+        if (currentDisplayMs <= 0 && timerMode === "countdown") {
+          // If we completed a countdown and start again at 0, reset to stopwatch mode
+          timerMode = "stopwatch";
+          stopwatchElapsedMs = 0;
+          countdownRemainingMs = 0;
+        }
+
         if (!timerRunning) {
           // Play/Start
           timerRunning = true;
@@ -1873,18 +1915,27 @@
         } else {
           // Pause
           timerRunning = false;
-          timerElapsedTime += Date.now() - timerStartTime;
+          const delta = Date.now() - timerStartTime;
+          if (timerMode === "stopwatch") {
+            stopwatchElapsedMs += delta;
+          } else {
+            countdownRemainingMs -= delta;
+            if (countdownRemainingMs < 0) countdownRemainingMs = 0;
+          }
           swStart.textContent = "Start";
           swStart.classList.remove("danger-btn-outline");
 
           clearInterval(timerInterval);
           playClickSound(450, 350, 0.05, 0.03);
         }
+        updateTimerDisplay();
       });
 
       swReset.addEventListener("click", () => {
         timerRunning = false;
-        timerElapsedTime = 0;
+        stopwatchElapsedMs = 0;
+        countdownRemainingMs = 0;
+        timerMode = "stopwatch";
         swStart.textContent = "Start";
         swStart.classList.remove("danger-btn-outline");
 
@@ -1893,6 +1944,27 @@
         playResetSound();
       });
     }
+
+    // Bind increment buttons click
+    incButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const secs = parseInt(btn.getAttribute("data-secs")) || 10;
+        const addMs = secs * 1000;
+
+        let currentDisplayMs = 0;
+        if (timerMode === "stopwatch") {
+          currentDisplayMs = stopwatchElapsedMs + (timerRunning ? Date.now() - timerStartTime : 0);
+          timerMode = "countdown";
+          countdownRemainingMs = currentDisplayMs + addMs;
+          stopwatchElapsedMs = 0;
+        } else {
+          countdownRemainingMs += addMs;
+        }
+
+        playClickSound(600, 500, 0.05, 0.03);
+        updateTimerDisplay();
+      });
+    });
   };
 
   // ------------------------------------------------------------------------
