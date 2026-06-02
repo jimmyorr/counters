@@ -759,6 +759,21 @@
     const dialog = $("#calculator-dialog");
     if (!dialog) return;
 
+    const updateSubmitButtonText = () => {
+      const submitBtn = $("#calc-btn-submit");
+      if (!submitBtn) return;
+
+      const valStr = $("#calc-number-input")?.value || "";
+      const val = parseFloat(valStr);
+      const isMinus = state.calcPendingOperation === "minus";
+
+      if (!val || isNaN(val)) {
+        submitBtn.textContent = isMinus ? "Subtract" : "Add";
+      } else {
+        submitBtn.textContent = `${isMinus ? "Subtract" : "Add"} ${formatNumber(val)}`;
+      }
+    };
+
     const updateCalcDisplayDOM = () => {
       const opIndicator = $(".math-op-indicator");
       const opMinus = $("#calc-op-minus");
@@ -786,7 +801,13 @@
           state.calcPendingOperation === "plus",
         );
       }
+
+      updateSubmitButtonText();
     };
+
+    window.updateCalcDisplayDOM = updateCalcDisplayDOM;
+
+    $("#calc-number-input")?.addEventListener("input", updateSubmitButtonText);
 
     // Toggle calculator operators (+ / -)
     $("#calc-op-minus").addEventListener("click", () => {
@@ -1538,9 +1559,9 @@
             $("#calc-dialog-title").textContent =
               `${counter.name}: ${formatNumber(counter.value)}`;
             $("#calc-number-input").value = "";
-            $(".math-op-indicator").textContent = "+";
-            $$(".op-btn").forEach((b) => b.classList.remove("active"));
-            $("#calc-op-plus").classList.add("active");
+            if (window.updateCalcDisplayDOM) {
+              window.updateCalcDisplayDOM();
+            }
 
             const dialog = $("#calculator-dialog");
             if (dialog) {
