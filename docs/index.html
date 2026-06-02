@@ -1014,15 +1014,15 @@
       </div>
     </dialog>
 
-    <!-- 7. Minimal Edit Name Dialog -->
-    <dialog id="edit-name-dialog" class="bottom-sheet-dialog">
+    <!-- 7. Minimal Edit label Dialog -->
+    <dialog id="edit-label-dialog" class="bottom-sheet-dialog">
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
-        <h2 class="sheet-title">Edit name</h2>
+        <h2 class="sheet-title">Edit label</h2>
       </div>
       <div class="bottom-sheet-body" style="padding-top: 10px">
         <form
-          id="edit-name-form"
+          id="edit-label-form"
           method="dialog"
           autocomplete="off"
           style="width: 100%"
@@ -1030,11 +1030,11 @@
           <div class="form-group" style="margin-bottom: 20px">
             <input
               type="text"
-              id="edit-name-input"
+              id="edit-label-input"
               class="form-input"
               required
               autocomplete="new-password"
-              placeholder="Name"
+              placeholder="Label"
               style="width: 100%; box-sizing: border-box"
             />
           </div>
@@ -1042,7 +1042,7 @@
             <button
               type="button"
               class="secondary-btn full-width"
-              commandfor="edit-name-dialog"
+              commandfor="edit-label-dialog"
               command="close"
             >
               Cancel
@@ -1050,7 +1050,7 @@
             <button
               type="submit"
               class="primary-btn full-width"
-              id="edit-name-save-btn"
+              id="edit-label-save-btn"
             >
               Save
             </button>

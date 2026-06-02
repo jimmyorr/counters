@@ -66,7 +66,10 @@
       const savedHistory = localStorage.getItem("counters-history");
 
       if (savedCounters) {
-        state.counters = JSON.parse(savedCounters);
+        state.counters = JSON.parse(savedCounters).map((counter) => ({
+          ...counter,
+          label: counter.label || counter.name || "",
+        }));
       } else {
         state.counters = [];
         saveCounters();
@@ -77,7 +80,10 @@
       }
 
       if (savedHistory) {
-        state.history = JSON.parse(savedHistory);
+        state.history = JSON.parse(savedHistory).map((log) => ({
+          ...log,
+          counterLabel: log.counterLabel || log.counterName || "",
+        }));
       } else {
         state.history = [];
       }
@@ -292,7 +298,7 @@
 
       leaderContainer.querySelector(".leader-icon svg").innerHTML =
         `<path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/>`;
-      leaderText.textContent = leader.name;
+      leaderText.textContent = leader.label;
     } else if (type === "lowest") {
       // Find lowest value counter
       const lowLeader = [...state.counters].sort(
@@ -305,7 +311,7 @@
 
       leaderContainer.querySelector(".leader-icon svg").innerHTML =
         `<path d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"/>`;
-      leaderText.textContent = lowLeader.name;
+      leaderText.textContent = lowLeader.label;
     } else if (type === "total") {
       // Find sum of all values
       const totalValue = state.counters.reduce(
@@ -354,13 +360,13 @@
         <div class="counter-card ${swatch.class}${isNewClass}" data-counter-id="${counter.id}" style="--card-theme: ${swatch.hex}">
           <!-- Card Top Info Bar -->
           <div class="card-header">
-            <button class="card-btn btn-counter-reset" title="Reset value" aria-label="Reset value for ${counter.name}">
+            <button class="card-btn btn-counter-reset" title="Reset value" aria-label="Reset value for ${counter.label}">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                 <path d="M5.828 7l2.536 2.536L6.95 10.95 2 6l4.95-4.95 1.414 1.414L5.828 5H13a8 8 0 1 1 0 16H4v-2h9a6 6 0 1 0 0-12H5.828z"/>
               </svg>
             </button>
-            <span class="counter-name">${counter.name}</span>
-            <button class="card-btn btn-counter-edit" title="Edit details" aria-label="Edit details for ${counter.name}">
+            <span class="counter-name">${counter.label}</span>
+            <button class="card-btn btn-counter-edit" title="Edit details" aria-label="Edit details for ${counter.label}">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                 <path d="M5 18.084V22h3.916L21.416 9.497l-3.916-3.916L5 18.084zm3.084 1.916H7v-1.084l11.5-11.5 1.084 1.084L8.084 20zM19.416 3.584L21.416 5.584a2 2 0 0 1 0 2.828L20.416 9.412l-3.916-3.916L17.5 4.5a2 2 0 0 1 2.828 0z"/>
               </svg>
@@ -620,7 +626,7 @@
           <div class="history-badge"></div>
           <div class="history-details">
             <div class="history-row-top">
-              <span class="history-counter">${log.counterName}</span>
+              <span class="history-counter">${log.counterLabel}</span>
               <span class="history-time">${log.timestamp}</span>
             </div>
             <div class="history-row-bottom">
@@ -1009,7 +1015,7 @@
         ? parseInt(selectedSwatch.getAttribute("data-color-id"))
         : 0;
 
-      const name = $("#edit-label").value.trim();
+      const label = $("#edit-label").value.trim();
       const value = parseInt($("#edit-value-input-details").value || "0");
       const increment = parseInt($("#edit-increment").value || "1");
       const resetValue = parseInt($("#edit-reset-val").value || "0");
@@ -1018,7 +1024,7 @@
         // Create new counter
         const newCounter = {
           id: Date.now().toString(),
-          name,
+          label,
           value,
           color: colorId,
           increment,
@@ -1028,7 +1034,7 @@
         state.counters.push(newCounter);
         saveCounters();
         addHistoryLog(newCounter, "Added counter", 0, value);
-        showToast(`Counter "${name}" added`);
+        showToast(`Counter "${label}" added`);
       } else {
         // Edit existing counter
         const counter = state.counters.find(
@@ -1036,7 +1042,7 @@
         );
         if (counter) {
           const oldValue = counter.value;
-          counter.name = name;
+          counter.label = label;
           counter.value = value;
           counter.color = colorId;
           counter.increment = increment;
@@ -1119,26 +1125,26 @@
     });
   };
 
-  const setupEditNameDialog = () => {
-    const dialog = $("#edit-name-dialog");
-    const form = $("#edit-name-form");
+  const setupEditLabelDialog = () => {
+    const dialog = $("#edit-label-dialog");
+    const form = $("#edit-label-form");
 
     if (!dialog || !form) return;
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
 
-      const newName = $("#edit-name-input").value.trim();
-      if (!newName) return;
+      const newLabel = $("#edit-label-input").value.trim();
+      if (!newLabel) return;
 
       const counter = state.counters.find(
         (c) => c.id === state.activeCounterIdForEdit,
       );
       if (counter) {
-        counter.name = newName;
+        counter.label = newLabel;
         saveCounters();
-        addHistoryLog(counter, "Edited name", counter.value, counter.value);
-        showToast("Name updated");
+        addHistoryLog(counter, "Edited label", counter.value, counter.value);
+        showToast("Label updated");
       }
 
       dialog.close();
@@ -1191,8 +1197,8 @@
         : colorSwatches[Math.floor(Math.random() * colorSwatches.length)];
     const colorId = selectedSwatch.id;
 
-    // Pick an unused placeholder name if possible
-    const nameChoices = [
+    // Pick an unused placeholder label if possible
+    const labelChoices = [
       "Flicker",
       "Robin",
       "Finch",
@@ -1220,16 +1226,18 @@
       "Plover",
       "Stilt",
     ];
-    const usedNames = state.counters.map((c) => c.name);
-    const unusedNames = nameChoices.filter((name) => !usedNames.includes(name));
-    const name =
-      unusedNames.length > 0
-        ? unusedNames[Math.floor(Math.random() * unusedNames.length)]
-        : nameChoices[Math.floor(Math.random() * nameChoices.length)];
+    const usedLabels = state.counters.map((c) => c.label);
+    const unusedLabels = labelChoices.filter(
+      (label) => !usedLabels.includes(label),
+    );
+    const label =
+      unusedLabels.length > 0
+        ? unusedLabels[Math.floor(Math.random() * unusedLabels.length)]
+        : labelChoices[Math.floor(Math.random() * labelChoices.length)];
 
     const newCounter = {
       id: Date.now().toString(),
-      name,
+      label,
       value: 0,
       color: colorId,
       increment: 1,
@@ -1240,7 +1248,7 @@
     state.counters.push(newCounter);
     saveCounters();
     addHistoryLog(newCounter, "Added counter", 0, 0);
-    showToast(`Counter "${name}" added`);
+    showToast(`Counter "${label}" added`);
     renderCountersList();
     triggerAutoSortWithDebounce();
     playSuccessSound();
@@ -1253,11 +1261,11 @@
 
     state.activeCounterIdForEdit = counterId;
 
-    $("#edit-dialog-title").textContent = `Edit ${counter.name}`;
+    $("#edit-dialog-title").textContent = `Edit ${counter.label}`;
     $("#edit-btn-delete").style.display = "flex"; // Show trash
 
     // Populate form values
-    $("#edit-label").value = counter.name;
+    $("#edit-label").value = counter.label;
     $("#edit-value-input-details").value = counter.value;
     $("#edit-increment").value = counter.increment;
     $("#edit-reset-val").value = counter.resetValue;
@@ -1400,7 +1408,7 @@
 
     const log = {
       id: Date.now().toString(),
-      counterName: counter.name,
+      counterLabel: counter.label,
       color: counter.color,
       actionLabel: actionLabel,
       progression: progressionVal,
@@ -1557,7 +1565,7 @@
             state.calcPendingOperation = "plus";
 
             $("#calc-dialog-title").textContent =
-              `${counter.name}: ${formatNumber(counter.value)}`;
+              `${counter.label}: ${formatNumber(counter.value)}`;
             $("#calc-number-input").value = "";
             if (window.updateCalcDisplayDOM) {
               window.updateCalcDisplayDOM();
@@ -1645,15 +1653,15 @@
         return;
       }
 
-      // 3.5. Click on the counter name (opens minimal edit name dialog)
-      const counterName = e.target.closest(".counter-name");
-      if (counterName) {
+      // 3.5. Click on the counter label text (opens minimal edit label dialog)
+      const counterLabel = e.target.closest(".counter-name");
+      if (counterLabel) {
         state.activeCounterIdForEdit = counterId;
-        const nameInput = $("#edit-name-input");
-        if (nameInput) {
-          nameInput.value = counter.name;
+        const labelInput = $("#edit-label-input");
+        if (labelInput) {
+          labelInput.value = counter.label;
         }
-        const dialog = $("#edit-name-dialog");
+        const dialog = $("#edit-label-dialog");
         if (dialog) {
           const swatch = colorSwatches[counter.color] || colorSwatches[0];
           dialog.style.setProperty("--sheet-theme", swatch.hex);
@@ -1671,7 +1679,7 @@
 
       // 5. Quick Reset value target
       if (e.target.closest(".btn-counter-reset")) {
-        showConfirmDialog(`Reset value for ${counter.name} to 0?`, () => {
+        showConfirmDialog(`Reset value for ${counter.label} to 0?`, () => {
           const oldValue = counter.value;
           counter.value = 0;
           saveCounters();
@@ -2059,7 +2067,7 @@
     setupMainMenuDialog();
     setupCalculatorDialog();
     setupEditCounterDialog();
-    setupEditNameDialog();
+    setupEditLabelDialog();
     setupEditValueDialog();
     setupHistoryDialog();
     setupConfirmDialog();
