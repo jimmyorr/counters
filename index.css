@@ -1255,6 +1255,12 @@ input:checked + .slider-round:before {
   transition: transform var(--trans-spring);
 }
 
+.nav-icon svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
 .nav-text {
   font-family: var(--font-secondary);
   font-size: 11px;
