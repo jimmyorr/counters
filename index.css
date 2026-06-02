@@ -609,6 +609,26 @@ html[data-layout="grid"] .value-display {
   display: none;
 }
 
+.empty-state .placeholder-icon {
+  cursor: pointer;
+  outline: none;
+  transition: transform var(--trans-fast) var(--ease-spring);
+}
+
+.empty-state .placeholder-icon:hover {
+  transform: scale(1.08);
+}
+
+.empty-state .placeholder-icon:active {
+  transform: scale(0.94);
+}
+
+.empty-state .placeholder-icon:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
 .empty-illustration {
   color: var(--text-tertiary);
   margin-bottom: 20px;

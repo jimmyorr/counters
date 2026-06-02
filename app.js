@@ -1441,6 +1441,19 @@
       addNewCounterStreamlined();
     });
 
+    const emptyPlaceholder = $("#btn-empty-placeholder-icon");
+    if (emptyPlaceholder) {
+      emptyPlaceholder.addEventListener("click", () => {
+        addNewCounterStreamlined();
+      });
+      emptyPlaceholder.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          addNewCounterStreamlined();
+        }
+      });
+    }
+
     const listWrapper = $("#counters-list-wrapper");
     if (listWrapper) {
       listWrapper.addEventListener("pointerdown", (e) => {
