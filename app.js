@@ -1913,7 +1913,7 @@
           swStart.textContent = "Pause";
           swStart.classList.add("danger-btn-outline");
 
-          timerInterval = setInterval(updateTimerDisplay, 100);
+          timerInterval = setInterval(updateTimerDisplay, 30);
           playClickSound(650, 450, 0.05, 0.03);
         } else {
           // Pause
