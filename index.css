@@ -36,6 +36,8 @@
   --text-primary: #191b22;
   --text-secondary: #697082;
   --text-tertiary: #9da3b4;
+  --text-danger: #d32f2f;
+  --text-button-secondary: #4a5060;
   --border-light: rgba(0, 0, 0, 0.08);
   --border-strong: rgba(0, 0, 0, 0.15);
   --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
@@ -56,6 +58,8 @@
   --text-primary: #f5f6fa;
   --text-secondary: #9aa1b1;
   --text-tertiary: #5d6475;
+  --text-danger: #ff8e8e;
+  --text-button-secondary: #dce0e8;
   --border-light: rgba(255, 255, 255, 0.06);
   --border-strong: rgba(255, 255, 255, 0.12);
   --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
@@ -255,7 +259,7 @@ body > .app-nav {
   gap: 6px;
   font-family: var(--font-secondary);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-primary);
   cursor: pointer;
   padding: 6px 12px;
@@ -724,10 +728,10 @@ html[data-layout="grid"] .value-display {
 
 .secondary-btn {
   background-color: var(--bg-tertiary);
-  color: var(--text-primary);
+  color: var(--text-button-secondary);
   border: 1px solid var(--border-light);
   font-family: var(--font-primary);
-  font-weight: 500;
+  font-weight: 600;
   font-size: 15px;
   padding: 12px 24px;
   border-radius: 12px;
@@ -1202,7 +1206,7 @@ input:checked + .slider-round:before {
 
 /* Danger actions */
 .danger-heading {
-  color: #f85c5c !important;
+  color: var(--text-danger) !important;
 }
 
 .danger-column p {
@@ -1240,8 +1244,8 @@ input:checked + .slider-round:before {
 
 .danger-btn-outline {
   background-color: transparent;
-  box-shadow: inset 0 0 0 1.5px #f85c5c;
-  color: #f85c5c;
+  box-shadow: inset 0 0 0 1.5px var(--text-danger);
+  color: var(--text-danger);
 }
 
 .danger-btn-outline:hover {
@@ -1507,7 +1511,7 @@ dialog[open].bottom-sheet-dialog {
 }
 
 .header-icon-btn.danger-color {
-  color: #f85c5c;
+  color: var(--text-danger);
 }
 
 .header-icon-btn:hover {
@@ -1963,7 +1967,7 @@ dialog[open].options-menu-dialog {
   border-radius: 10px;
   font-family: var(--font-primary);
   font-size: 13.5px;
-  font-weight: 500;
+  font-weight: 600;
   text-align: left;
   display: flex;
   align-items: center;
