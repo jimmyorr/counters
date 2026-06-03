@@ -1388,7 +1388,7 @@
     // Clear history logs
     $("#history-btn-clear").addEventListener("click", () => {
       if (state.history.length === 0) return;
-      showConfirmDialog("Clear transaction history?", () => {
+      showConfirmDialog("Clear history?", () => {
         state.history = [];
         saveHistory();
         renderHistory();
@@ -1837,7 +1837,7 @@
           addHistoryLog(
             { name: "Dice roll", color: 3 },
             `Rolled ${currentDiceCount}d${currentDiceType}`,
-            progressionText
+            progressionText,
           );
 
           btnRollAction.disabled = false;
@@ -1862,9 +1862,12 @@
     const updateTimerDisplay = () => {
       let totalMs = 0;
       if (timerMode === "stopwatch") {
-        totalMs = stopwatchElapsedMs + (timerRunning ? Date.now() - timerStartTime : 0);
+        totalMs =
+          stopwatchElapsedMs + (timerRunning ? Date.now() - timerStartTime : 0);
       } else {
-        totalMs = countdownRemainingMs - (timerRunning ? Date.now() - timerStartTime : 0);
+        totalMs =
+          countdownRemainingMs -
+          (timerRunning ? Date.now() - timerStartTime : 0);
         if (totalMs <= 0) {
           totalMs = 0;
           if (timerRunning) {
@@ -1893,7 +1896,7 @@
 
       // Disabled / visually dimmed if timer is at 0
       if (swReset) {
-        swReset.disabled = (totalMs === 0);
+        swReset.disabled = totalMs === 0;
       }
     };
 
@@ -1906,9 +1909,13 @@
       swStart.addEventListener("click", () => {
         let currentDisplayMs = 0;
         if (timerMode === "stopwatch") {
-          currentDisplayMs = stopwatchElapsedMs + (timerRunning ? Date.now() - timerStartTime : 0);
+          currentDisplayMs =
+            stopwatchElapsedMs +
+            (timerRunning ? Date.now() - timerStartTime : 0);
         } else {
-          currentDisplayMs = countdownRemainingMs - (timerRunning ? Date.now() - timerStartTime : 0);
+          currentDisplayMs =
+            countdownRemainingMs -
+            (timerRunning ? Date.now() - timerStartTime : 0);
         }
 
         if (currentDisplayMs <= 0 && timerMode === "countdown") {
@@ -1968,7 +1975,9 @@
 
         let currentDisplayMs = 0;
         if (timerMode === "stopwatch") {
-          currentDisplayMs = stopwatchElapsedMs + (timerRunning ? Date.now() - timerStartTime : 0);
+          currentDisplayMs =
+            stopwatchElapsedMs +
+            (timerRunning ? Date.now() - timerStartTime : 0);
           timerMode = "countdown";
           countdownRemainingMs = currentDisplayMs + addMs;
           stopwatchElapsedMs = 0;
