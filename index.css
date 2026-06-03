@@ -638,8 +638,6 @@ html[data-layout="grid"] .value-display {
   border-radius: 12px;
   box-shadow: inset 0 0 0 2px var(--focus-ring);
 }
-  font-size: 28px;
-}
 
 /* Active click flash effect */
 .zone-active-flash {

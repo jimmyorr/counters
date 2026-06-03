@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.0.9
+
+- **Customization:** Added a dynamic theme color hue slider in Settings to personalize the entire app's primary color.
+- **Accessibility:** Implemented WCAG AA focus rings, auto-focus rules for safe dialog actions, and preserved input focus across renders.
+- **Native features:** Integrated Capacitor for iOS and Android support, migrating state management to native `@capacitor/preferences`.
+- **Refining:** Standardized design tokens, typography, and fixed sorting bugs.
+
 ## 0.0.7
 
 - **Interactions:** Auto-focus and select text content when editing counter labels or focusing input fields.
