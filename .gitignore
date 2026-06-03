@@ -16,7 +16,10 @@ android/app/build/
 android/.gradle/
 android/local.properties
 android/captmp/
-ios/
+ios/App/Pods/
+ios/App/Podfile.lock
+ios/App/build/
+ios/App/App/public/
 *.swp
 *.lock
 

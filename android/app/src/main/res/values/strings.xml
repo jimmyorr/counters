@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Counters</string>
+    <string name="title_activity_main">Counters</string>
+    <string name="package_name">com.cowneck.counters</string>
+    <string name="custom_url_scheme">com.cowneck.counters</string>
+</resources>
