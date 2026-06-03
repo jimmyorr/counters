@@ -1477,13 +1477,20 @@ import { Preferences } from '@capacitor/preferences';
     let progressionVal = "";
     if (typeof oldValue === "string" && newValue === undefined) {
       progressionVal = oldValue;
+    } else if (actionLabel === "Added counter" || actionLabel === "Deleted counter" || actionLabel === "Reset counter") {
+      // For added/deleted/reset, showing the exact previous values isn't always useful, but let's at least hide 0 -> 0
+      if (oldValue === newValue) {
+        progressionVal = "";
+      } else {
+        progressionVal = `${formatNumber(oldValue)} → ${formatNumber(newValue)}`;
+      }
     } else {
       progressionVal = `${formatNumber(oldValue)} → ${formatNumber(newValue)}`;
     }
 
     const log = {
       id: Date.now().toString(),
-      counterLabel: counter.label,
+      counterLabel: counter.label || counter.name || "Unknown",
       color: counter.color,
       actionLabel: actionLabel,
       progression: progressionVal,
