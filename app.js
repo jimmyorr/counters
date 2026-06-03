@@ -366,6 +366,21 @@ import { Preferences } from '@capacitor/preferences';
       state.settings.autoSort ? "false" : "true",
     );
 
+    // 1. Capture current focus before rendering
+    let focusedCounterId = null;
+    let focusedSelector = null;
+    if (document.activeElement) {
+      const card = document.activeElement.closest(".counter-card");
+      if (card) {
+        focusedCounterId = card.getAttribute("data-counter-id");
+        if (document.activeElement.classList.contains("card-direct-zone-minus")) focusedSelector = ".card-direct-zone-minus";
+        else if (document.activeElement.classList.contains("card-value-body")) focusedSelector = ".card-value-body";
+        else if (document.activeElement.classList.contains("card-direct-zone-plus")) focusedSelector = ".card-direct-zone-plus";
+        else if (document.activeElement.classList.contains("btn-counter-reset")) focusedSelector = ".btn-counter-reset";
+        else if (document.activeElement.classList.contains("btn-counter-edit")) focusedSelector = ".btn-counter-edit";
+      }
+    }
+
     // Inject rendered HTML for each array item
     listWrapper.innerHTML = state.counters
       .map((counter) => {
@@ -407,6 +422,15 @@ import { Preferences } from '@capacitor/preferences';
       .join("");
 
     renderLeaderBar();
+
+    // 2. Restore focus
+    if (focusedCounterId && focusedSelector) {
+      const newCard = document.querySelector(`.counter-card[data-counter-id="${focusedCounterId}"]`);
+      if (newCard) {
+        const elToFocus = newCard.querySelector(focusedSelector);
+        if (elToFocus) elToFocus.focus();
+      }
+    }
   };
 
   // ------------------------------------------------------------------------
