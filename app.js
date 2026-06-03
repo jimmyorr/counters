@@ -664,9 +664,16 @@ import { Preferences } from '@capacitor/preferences';
     emptyView.classList.add("hidden");
     listWrapper.innerHTML = state.history
       .map((log) => {
-        const swatch = colorSwatches[log.color] || colorSwatches[0];
+        let themeHex = "";
+        if (log.color === "system") {
+          themeHex = "var(--accent-color)";
+        } else {
+          const swatch = colorSwatches[log.color] || colorSwatches[0];
+          themeHex = swatch.hex;
+        }
+
         return `
-        <div class="history-item" style="--history-theme: ${swatch.hex}">
+        <div class="history-item" style="--history-theme: ${themeHex}">
           <div class="history-badge"></div>
           <div class="history-details">
             <div class="history-row-top">
@@ -1936,7 +1943,7 @@ import { Preferences } from '@capacitor/preferences';
             progressionText += ` (${rolls.join(" + ")})`;
           }
           addHistoryLog(
-            { name: "Dice roll", color: 3 },
+            { name: "Dice roll", color: "system" },
             `Rolled ${currentDiceCount}d${currentDiceType}`,
             progressionText,
           );
