@@ -27,6 +27,7 @@
     "vite": "^8.0.14"
   },
   "dependencies": {
-    "@capacitor/core": "^8.4.0"
+    "@capacitor/core": "^8.4.0",
+    "@capacitor/preferences": "^8.0.1"
   }
 }

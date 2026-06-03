@@ -4,6 +4,9 @@
    Web Audio synthesizer, and custom mathematical overlays.
    ========================================================================== */
 
+import { Preferences } from '@capacitor/preferences';
+
+
 (function () {
   "use strict";
 
@@ -59,11 +62,11 @@
   // ------------------------------------------------------------------------
   // 2. Local Storage Synchronizer
   // ------------------------------------------------------------------------
-  const loadStateFromStorage = () => {
+  const loadStateFromStorage = async () => {
     try {
-      const savedCounters = localStorage.getItem("counters-list");
-      const savedSettings = localStorage.getItem("counters-settings");
-      const savedHistory = localStorage.getItem("counters-history");
+      const savedCounters = (await Preferences.get({ key: "counters-list" })).value;
+      const savedSettings = (await Preferences.get({ key: "counters-settings" })).value;
+      const savedHistory = (await Preferences.get({ key: "counters-history" })).value;
 
       if (savedCounters) {
         state.counters = JSON.parse(savedCounters).map((counter) => ({
@@ -93,15 +96,16 @@
   };
 
   const saveCounters = () => {
-    localStorage.setItem("counters-list", JSON.stringify(state.counters));
+    Preferences.set({ key: "counters-list", value: JSON.stringify(state.counters) });
   };
 
   const saveSettings = () => {
-    localStorage.setItem("counters-settings", JSON.stringify(state.settings));
+    Preferences.set({ key: "counters-settings", value: JSON.stringify(state.settings) });
+    localStorage.setItem("counters-layout", state.settings.layout);
   };
 
   const saveHistory = () => {
-    localStorage.setItem("counters-history", JSON.stringify(state.history));
+    Preferences.set({ key: "counters-history", value: JSON.stringify(state.history) });
   };
 
   // Helper: Format large numbers with commas
@@ -2085,8 +2089,8 @@
   // ------------------------------------------------------------------------
   // 19. Initialization Bootstrap routine
   // ------------------------------------------------------------------------
-  const init = () => {
-    loadStateFromStorage();
+  const init = async () => {
+    await loadStateFromStorage();
 
     // Core Layout options loaded
     document.documentElement.setAttribute("data-layout", state.settings.layout);
