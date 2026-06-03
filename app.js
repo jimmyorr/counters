@@ -289,8 +289,15 @@
     const type = state.settings.topBarContent;
 
     if (type === "highest") {
-      // Find highest value counter
-      const leader = [...state.counters].sort((a, b) => b.value - a.value)[0];
+      // Find highest value counter. In case of a tie, choose the one that appears first on screen (lowest index).
+      const leader = [...state.counters]
+        .map((counter, index) => ({ counter, index }))
+        .sort((a, b) => {
+          if (b.counter.value !== a.counter.value) {
+            return b.counter.value - a.counter.value;
+          }
+          return a.index - b.index;
+        })[0]?.counter;
       const swatch = colorSwatches[leader.color] || colorSwatches[0];
       leaderContainer.style.setProperty("--leader-color", swatch.hex);
       leaderContainer.style.setProperty("--leader-bg", `${swatch.hex}15`);
@@ -300,10 +307,15 @@
         `<path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/>`;
       leaderText.textContent = leader.label;
     } else if (type === "lowest") {
-      // Find lowest value counter
-      const lowLeader = [...state.counters].sort(
-        (a, b) => a.value - b.value,
-      )[0];
+      // Find lowest value counter. In case of a tie, choose the one that appears first on screen (lowest index).
+      const lowLeader = [...state.counters]
+        .map((counter, index) => ({ counter, index }))
+        .sort((a, b) => {
+          if (a.counter.value !== b.counter.value) {
+            return a.counter.value - b.counter.value;
+          }
+          return a.index - b.index;
+        })[0]?.counter;
       const swatch = colorSwatches[lowLeader.color] || colorSwatches[0];
       leaderContainer.style.setProperty("--leader-color", swatch.hex);
       leaderContainer.style.setProperty("--leader-bg", `${swatch.hex}15`);
