@@ -1666,6 +1666,10 @@
           const swatch = colorSwatches[counter.color] || colorSwatches[0];
           dialog.style.setProperty("--sheet-theme", swatch.hex);
           dialog.showModal();
+          if (labelInput) {
+            labelInput.focus();
+            labelInput.select();
+          }
           playClickSound();
         }
         return;
