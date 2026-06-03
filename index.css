@@ -1649,7 +1649,15 @@ dialog[open].bottom-sheet-dialog {
   outline: none;
   text-align: right;
   letter-spacing: 0.5px;
+  -moz-appearance: textfield;
 }
+
+.math-number-input::-webkit-outer-spin-button,
+.math-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 
 /* Custom Numeric Pad styling */
 .calc-numpad {
