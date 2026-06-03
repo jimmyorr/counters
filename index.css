@@ -1737,9 +1737,10 @@ dialog[open].bottom-sheet-dialog {
 }
 
 .palette-swatch.active {
-  border-color: var(--text-primary);
-  transform: scale(1.15);
-  box-shadow: 0 0 10px var(--accent-color);
+  outline: 2px solid var(--text-primary);
+  outline-offset: 3px;
+  transform: scale(1.1);
+  box-shadow: none;
 }
 
 /* Standard edit inputs */
