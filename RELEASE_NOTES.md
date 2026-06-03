@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.0.7
+
+- **Interactions:** Auto-focus and select text content when editing counter labels or focusing input fields.
+- **User interface:** Replaced empty state elements with a single unified interaction card, updated active color swatch styling, and hid math input spinners.
+- **Refactoring:** Renamed internal counter properties from "name" to "label" and streamlined history and timer logic.
+
 ## 0.0.6
 
 - **Timer:** Implemented a dual-mode stopwatch and dynamic countdown timer with adjustable time increments and increased update frequency.
