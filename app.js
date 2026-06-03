@@ -978,6 +978,15 @@
 
     if (!dialog || !form) return;
 
+    // Auto-select text on focus/tap for input fields
+    form.querySelectorAll("input").forEach((input) => {
+      input.addEventListener("focus", () => {
+        setTimeout(() => {
+          input.select();
+        }, 50);
+      });
+    });
+
     // Compile Palette Grid circular swatches
     const paletteContainer = $("#edit-palette-container");
     if (paletteContainer) {
