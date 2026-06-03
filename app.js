@@ -357,11 +357,15 @@ import { Preferences } from '@capacitor/preferences';
 
     if (state.counters.length === 0) {
       listWrapper.innerHTML = "";
+      listWrapper.style.display = "none";
       emptyState.classList.remove("hidden");
       renderLeaderBar();
+      const appMain = $(".app-main");
+      if (appMain) appMain.scrollTop = 0;
       return;
     }
 
+    listWrapper.style.display = "";
     emptyState.classList.add("hidden");
 
     // Reflect drag-enabled state on the wrapper for CSS cursor targeting

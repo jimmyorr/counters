@@ -373,9 +373,6 @@ body > .app-nav {
   transition: all var(--trans-normal);
 }
 
-.counters-container:empty {
-  display: none;
-}
 
 /* Grid Layout Styling Override */
 html[data-layout="grid"] .counters-container {
