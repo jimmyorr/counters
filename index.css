@@ -611,24 +611,46 @@ html[data-layout="grid"] .value-display {
   display: none;
 }
 
-.empty-state .placeholder-icon {
+.empty-state-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-secondary);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 20px;
+  width: 180px;
+  height: 180px;
+  gap: 16px;
   cursor: pointer;
+  box-shadow: var(--card-shadow);
+  transition: transform var(--trans-fast) var(--ease-spring), border-color var(--trans-fast), box-shadow var(--trans-fast);
   outline: none;
+}
+
+.empty-state-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-color);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+}
+
+.empty-state-card:active {
+  transform: scale(0.96);
+}
+
+.empty-state-card:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 4px;
+}
+
+.empty-state-card .placeholder-icon {
+  color: var(--accent-color);
+  margin-bottom: 0;
   transition: transform var(--trans-fast) var(--ease-spring);
 }
 
-.empty-state .placeholder-icon:hover {
+.empty-state-card:hover .placeholder-icon {
   transform: scale(1.08);
-}
-
-.empty-state .placeholder-icon:active {
-  transform: scale(0.94);
-}
-
-.empty-state .placeholder-icon:focus-visible {
-  outline: 2px solid var(--accent-color);
-  outline-offset: 4px;
-  border-radius: 50%;
 }
 
 .empty-illustration {
@@ -664,14 +686,12 @@ html[data-layout="grid"] .value-display {
 .empty-state-text-btn {
   font-size: 16px;
   color: var(--text-secondary);
-  margin-top: 4px;
-  cursor: pointer;
   font-family: var(--font-primary);
-  font-weight: 500;
+  font-weight: 600;
   transition: color var(--trans-fast);
 }
 
-.empty-state-text-btn:hover {
+.empty-state-card:hover .empty-state-text-btn {
   color: var(--text-primary);
 }
 

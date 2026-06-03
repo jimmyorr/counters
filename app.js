@@ -1466,10 +1466,6 @@
       addNewCounterStreamlined();
     });
 
-    $("#btn-empty-add-counter").addEventListener("click", () => {
-      addNewCounterStreamlined();
-    });
-
     const emptyPlaceholder = $("#btn-empty-placeholder-icon");
     if (emptyPlaceholder) {
       emptyPlaceholder.addEventListener("click", () => {

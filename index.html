@@ -187,37 +187,35 @@
 
         <!-- Empty State -->
         <div class="empty-state hidden" id="empty-state-view">
-          <div
-            class="placeholder-icon"
+          <button
+            class="empty-state-card"
             id="btn-empty-placeholder-icon"
-            role="button"
-            tabindex="0"
             aria-label="Add counter"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="64"
-              height="64"
-              fill="currentColor"
-            >
-              <defs>
-                <mask id="plus-mask">
-                  <rect width="24" height="24" fill="white" />
-                  <path
-                    d="M12 6v12M6 12h12"
-                    stroke="black"
-                    stroke-width="2.625"
-                    stroke-linecap="round"
-                  />
-                </mask>
-              </defs>
-              <circle cx="12" cy="12" r="11.25" mask="url(#plus-mask)" />
-            </svg>
-          </div>
-          <div class="empty-state-text-btn" id="btn-empty-add-counter">
-            Tap to add one
-          </div>
+            <div class="placeholder-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="64"
+                height="64"
+                fill="currentColor"
+              >
+                <defs>
+                  <mask id="plus-mask">
+                    <rect width="24" height="24" fill="white" />
+                    <path
+                      d="M12 6v12M6 12h12"
+                      stroke="black"
+                      stroke-width="2.625"
+                      stroke-linecap="round"
+                    />
+                  </mask>
+                </defs>
+                <circle cx="12" cy="12" r="11.25" mask="url(#plus-mask)" />
+              </svg>
+            </div>
+            <div class="empty-state-text-btn">Add a counter</div>
+          </button>
         </div>
       </section>
 
