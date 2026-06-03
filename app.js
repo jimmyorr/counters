@@ -391,15 +391,15 @@ import { Preferences } from '@capacitor/preferences';
           
           <div class="card-body-wrapper">
             <!-- Card Direct Click decrement zone -->
-            <div class="card-direct-zone card-direct-zone-minus" data-action="decrement" aria-label="Subtract direct increment">−</div>
+            <div class="card-direct-zone card-direct-zone-minus" data-action="decrement" aria-label="Subtract direct increment" tabindex="0" role="button">−</div>
             
             <!-- Middle Display -->
-            <div class="card-value-body data-action-calc">
+            <div class="card-value-body data-action-calc" tabindex="0" role="button" aria-label="Open calculator">
               <span class="value-display">${formatNumber(counter.value)}</span>
             </div>
             
             <!-- Card Direct Click increment zone -->
-            <div class="card-direct-zone card-direct-zone-plus" data-action="increment" aria-label="Add direct increment">+</div>
+            <div class="card-direct-zone card-direct-zone-plus" data-action="increment" aria-label="Add direct increment" tabindex="0" role="button">+</div>
           </div>
         </div>
       `;
@@ -1306,6 +1306,13 @@ import { Preferences } from '@capacitor/preferences';
       const swatch = colorSwatches[counter.color] || colorSwatches[0];
       dialog.style.setProperty("--sheet-theme", swatch.hex);
       dialog.showModal();
+      
+      const labelInput = $("#edit-label");
+      if (labelInput) {
+        labelInput.focus();
+        labelInput.select();
+      }
+      
       playClickSound();
     }
   };
@@ -1715,6 +1722,29 @@ import { Preferences } from '@capacitor/preferences';
           playResetSound();
         });
         return;
+      }
+    });
+
+    // Handle Keyboard A11y on cards
+    $("#counters-list-wrapper").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        const card = e.target.closest(".counter-card");
+        if (!card) return;
+        
+        const valueBody = e.target.closest(".card-value-body");
+        if (valueBody) {
+          e.preventDefault();
+          const counterId = card.getAttribute("data-counter-id");
+          openCalculatorDialog(counterId);
+          return;
+        }
+        
+        const directZone = e.target.closest(".card-direct-zone");
+        if (directZone) {
+          e.preventDefault();
+          directZone.click(); // Handled by click listener
+          return;
+        }
       }
     });
 
