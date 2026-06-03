@@ -795,7 +795,8 @@ html[data-layout="grid"] .value-display {
 }
 
 .secondary-btn:hover {
-  background-color: var(--border-light);
+  border-color: var(--accent-color);
+  color: var(--text-primary);
 }
 
 /* --------------------------------------------------------------------------
@@ -1459,7 +1460,7 @@ dialog[open]::backdrop {
 
 .bottom-sheet-dialog .primary-btn:hover {
   opacity: 0.9;
-  box-shadow: 0 4px 14px var(--sheet-theme, var(--accent-light));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--sheet-theme, var(--accent-color)) 25%, transparent);
 }
 
 .bottom-sheet-dialog .op-btn.active {
