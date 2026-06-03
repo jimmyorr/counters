@@ -1343,10 +1343,8 @@ import { Preferences } from '@capacitor/preferences';
       dialog.showModal();
       
       const labelInput = $("#edit-label");
-      if (labelInput) {
-        labelInput.focus();
-        labelInput.select();
-      }
+      // Intentionally NOT focusing the input to prevent mobile keyboard from popping up
+      // and squeezing the UI. User can tap the field if they want to edit it.
       
       playClickSound();
     }
