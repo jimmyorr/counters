@@ -25,6 +25,9 @@
   --header-height: 64px;
   --nav-height: 68px;
   --max-app-width: 500px;
+
+  /* Theme Hue (0-360) Default Blue */
+  --theme-hue: 205;
 }
 
 /* Light Theme Variables */
@@ -43,8 +46,8 @@
   --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   --modal-backdrop: rgba(0, 0, 0, 0.35);
   --overlay-bg: rgba(255, 255, 255, 0.96);
-  --accent-color: #3b9df8;
-  --accent-light: #e6f2fe;
+  --accent-color: hsl(var(--theme-hue), 94%, 60%);
+  --accent-light: hsla(var(--theme-hue), 94%, 60%, 0.1);
   --glass-bg: rgba(242, 243, 247, 0.75);
 }
 
@@ -65,8 +68,8 @@
   --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   --modal-backdrop: rgba(0, 0, 0, 0.55);
   --overlay-bg: rgba(22, 23, 29, 0.96);
-  --accent-color: #55b1f9;
-  --accent-light: rgba(85, 177, 249, 0.15);
+  --accent-color: hsl(var(--theme-hue), 92%, 65%);
+  --accent-light: hsla(var(--theme-hue), 92%, 65%, 0.15);
   --glass-bg: rgba(13, 14, 17, 0.75);
 }
 
@@ -465,6 +468,48 @@ html[data-layout="grid"] .counter-card {
   opacity: 0.5;
   pointer-events: none;
   flex-shrink: 0;
+}
+
+/* Custom Hue Slider */
+.hue-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(to right,
+    hsl(0, 100%, 50%),
+    hsl(60, 100%, 50%),
+    hsl(120, 100%, 50%),
+    hsl(180, 100%, 50%),
+    hsl(240, 100%, 50%),
+    hsl(300, 100%, 50%),
+    hsl(360, 100%, 50%)
+  );
+  outline: none;
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.hue-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: transform var(--trans-fast);
+}
+
+.hue-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.hue-slider:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 3px;
 }
 
 .card-btn {

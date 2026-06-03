@@ -31,6 +31,7 @@ import { Preferences } from '@capacitor/preferences';
       autoSort: false,
       soundEnabled: true,
       quickAddValues: [5, 10, 15, 20, 50, 100],
+      themeHue: 205,
     },
     history: [],
     currentTab: "counters",
@@ -80,6 +81,9 @@ import { Preferences } from '@capacitor/preferences';
 
       if (savedSettings) {
         state.settings = { ...state.settings, ...JSON.parse(savedSettings) };
+      }
+      if (state.settings.themeHue !== undefined) {
+        document.documentElement.style.setProperty("--theme-hue", state.settings.themeHue);
       }
 
       if (savedHistory) {
@@ -1350,6 +1354,7 @@ import { Preferences } from '@capacitor/preferences';
       localStorage.getItem("counters-theme") || "system";
     $("#setting-quick-add-values").value =
       state.settings.quickAddValues.join(", ");
+    $("#setting-theme-hue").value = state.settings.themeHue;
   };
 
   const bindSettingsActions = () => {
@@ -1359,6 +1364,20 @@ import { Preferences } from '@capacitor/preferences';
       saveSettings();
       playClickSound();
     });
+
+    // Theme Hue Slider
+    const hueSlider = $("#setting-theme-hue");
+    if (hueSlider) {
+      hueSlider.addEventListener("input", (e) => {
+        const val = e.target.value;
+        document.documentElement.style.setProperty("--theme-hue", val);
+      });
+      hueSlider.addEventListener("change", (e) => {
+        state.settings.themeHue = parseInt(e.target.value, 10);
+        saveSettings();
+        playClickSound();
+      });
+    }
 
     // Theme selector
     $("#setting-theme").addEventListener("change", (e) => {
