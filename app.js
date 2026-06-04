@@ -128,6 +128,15 @@ import { Preferences } from '@capacitor/preferences';
     return ctx.fillStyle;
   };
 
+  // Helper: Get Counter Hex Color
+  const getCounterHex = (counter) => {
+    if (typeof counter.color === "string" && counter.color.startsWith("#")) {
+      return counter.color;
+    }
+    const presetSwatch = colorSwatches[counter.color] || colorSwatches[0];
+    return presetSwatch.hex;
+  };
+
   // ------------------------------------------------------------------------
   // 3. Web Audio Tonal Synthesizer
   // ------------------------------------------------------------------------
@@ -1681,8 +1690,8 @@ import { Preferences } from '@capacitor/preferences';
               }
               const dialog = $("#edit-value-dialog");
               if (dialog) {
-                const swatch = colorSwatches[counter.color] || colorSwatches[0];
-                dialog.style.setProperty("--sheet-theme", swatch.hex);
+                const hexColor = getCounterHex(counter);
+                dialog.style.setProperty("--sheet-theme", hexColor);
                 setTimeout(() => {
                   dialog.showModal();
                 }, 50);
@@ -1742,13 +1751,13 @@ import { Preferences } from '@capacitor/preferences';
 
             const dialog = $("#calculator-dialog");
             if (dialog) {
-              const swatch = colorSwatches[counter.color] || colorSwatches[0];
-              dialog.style.setProperty("--sheet-theme", swatch.hex);
+              const hexColor = getCounterHex(counter);
+              dialog.style.setProperty("--sheet-theme", hexColor);
 
               const titleEl = $("#calc-dialog-title");
               if (titleEl) {
-                titleEl.style.setProperty("--pill-bg", `${swatch.hex}15`);
-                titleEl.style.setProperty("--pill-border", `${swatch.hex}40`);
+                titleEl.style.setProperty("--pill-bg", `${hexColor}15`);
+                titleEl.style.setProperty("--pill-border", `${hexColor}40`);
               }
 
               setTimeout(() => {
@@ -1832,8 +1841,8 @@ import { Preferences } from '@capacitor/preferences';
         }
         const dialog = $("#edit-label-dialog");
         if (dialog) {
-          const swatch = colorSwatches[counter.color] || colorSwatches[0];
-          dialog.style.setProperty("--sheet-theme", swatch.hex);
+          const hexColor = getCounterHex(counter);
+          dialog.style.setProperty("--sheet-theme", hexColor);
           dialog.showModal();
           if (labelInput) {
             labelInput.focus();
