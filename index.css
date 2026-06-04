@@ -418,7 +418,7 @@ html[data-layout="grid"] .counter-card {
 /* Card Header elements */
 .card-header {
   position: relative;
-  height: 36px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -541,7 +541,7 @@ html[data-layout="grid"] .counter-card {
 
 .counter-label {
   font-family: var(--font-secondary);
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
   letter-spacing: 0.1px;
   max-width: 60%;
