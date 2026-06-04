@@ -97,7 +97,8 @@
     <header class="app-header">
       <div class="header-left" id="header-leader-container">
         <span class="leader-icon">
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             width="20"
@@ -123,7 +124,8 @@
           title="History"
           aria-label="Open history"
         >
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             width="22"
@@ -141,7 +143,8 @@
           title="Add counter"
           aria-label="Add counter"
         >
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             width="22"
@@ -157,7 +160,8 @@
           title="Display options"
           aria-label="Open options"
         >
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             width="22"
@@ -194,7 +198,8 @@
             aria-label="Add counter"
           >
             <div class="placeholder-icon">
-              <svg aria-hidden="true"
+              <svg
+                aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 width="64"
@@ -221,11 +226,17 @@
       </section>
 
       <!-- Tab 2: Dice View -->
-      <section class="tab-content" id="tab-dice" data-view="dice" role="tabpanel">
+      <section
+        class="tab-content"
+        id="tab-dice"
+        data-view="dice"
+        role="tabpanel"
+      >
         <div class="dice-container">
           <!-- Static/Animated Dice Icon -->
           <div class="placeholder-icon shake-animation" id="dice-shake-icon">
-            <svg aria-hidden="true"
+            <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               width="64"
@@ -281,10 +292,16 @@
       </section>
 
       <!-- Tab 3: Timer View Placeholder -->
-      <section class="tab-content" id="tab-timer" data-view="timer" role="tabpanel">
+      <section
+        class="tab-content"
+        id="tab-timer"
+        data-view="timer"
+        role="tabpanel"
+      >
         <div class="placeholder-container">
           <div class="placeholder-icon">
-            <svg aria-hidden="true"
+            <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               width="64"
@@ -329,7 +346,8 @@
         aria-selected="true"
       >
         <span class="nav-icon">
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
@@ -351,9 +369,16 @@
         <span class="nav-text">Counters</span>
       </button>
 
-      <button class="nav-item" data-tab-btn="dice" aria-label="Dice" role="tab" aria-selected="false">
+      <button
+        class="nav-item"
+        data-tab-btn="dice"
+        aria-label="Dice"
+        role="tab"
+        aria-selected="false"
+      >
         <span class="nav-icon">
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
@@ -366,9 +391,16 @@
         <span class="nav-text">Dice</span>
       </button>
 
-      <button class="nav-item" data-tab-btn="timer" aria-label="Timer" role="tab" aria-selected="false">
+      <button
+        class="nav-item"
+        data-tab-btn="timer"
+        aria-label="Timer"
+        role="tab"
+        aria-selected="false"
+      >
         <span class="nav-icon">
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
@@ -400,7 +432,8 @@
             command="close"
             aria-label="Close sheet"
           >
-            <svg aria-hidden="true"
+            <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               width="24"
@@ -422,7 +455,6 @@
           <div class="quick-add-grid" id="calc-quick-add-container">
             <!-- Injected dynamically by JavaScript, e.g. +5, +10, +50 -->
           </div>
-
 
           <!-- Interactive Math Area -->
           <div class="math-entry-row">
@@ -477,7 +509,8 @@
             title="Delete Counter"
             aria-label="Delete Counter"
           >
-            <svg aria-hidden="true"
+            <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               width="22"
@@ -499,7 +532,8 @@
             aria-label="Close edit panel"
             autofocus
           >
-            <svg aria-hidden="true"
+            <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               width="24"
@@ -544,7 +578,9 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label for="edit-value-input-details" style="white-space: nowrap;">Value</label>
+              <label for="edit-value-input-details" style="white-space: nowrap"
+                >Value</label
+              >
               <input
                 type="number"
                 inputmode="decimal"
@@ -556,7 +592,9 @@
               <span class="field-hint">Current</span>
             </div>
             <div class="form-group">
-              <label for="edit-increment" style="white-space: nowrap;">Increment</label>
+              <label for="edit-increment" style="white-space: nowrap"
+                >Increment</label
+              >
               <input
                 type="number"
                 inputmode="decimal"
@@ -569,7 +607,9 @@
               <span class="field-hint">On edge</span>
             </div>
             <div class="form-group">
-              <label for="edit-reset-val" style="white-space: nowrap;">Reset</label>
+              <label for="edit-reset-val" style="white-space: nowrap"
+                >Reset</label
+              >
               <input
                 type="number"
                 inputmode="decimal"
@@ -609,7 +649,8 @@
           command="close"
           aria-label="Close Menu"
         >
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             width="20"
@@ -625,7 +666,8 @@
       <div class="options-dialog-body" style="padding-top: 8px">
         <div class="selection-stack" style="gap: 8px">
           <button class="select-row-btn" id="menu-btn-open-settings">
-            <svg aria-hidden="true"
+            <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               width="18"
@@ -644,7 +686,8 @@
           ></div>
 
           <button class="select-row-btn" id="menu-btn-reset-counters">
-            <svg aria-hidden="true"
+            <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               width="18"
@@ -663,7 +706,8 @@
             id="menu-btn-delete-all"
             style="color: #f85c5c; border-color: rgba(248, 92, 92, 0.3)"
           >
-            <svg aria-hidden="true"
+            <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               width="18"
@@ -696,7 +740,8 @@
             command="close"
             aria-label="Close settings"
           >
-            <svg aria-hidden="true"
+            <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               width="24"
@@ -715,7 +760,7 @@
         <div class="settings-wrapper">
           <div class="settings-section">
             <h3>Appearance</h3>
-            
+
             <!-- Theme selector -->
             <div class="settings-row">
               <div class="settings-info">
@@ -724,22 +769,39 @@
                   >Match system layout or pin dark/light mode</span
                 >
               </div>
-              <select class="settings-select" id="setting-theme" aria-label="Theme">
+              <select
+                class="settings-select"
+                id="setting-theme"
+                aria-label="Theme"
+              >
                 <option value="system">System</option>
                 <option value="dark">Dark</option>
                 <option value="light">Light</option>
               </select>
             </div>
 
-            <div class="settings-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <div
+              class="settings-row"
+              style="flex-direction: column; align-items: flex-start; gap: 8px"
+            >
               <div class="settings-info">
                 <span class="setting-title">Theme color</span>
-                <span class="setting-desc">Slide to personalize the primary app color</span>
+                <span class="setting-desc"
+                  >Slide to personalize the primary app color</span
+                >
               </div>
-              <input type="range" id="setting-theme-hue" class="hue-slider" min="0" max="360" value="205" aria-label="Theme color hue" />
+              <input
+                type="range"
+                id="setting-theme-hue"
+                class="hue-slider"
+                min="0"
+                max="360"
+                value="205"
+                aria-label="Theme color hue"
+              />
             </div>
 
-            <h3 style="margin-top: 24px;">Preferences</h3>
+            <h3 style="margin-top: 24px">Preferences</h3>
 
             <!-- Sound Toggle -->
             <div class="settings-row">
@@ -750,19 +812,20 @@
                 >
               </div>
               <label class="switch-toggle">
-                <input type="checkbox" id="setting-sound" aria-label="Audio feedback" checked />
+                <input
+                  type="checkbox"
+                  id="setting-sound"
+                  aria-label="Audio feedback"
+                  checked
+                />
                 <span class="slider-round"></span>
               </label>
             </div>
-          </div>
-
-          <div class="settings-section">
-            <h3>Value customizations</h3>
 
             <!-- Quick Add Editing -->
             <div class="settings-column">
               <div class="settings-info">
-                <span class="setting-title">Quick-add calculator values</span>
+                <span class="setting-title">Quick-add values</span>
                 <span class="setting-desc"
                   >Comma-separated numbers that appear on the calculator overlay
                   sheet</span
@@ -771,7 +834,8 @@
               <input
                 type="text"
                 class="settings-input"
-                id="setting-quick-add-values" aria-label="Quick-add calculator values"
+                id="setting-quick-add-values"
+                aria-label="Quick-add calculator values"
                 value="5, 10, 15, 20, 50, 100"
               />
             </div>
@@ -798,7 +862,8 @@
           command="close"
           aria-label="Close dialog"
         >
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             width="20"
@@ -823,7 +888,8 @@
               aria-label="List layout"
               title="List view"
             >
-              <svg aria-hidden="true"
+              <svg
+                aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 width="20"
@@ -840,7 +906,8 @@
               aria-label="Grid layout"
               title="Grid view"
             >
-              <svg aria-hidden="true"
+              <svg
+                aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 width="20"
@@ -861,7 +928,8 @@
           <h4>Top bar display info</h4>
           <div class="selection-stack">
             <button class="select-row-btn active" id="topbar-opt-highest">
-              <svg aria-hidden="true"
+              <svg
+                aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 width="18"
@@ -876,7 +944,8 @@
             </button>
 
             <button class="select-row-btn" id="topbar-opt-lowest">
-              <svg aria-hidden="true"
+              <svg
+                aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 width="18"
@@ -891,7 +960,8 @@
             </button>
 
             <button class="select-row-btn" id="topbar-opt-total">
-              <svg aria-hidden="true"
+              <svg
+                aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 width="18"
@@ -916,7 +986,11 @@
               <span class="switch-title">Turn on auto-sorting (3s delay)</span>
             </div>
             <label class="switch-toggle">
-              <input type="checkbox" id="options-auto-sort" aria-label="Turn on auto-sorting" />
+              <input
+                type="checkbox"
+                id="options-auto-sort"
+                aria-label="Turn on auto-sorting"
+              />
               <span class="slider-round"></span>
             </label>
           </div>
@@ -924,7 +998,11 @@
       </div>
     </dialog>
 
-    <dialog id="confirm-dialog" class="bottom-sheet-dialog" style="--sheet-theme: #f85c5c;">
+    <dialog
+      id="confirm-dialog"
+      class="bottom-sheet-dialog"
+      style="--sheet-theme: #f85c5c"
+    >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
         <h2 class="sheet-title" id="confirm-dialog-title">Confirm action</h2>
@@ -944,10 +1022,7 @@
           <button class="secondary-btn full-width" id="confirm-btn-cancel">
             Cancel
           </button>
-          <button
-            class="primary-btn full-width"
-            id="confirm-btn-ok"
-          >
+          <button class="primary-btn full-width" id="confirm-btn-ok">
             Confirm
           </button>
         </div>
@@ -969,7 +1044,8 @@
             title="Clear history"
             aria-label="Clear history"
           >
-            <svg aria-hidden="true"
+            <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               width="20"
@@ -991,7 +1067,8 @@
             aria-label="Close history"
             autofocus
           >
-            <svg aria-hidden="true"
+            <svg
+              aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               width="24"
@@ -1013,7 +1090,8 @@
 
         <!-- History Empty state -->
         <div class="history-empty hidden" id="history-empty-view">
-          <svg aria-hidden="true"
+          <svg
+            aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             width="48"
