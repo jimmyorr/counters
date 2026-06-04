@@ -715,12 +715,28 @@
         <div class="settings-wrapper">
           <div class="settings-section">
             <h3>Appearance</h3>
+            
+            <!-- Theme selector -->
+            <div class="settings-row">
+              <div class="settings-info">
+                <span class="setting-title">Theme</span>
+                <span class="setting-desc"
+                  >Match system layout or pin dark/light mode</span
+                >
+              </div>
+              <select class="settings-select" id="setting-theme" aria-label="Theme">
+                <option value="system">System</option>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+              </select>
+            </div>
+
             <div class="settings-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
               <div class="settings-info">
-                <span class="setting-title">Theme Color</span>
+                <span class="setting-title">Theme color</span>
                 <span class="setting-desc">Slide to personalize the primary app color</span>
               </div>
-              <input type="range" id="setting-theme-hue" class="hue-slider" min="0" max="360" value="205" aria-label="Theme Color Hue" />
+              <input type="range" id="setting-theme-hue" class="hue-slider" min="0" max="360" value="205" aria-label="Theme color hue" />
             </div>
 
             <h3 style="margin-top: 24px;">Preferences</h3>
@@ -737,21 +753,6 @@
                 <input type="checkbox" id="setting-sound" aria-label="Audio feedback" checked />
                 <span class="slider-round"></span>
               </label>
-            </div>
-
-            <!-- Theme selector -->
-            <div class="settings-row">
-              <div class="settings-info">
-                <span class="setting-title">Theme</span>
-                <span class="setting-desc"
-                  >Match system layout or pin dark/light mode</span
-                >
-              </div>
-              <select class="settings-select" id="setting-theme" aria-label="Theme">
-                <option value="system">System</option>
-                <option value="dark">Dark</option>
-                <option value="light">Light</option>
-              </select>
             </div>
           </div>
 
