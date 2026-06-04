@@ -121,6 +121,13 @@ import { Preferences } from '@capacitor/preferences';
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => document.querySelectorAll(selector);
 
+  // Helper: Get App Theme Hex Color
+  const getThemeHex = () => {
+    const ctx = document.createElement("canvas").getContext("2d");
+    ctx.fillStyle = `hsl(${state.settings.themeHue || 205}, 94%, 60%)`;
+    return ctx.fillStyle;
+  };
+
   // ------------------------------------------------------------------------
   // 3. Web Audio Tonal Synthesizer
   // ------------------------------------------------------------------------
@@ -306,10 +313,16 @@ import { Preferences } from '@capacitor/preferences';
           }
           return a.index - b.index;
         })[0]?.counter;
-      const swatch = colorSwatches[leader.color] || colorSwatches[0];
-      leaderContainer.style.setProperty("--leader-color", swatch.hex);
-      leaderContainer.style.setProperty("--leader-bg", `${swatch.hex}15`);
-      leaderContainer.style.setProperty("--leader-border", `${swatch.hex}40`);
+      let themeHex = "";
+      if (typeof leader.color === "string" && leader.color.startsWith("#")) {
+        themeHex = leader.color;
+      } else {
+        const swatch = colorSwatches[leader.color] || colorSwatches[0];
+        themeHex = swatch.hex;
+      }
+      leaderContainer.style.setProperty("--leader-color", themeHex);
+      leaderContainer.style.setProperty("--leader-bg", `${themeHex}15`);
+      leaderContainer.style.setProperty("--leader-border", `${themeHex}40`);
 
       leaderContainer.querySelector(".leader-icon svg").innerHTML =
         `<path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/>`;
@@ -324,10 +337,16 @@ import { Preferences } from '@capacitor/preferences';
           }
           return a.index - b.index;
         })[0]?.counter;
-      const swatch = colorSwatches[lowLeader.color] || colorSwatches[0];
-      leaderContainer.style.setProperty("--leader-color", swatch.hex);
-      leaderContainer.style.setProperty("--leader-bg", `${swatch.hex}15`);
-      leaderContainer.style.setProperty("--leader-border", `${swatch.hex}40`);
+      let themeHex = "";
+      if (typeof lowLeader.color === "string" && lowLeader.color.startsWith("#")) {
+        themeHex = lowLeader.color;
+      } else {
+        const swatch = colorSwatches[lowLeader.color] || colorSwatches[0];
+        themeHex = swatch.hex;
+      }
+      leaderContainer.style.setProperty("--leader-color", themeHex);
+      leaderContainer.style.setProperty("--leader-bg", `${themeHex}15`);
+      leaderContainer.style.setProperty("--leader-border", `${themeHex}40`);
 
       leaderContainer.querySelector(".leader-icon svg").innerHTML =
         `<path d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"/>`;
@@ -392,11 +411,19 @@ import { Preferences } from '@capacitor/preferences';
     // Inject rendered HTML for each array item
     listWrapper.innerHTML = state.counters
       .map((counter) => {
-        const swatch = colorSwatches[counter.color] || colorSwatches[0];
+        let cardThemeHex = "";
+        let swatchClass = "";
+        if (typeof counter.color === "string" && counter.color.startsWith("#")) {
+          cardThemeHex = counter.color;
+        } else {
+          const preset = colorSwatches[counter.color] || colorSwatches[0];
+          cardThemeHex = preset.hex;
+          swatchClass = preset.class;
+        }
         const isNewClass = counter.isNew ? " animate-entry" : "";
         delete counter.isNew;
         return `
-        <div class="counter-card ${swatch.class}${isNewClass}" data-counter-id="${counter.id}" style="--card-theme: ${swatch.hex}">
+        <div class="counter-card ${swatchClass}${isNewClass}" data-counter-id="${counter.id}" style="--card-theme: ${cardThemeHex}; --card-text: #ffffff">
           <!-- Card Top Info Bar -->
           <div class="card-header">
             <button class="card-btn btn-counter-reset" title="Reset value" aria-label="Reset value for ${counter.label}">
@@ -671,6 +698,8 @@ import { Preferences } from '@capacitor/preferences';
         let themeHex = "";
         if (log.color === "system") {
           themeHex = "var(--accent-color)";
+        } else if (typeof log.color === "string" && log.color.startsWith("#")) {
+          themeHex = log.color;
         } else {
           const swatch = colorSwatches[log.color] || colorSwatches[0];
           themeHex = swatch.hex;
@@ -1051,7 +1080,14 @@ import { Preferences } from '@capacitor/preferences';
           <div class="palette-swatch ${swatch.class}" data-color-id="${swatch.id}" style="background-color: ${swatch.hex}"></div>
         `;
         })
-        .join("");
+        .join("") + `
+          <div class="palette-swatch custom-color-picker" data-color-id="custom">
+            <svg class="custom-color-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />
+            </svg>
+            <input type="color" id="edit-custom-color" aria-label="Custom color picker">
+          </div>
+        `;
 
       // Swatch Click bind
       paletteContainer.addEventListener("click", (e) => {
@@ -1062,12 +1098,30 @@ import { Preferences } from '@capacitor/preferences';
         swatch.classList.add("active");
 
         // Dynamically update sheet theme color
-        const colorId = parseInt(swatch.getAttribute("data-color-id"));
-        const swatchData = colorSwatches[colorId] || colorSwatches[0];
-        dialog.style.setProperty("--sheet-theme", swatchData.hex);
+        const colorId = swatch.getAttribute("data-color-id");
+        if (colorId === "custom") {
+          const customInput = $("#edit-custom-color");
+          if (customInput) dialog.style.setProperty("--sheet-theme", customInput.value);
+        } else {
+          const swatchData = colorSwatches[parseInt(colorId)] || colorSwatches[0];
+          dialog.style.setProperty("--sheet-theme", swatchData.hex);
+        }
 
         playClickSound();
       });
+
+      const customColorInput = $("#edit-custom-color");
+      if (customColorInput) {
+        customColorInput.addEventListener("input", (e) => {
+          const swatch = e.target.closest(".palette-swatch");
+          if (swatch) {
+            swatch.style.backgroundColor = e.target.value;
+            $$(".palette-swatch").forEach((s) => s.classList.remove("active"));
+            swatch.classList.add("active");
+            dialog.style.setProperty("--sheet-theme", e.target.value);
+          }
+        });
+      }
     }
 
     // Form submission (Save counter adjustments or Add counter)
@@ -1075,9 +1129,15 @@ import { Preferences } from '@capacitor/preferences';
       e.preventDefault();
 
       const selectedSwatch = $(".palette-swatch.active");
-      const colorId = selectedSwatch
-        ? parseInt(selectedSwatch.getAttribute("data-color-id"))
-        : 0;
+      let colorId = 0;
+      if (selectedSwatch) {
+        const dataColorId = selectedSwatch.getAttribute("data-color-id");
+        if (dataColorId === "custom") {
+          colorId = $("#edit-custom-color").value;
+        } else {
+          colorId = parseInt(dataColorId);
+        }
+      }
 
       const label = $("#edit-label").value.trim();
       const value = parseInt($("#edit-value-input-details").value || "0");
@@ -1335,15 +1395,37 @@ import { Preferences } from '@capacitor/preferences';
     $("#edit-reset-val").value = counter.resetValue;
 
     // Set palette swatch selected
+    let sheetThemeHex = colorSwatches[0].hex;
     $$(".palette-swatch").forEach((swatch) => {
-      const id = parseInt(swatch.getAttribute("data-color-id"));
-      swatch.classList.toggle("active", id === counter.color);
+      const colorId = swatch.getAttribute("data-color-id");
+      swatch.classList.remove("active");
+      
+      if (typeof counter.color === "string" && counter.color.startsWith("#")) {
+        if (colorId === "custom") {
+          swatch.classList.add("active");
+          swatch.style.backgroundColor = counter.color;
+          sheetThemeHex = counter.color;
+          const input = swatch.querySelector("input");
+          if (input) input.value = counter.color;
+        }
+      } else {
+        if (parseInt(colorId) === counter.color) {
+          swatch.classList.add("active");
+          const presetSwatch = colorSwatches[counter.color] || colorSwatches[0];
+          sheetThemeHex = presetSwatch.hex;
+        }
+        if (colorId === "custom") {
+          const appThemeHex = getThemeHex();
+          swatch.style.backgroundColor = appThemeHex;
+          const input = swatch.querySelector("input");
+          if (input) input.value = appThemeHex;
+        }
+      }
     });
 
     const dialog = $("#edit-counter-dialog");
     if (dialog) {
-      const swatch = colorSwatches[counter.color] || colorSwatches[0];
-      dialog.style.setProperty("--sheet-theme", swatch.hex);
+      dialog.style.setProperty("--sheet-theme", sheetThemeHex);
       dialog.showModal();
       
       const labelInput = $("#edit-label");
