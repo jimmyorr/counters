@@ -2439,3 +2439,10 @@ input.math-number-input:focus-visible {
   height: 48px;
   transform: translate(-50%, -50%);
 }
+
+/* Hide gray color on viewports under 400px to prevent wrapping single swatches */
+@media (max-width: 400px) {
+  .palette-grid .card-color-3 {
+    display: none !important;
+  }
+}

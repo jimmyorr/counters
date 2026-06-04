@@ -51,11 +51,7 @@ import { Preferences } from '@capacitor/preferences';
     { id: 2, class: "card-color-2", hex: "#ca265a" }, // Crimson Pink
     { id: 3, class: "card-color-3", hex: "#5b6973" }, // Slate Grey
     { id: 4, class: "card-color-4", hex: "#167648" }, // Forest Green
-    {
-      id: 5,
-      class: "card-color-5 { --card-theme: hsl(45, 95%, 45%); }",
-      hex: "#e69f00",
-    }, // Golden Yellow
+    { id: 5, class: "card-color-5", hex: "#e69f00" }, // Golden Yellow
     { id: 6, class: "card-color-6", hex: "#1096a6" }, // Teal
     { id: 7, class: "card-color-7", hex: "#622ea1" }, // Purple
   ];
