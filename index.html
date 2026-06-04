@@ -423,11 +423,6 @@
             <!-- Injected dynamically by JavaScript, e.g. +5, +10, +50 -->
           </div>
 
-          <p class="tweak-caption">
-            You can tweak these values in the Settings
-          </p>
-
-          <hr class="dialog-divider" />
 
           <!-- Interactive Math Area -->
           <div class="math-entry-row">
@@ -545,21 +540,21 @@
             />
           </div>
 
-          <div class="form-group">
-            <label for="edit-value-input-details">Current value</label>
-            <input
-              type="number"
-              inputmode="decimal"
-              id="edit-value-input-details"
-              class="form-input"
-              required
-              placeholder="0"
-            />
-          </div>
-
           <div class="form-row">
             <div class="form-group">
-              <label for="edit-increment">Direct increment</label>
+              <label for="edit-value-input-details" style="white-space: nowrap;">Value</label>
+              <input
+                type="number"
+                inputmode="decimal"
+                id="edit-value-input-details"
+                class="form-input"
+                required
+                placeholder="0"
+              />
+              <span class="field-hint">Current</span>
+            </div>
+            <div class="form-group">
+              <label for="edit-increment" style="white-space: nowrap;">Increment</label>
               <input
                 type="number"
                 inputmode="decimal"
@@ -569,10 +564,10 @@
                 min="1"
                 placeholder="1"
               />
-              <span class="field-hint">Triggered on card edges</span>
+              <span class="field-hint">On edge</span>
             </div>
             <div class="form-group">
-              <label for="edit-reset-val">Reset value</label>
+              <label for="edit-reset-val" style="white-space: nowrap;">Reset</label>
               <input
                 type="number"
                 inputmode="decimal"
@@ -581,7 +576,7 @@
                 required
                 placeholder="0"
               />
-              <span class="field-hint">Triggered on reset</span>
+              <span class="field-hint">On reset</span>
             </div>
           </div>
 
