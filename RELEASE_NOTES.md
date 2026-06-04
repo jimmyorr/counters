@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.0.10
+
+- **User interface:** Increased counter label sizes for better visibility, condensed the edit counter layout onto a single line, and removed extraneous help text.
+- **Interactions:** Moved destructive "Delete" and "Clear history" actions to the top left of their dialogs to prevent accidental taps near the close button.
+
 ## 0.0.9
 
 - **Customization:** Added a dynamic theme color hue slider in Settings to personalize the entire app's primary color.

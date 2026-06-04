@@ -90,8 +90,8 @@
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-C27ZZoss.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-Dxz3_5h6.css">
+    <script type="module" crossorigin src="./assets/index-aTIpOSnt.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CmKUQARg.css">
   </head>
   <body>
     <!-- App Header -->
@@ -424,11 +424,6 @@
             <!-- Injected dynamically by JavaScript, e.g. +5, +10, +50 -->
           </div>
 
-          <p class="tweak-caption">
-            You can tweak these values in the Settings
-          </p>
-
-          <hr class="dialog-divider" />
 
           <!-- Interactive Math Area -->
           <div class="math-entry-row">
@@ -476,8 +471,7 @@
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
-        <h2 id="edit-dialog-title" class="sheet-title">Edit counter</h2>
-        <div class="header-actions">
+        <div class="header-left-actions">
           <button
             class="header-icon-btn danger-color"
             id="edit-btn-delete"
@@ -496,6 +490,9 @@
               />
             </svg>
           </button>
+        </div>
+        <h2 id="edit-dialog-title" class="sheet-title">Edit counter</h2>
+        <div class="header-actions">
           <button
             class="sheet-close-btn"
             commandfor="edit-counter-dialog"
@@ -546,21 +543,21 @@
             />
           </div>
 
-          <div class="form-group">
-            <label for="edit-value-input-details">Current value</label>
-            <input
-              type="number"
-              inputmode="decimal"
-              id="edit-value-input-details"
-              class="form-input"
-              required
-              placeholder="0"
-            />
-          </div>
-
           <div class="form-row">
             <div class="form-group">
-              <label for="edit-increment">Direct increment</label>
+              <label for="edit-value-input-details" style="white-space: nowrap;">Value</label>
+              <input
+                type="number"
+                inputmode="decimal"
+                id="edit-value-input-details"
+                class="form-input"
+                required
+                placeholder="0"
+              />
+              <span class="field-hint">Current</span>
+            </div>
+            <div class="form-group">
+              <label for="edit-increment" style="white-space: nowrap;">Increment</label>
               <input
                 type="number"
                 inputmode="decimal"
@@ -570,10 +567,10 @@
                 min="1"
                 placeholder="1"
               />
-              <span class="field-hint">Triggered on card edges</span>
+              <span class="field-hint">On edge</span>
             </div>
             <div class="form-group">
-              <label for="edit-reset-val">Reset value</label>
+              <label for="edit-reset-val" style="white-space: nowrap;">Reset</label>
               <input
                 type="number"
                 inputmode="decimal"
@@ -582,7 +579,7 @@
                 required
                 placeholder="0"
               />
-              <span class="field-hint">Triggered on reset</span>
+              <span class="field-hint">On reset</span>
             </div>
           </div>
 
@@ -965,8 +962,7 @@
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
-        <h2 id="history-dialog-title" class="sheet-title">History</h2>
-        <div class="header-actions">
+        <div class="header-left-actions">
           <button
             class="header-icon-btn danger-color"
             id="history-btn-clear"
@@ -985,6 +981,9 @@
               />
             </svg>
           </button>
+        </div>
+        <h2 id="history-dialog-title" class="sheet-title">History</h2>
+        <div class="header-actions">
           <button
             class="sheet-close-btn"
             commandfor="history-dialog"
