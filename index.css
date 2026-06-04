@@ -1223,6 +1223,15 @@ input:checked + .slider-round:before {
   background-color: #000000;
 }
 
+/* Fix focus ring on visually hidden switch input */
+.switch-toggle input:focus-visible {
+  box-shadow: none;
+}
+
+.switch-toggle input:focus-visible + .slider-round {
+  box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--focus-ring, #000000);
+}
+
 /* Settings Inputs */
 .settings-select {
   background-color: var(--bg-tertiary);
