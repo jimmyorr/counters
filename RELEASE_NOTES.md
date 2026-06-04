@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.0.11
+
+- **Customization:** Added a custom color picker to set individual counter hex colors, separate from the primary app theme.
+- **User interface:** Reorganized the settings menu to group theme options under Appearance and consolidate quick-add preferences.
+- **Accessibility:** Added focus rings to toggle switches and converted the top leader indicator into a keyboard-accessible button.
+
 ## 0.0.10
 
 - **User interface:** Increased counter label sizes for better visibility, condensed the edit counter layout onto a single line, and removed extraneous help text.
