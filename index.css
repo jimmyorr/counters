@@ -1559,6 +1559,14 @@ dialog[open].bottom-sheet-dialog {
   gap: 8px;
 }
 
+.header-left-actions {
+  position: absolute;
+  left: 16px;
+  top: 14px;
+  display: flex;
+  gap: 8px;
+}
+
 .header-icon-btn {
   background: none;
   border: none;
