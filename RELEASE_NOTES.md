@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.0.12
+
+- **Calculator:** Expanded submit button layout, capped input length to prevent precision bugs, and truncated overflow text.
+- **Accessibility:** Added adaptive contrast blending for dialog title pills, improving legibility across themes.
+- **User interface:** Fixed flex layout to prevent squishing on large numbers and restored minimum widths.
+
 ## 0.0.11
 
 - **Customization:** Added a custom color picker to set individual counter hex colors, separate from the primary app theme.
