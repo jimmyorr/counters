@@ -1667,8 +1667,8 @@ dialog[open].bottom-sheet-dialog {
 /* Calculator Active Row */
 .math-entry-row {
   display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 12px;
+  grid-template-columns: 80px 1fr auto;
+  gap: 8px;
   width: 100%;
   margin-bottom: 20px;
 }

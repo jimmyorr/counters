@@ -904,6 +904,8 @@ import { Preferences } from '@capacitor/preferences';
 
     $("#calc-number-input")?.addEventListener("input", updateSubmitButtonText);
 
+
+
     // Toggle calculator operators (+ / -)
     $("#calc-op-minus").addEventListener("click", () => {
       state.calcPendingOperation = "minus";
