@@ -4,8 +4,7 @@
    Web Audio synthesizer, and custom mathematical overlays.
    ========================================================================== */
 
-import { Preferences } from '@capacitor/preferences';
-
+import { Preferences } from "@capacitor/preferences";
 
 (function () {
   "use strict";
@@ -61,9 +60,13 @@ import { Preferences } from '@capacitor/preferences';
   // ------------------------------------------------------------------------
   const loadStateFromStorage = async () => {
     try {
-      const savedCounters = (await Preferences.get({ key: "counters-list" })).value;
-      const savedSettings = (await Preferences.get({ key: "counters-settings" })).value;
-      const savedHistory = (await Preferences.get({ key: "counters-history" })).value;
+      const savedCounters = (await Preferences.get({ key: "counters-list" }))
+        .value;
+      const savedSettings = (
+        await Preferences.get({ key: "counters-settings" })
+      ).value;
+      const savedHistory = (await Preferences.get({ key: "counters-history" }))
+        .value;
 
       if (savedCounters) {
         state.counters = JSON.parse(savedCounters).map((counter) => ({
@@ -79,7 +82,10 @@ import { Preferences } from '@capacitor/preferences';
         state.settings = { ...state.settings, ...JSON.parse(savedSettings) };
       }
       if (state.settings.themeHue !== undefined) {
-        document.documentElement.style.setProperty("--theme-hue", state.settings.themeHue);
+        document.documentElement.style.setProperty(
+          "--theme-hue",
+          state.settings.themeHue,
+        );
       }
 
       if (savedHistory) {
@@ -96,16 +102,25 @@ import { Preferences } from '@capacitor/preferences';
   };
 
   const saveCounters = () => {
-    Preferences.set({ key: "counters-list", value: JSON.stringify(state.counters) });
+    Preferences.set({
+      key: "counters-list",
+      value: JSON.stringify(state.counters),
+    });
   };
 
   const saveSettings = () => {
-    Preferences.set({ key: "counters-settings", value: JSON.stringify(state.settings) });
+    Preferences.set({
+      key: "counters-settings",
+      value: JSON.stringify(state.settings),
+    });
     localStorage.setItem("counters-layout", state.settings.layout);
   };
 
   const saveHistory = () => {
-    Preferences.set({ key: "counters-history", value: JSON.stringify(state.history) });
+    Preferences.set({
+      key: "counters-history",
+      value: JSON.stringify(state.history),
+    });
   };
 
   // Helper: Format large numbers with commas
@@ -343,7 +358,10 @@ import { Preferences } from '@capacitor/preferences';
           return a.index - b.index;
         })[0]?.counter;
       let themeHex = "";
-      if (typeof lowLeader.color === "string" && lowLeader.color.startsWith("#")) {
+      if (
+        typeof lowLeader.color === "string" &&
+        lowLeader.color.startsWith("#")
+      ) {
         themeHex = lowLeader.color;
       } else {
         const swatch = colorSwatches[lowLeader.color] || colorSwatches[0];
@@ -405,11 +423,18 @@ import { Preferences } from '@capacitor/preferences';
       const card = document.activeElement.closest(".counter-card");
       if (card) {
         focusedCounterId = card.getAttribute("data-counter-id");
-        if (document.activeElement.classList.contains("card-direct-zone-minus")) focusedSelector = ".card-direct-zone-minus";
-        else if (document.activeElement.classList.contains("card-value-body")) focusedSelector = ".card-value-body";
-        else if (document.activeElement.classList.contains("card-direct-zone-plus")) focusedSelector = ".card-direct-zone-plus";
-        else if (document.activeElement.classList.contains("btn-counter-reset")) focusedSelector = ".btn-counter-reset";
-        else if (document.activeElement.classList.contains("btn-counter-edit")) focusedSelector = ".btn-counter-edit";
+        if (document.activeElement.classList.contains("card-direct-zone-minus"))
+          focusedSelector = ".card-direct-zone-minus";
+        else if (document.activeElement.classList.contains("card-value-body"))
+          focusedSelector = ".card-value-body";
+        else if (
+          document.activeElement.classList.contains("card-direct-zone-plus")
+        )
+          focusedSelector = ".card-direct-zone-plus";
+        else if (document.activeElement.classList.contains("btn-counter-reset"))
+          focusedSelector = ".btn-counter-reset";
+        else if (document.activeElement.classList.contains("btn-counter-edit"))
+          focusedSelector = ".btn-counter-edit";
       }
     }
 
@@ -418,7 +443,10 @@ import { Preferences } from '@capacitor/preferences';
       .map((counter) => {
         let cardThemeHex = "";
         let swatchClass = "";
-        if (typeof counter.color === "string" && counter.color.startsWith("#")) {
+        if (
+          typeof counter.color === "string" &&
+          counter.color.startsWith("#")
+        ) {
           cardThemeHex = counter.color;
         } else {
           const preset = colorSwatches[counter.color] || colorSwatches[0];
@@ -465,7 +493,9 @@ import { Preferences } from '@capacitor/preferences';
 
     // 2. Restore focus
     if (focusedCounterId && focusedSelector) {
-      const newCard = document.querySelector(`.counter-card[data-counter-id="${focusedCounterId}"]`);
+      const newCard = document.querySelector(
+        `.counter-card[data-counter-id="${focusedCounterId}"]`,
+      );
       if (newCard) {
         const elToFocus = newCard.querySelector(focusedSelector);
         if (elToFocus) elToFocus.focus();
@@ -904,8 +934,6 @@ import { Preferences } from '@capacitor/preferences';
 
     $("#calc-number-input")?.addEventListener("input", updateSubmitButtonText);
 
-
-
     // Toggle calculator operators (+ / -)
     $("#calc-op-minus").addEventListener("click", () => {
       state.calcPendingOperation = "minus";
@@ -1081,13 +1109,15 @@ import { Preferences } from '@capacitor/preferences';
     // Compile Palette Grid circular swatches
     const paletteContainer = $("#edit-palette-container");
     if (paletteContainer) {
-      paletteContainer.innerHTML = colorSwatches
-        .map((swatch) => {
-          return `
+      paletteContainer.innerHTML =
+        colorSwatches
+          .map((swatch) => {
+            return `
           <div class="palette-swatch ${swatch.class}" data-color-id="${swatch.id}" style="background-color: ${swatch.hex}"></div>
         `;
-        })
-        .join("") + `
+          })
+          .join("") +
+        `
           <div class="palette-swatch custom-color-picker" data-color-id="custom">
             <svg class="custom-color-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
               <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />
@@ -1108,9 +1138,11 @@ import { Preferences } from '@capacitor/preferences';
         const colorId = swatch.getAttribute("data-color-id");
         if (colorId === "custom") {
           const customInput = $("#edit-custom-color");
-          if (customInput) dialog.style.setProperty("--sheet-theme", customInput.value);
+          if (customInput)
+            dialog.style.setProperty("--sheet-theme", customInput.value);
         } else {
-          const swatchData = colorSwatches[parseInt(colorId)] || colorSwatches[0];
+          const swatchData =
+            colorSwatches[parseInt(colorId)] || colorSwatches[0];
           dialog.style.setProperty("--sheet-theme", swatchData.hex);
         }
 
@@ -1406,7 +1438,7 @@ import { Preferences } from '@capacitor/preferences';
     $$(".palette-swatch").forEach((swatch) => {
       const colorId = swatch.getAttribute("data-color-id");
       swatch.classList.remove("active");
-      
+
       if (typeof counter.color === "string" && counter.color.startsWith("#")) {
         if (colorId === "custom") {
           swatch.classList.add("active");
@@ -1434,11 +1466,11 @@ import { Preferences } from '@capacitor/preferences';
     if (dialog) {
       dialog.style.setProperty("--sheet-theme", sheetThemeHex);
       dialog.showModal();
-      
+
       const labelInput = $("#edit-label");
       // Intentionally NOT focusing the input to prevent mobile keyboard from popping up
       // and squeezing the UI. User can tap the field if they want to edit it.
-      
+
       playClickSound();
     }
   };
@@ -1575,7 +1607,11 @@ import { Preferences } from '@capacitor/preferences';
     let progressionVal = "";
     if (typeof oldValue === "string" && newValue === undefined) {
       progressionVal = oldValue;
-    } else if (actionLabel === "Added counter" || actionLabel === "Deleted counter" || actionLabel === "Reset counter") {
+    } else if (
+      actionLabel === "Added counter" ||
+      actionLabel === "Deleted counter" ||
+      actionLabel === "Reset counter"
+    ) {
       // For added/deleted/reset, showing the exact previous values isn't always useful, but let's at least hide 0 -> 0
       if (oldValue === newValue) {
         progressionVal = "";
@@ -1878,15 +1914,37 @@ import { Preferences } from '@capacitor/preferences';
       if (e.key === "Enter" || e.key === " ") {
         const card = e.target.closest(".counter-card");
         if (!card) return;
-        
+
         const valueBody = e.target.closest(".card-value-body");
         if (valueBody) {
           e.preventDefault();
           const counterId = card.getAttribute("data-counter-id");
-          openCalculatorDialog(counterId);
+          const counter = state.counters.find((c) => c.id === counterId);
+          if (counter) {
+            state.activeCounterIdForCalc = counterId;
+            state.calcPendingValue = "";
+            state.calcPendingOperation = "plus";
+            const titleEl = $("#calc-dialog-title");
+            if (titleEl) titleEl.textContent = `${counter.label}: ${formatNumber(counter.value)}`;
+            const inputEl = $("#calc-number-input");
+            if (inputEl) inputEl.value = "";
+            if (window.updateCalcDisplayDOM) window.updateCalcDisplayDOM();
+            
+            const dialog = $("#calculator-dialog");
+            if (dialog) {
+              const hexColor = getCounterHex(counter);
+              dialog.style.setProperty("--sheet-theme", hexColor);
+              if (titleEl) {
+                titleEl.style.setProperty("--pill-bg", `${hexColor}15`);
+                titleEl.style.setProperty("--pill-border", `${hexColor}40`);
+              }
+              setTimeout(() => dialog.showModal(), 50);
+              playClickSound(600, 700, 0.08, 0.05);
+            }
+          }
           return;
         }
-        
+
         const directZone = e.target.closest(".card-direct-zone");
         if (directZone) {
           e.preventDefault();
