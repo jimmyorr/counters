@@ -888,7 +888,14 @@ import { Preferences } from "@capacitor/preferences";
       const submitBtn = $("#calc-btn-submit");
       if (!submitBtn) return;
 
-      const valStr = $("#calc-number-input")?.value || "";
+      const inputEl = $("#calc-number-input");
+      let valStr = inputEl?.value || "";
+      
+      if (valStr.length > 14) {
+        valStr = valStr.slice(0, 14);
+        if (inputEl) inputEl.value = valStr;
+      }
+
       const val = parseFloat(valStr);
       const isMinus = state.calcPendingOperation === "minus";
 

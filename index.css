@@ -1679,6 +1679,11 @@ dialog[open].bottom-sheet-dialog {
   margin-bottom: 20px;
 }
 
+#calc-btn-submit {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .operation-toggles {
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-strong);
