@@ -1547,6 +1547,18 @@ dialog[open].bottom-sheet-dialog {
   transition: all var(--trans-normal);
 }
 
+.dark-mode .sheet-title-pill {
+  color: color-mix(in srgb, var(--sheet-theme, var(--text-primary)) 60%, white);
+  background-color: color-mix(in srgb, var(--sheet-theme, var(--bg-tertiary)) 15%, transparent);
+  border-color: color-mix(in srgb, var(--sheet-theme, var(--border-light)) 30%, transparent);
+}
+
+.light-mode .sheet-title-pill {
+  color: color-mix(in srgb, var(--sheet-theme, var(--text-primary)) 85%, black);
+  background-color: color-mix(in srgb, var(--sheet-theme, var(--bg-tertiary)) 10%, transparent);
+  border-color: color-mix(in srgb, var(--sheet-theme, var(--border-light)) 30%, transparent);
+}
+
 .sheet-close-btn {
   background: none;
   border: none;
