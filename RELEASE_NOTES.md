@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.0.13
+
+- **Settings:** Added a "Keep screen awake" toggle functionality using native Capacitor plugins and the Web Wake Lock API.
+- **User interface:** Implemented a unified site-wide styling system, optimized font sizes for grid display elements, and fixed padding to respect device safe area insets.
+- **PWA support:** Added web app manifest, custom icon assets, and support for home screen installation.
+
 ## 0.0.12
 
 - **Calculator:** Expanded submit button layout, capped input length to prevent precision bugs, and truncated overflow text.
