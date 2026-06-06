@@ -1074,6 +1074,29 @@ import { registerSW } from "virtual:pwa-register";
       );
     });
 
+    $("#menu-btn-shuffle-counters")?.addEventListener("click", () => {
+      dialog.close();
+      if (state.counters.length === 0) return;
+      
+      // Fisher-Yates shuffle
+      for (let i = state.counters.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [state.counters[i], state.counters[j]] = [state.counters[j], state.counters[i]];
+      }
+      
+      // Turn off auto-sort if it's on, otherwise it will just sort itself back
+      if (state.settings.autoSort) {
+        state.settings.autoSort = false;
+        $("#options-auto-sort").checked = false;
+        saveSettings();
+      }
+
+      saveCounters();
+      renderCountersList();
+      showToast("Counters shuffled");
+      playClickSound();
+    });
+
     $("#menu-btn-delete-all")?.addEventListener("click", () => {
       dialog.close();
       if (state.counters.length === 0) return;
