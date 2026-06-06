@@ -2401,7 +2401,7 @@ import { registerSW } from "virtual:pwa-register";
         });
       },
       onOfflineReady() {
-        showToast("App ready to work offline");
+        console.log("App ready to work offline");
       },
     });
   };
