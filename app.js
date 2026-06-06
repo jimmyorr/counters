@@ -1108,6 +1108,14 @@ import { registerSW } from "virtual:pwa-register";
       }
 
       saveCounters();
+
+      const listWrapper = $("#counters-list-wrapper");
+      if (listWrapper) {
+        listWrapper.classList.remove("animate-shuffle");
+        void listWrapper.offsetWidth; // Trigger reflow
+        listWrapper.classList.add("animate-shuffle");
+      }
+
       renderCountersList();
       showToast("Counters shuffled");
       playClickSound();
