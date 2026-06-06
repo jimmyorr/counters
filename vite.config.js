@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite';
 import fs from 'fs';
+import { VitePWA } from 'vite-plugin-pwa';
 
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
+const manifestData = JSON.parse(fs.readFileSync('./public/manifest.json', 'utf-8'));
 
 export default defineConfig({
   base: './',
@@ -12,4 +14,11 @@ export default defineConfig({
     outDir: 'docs',
     emptyOutDir: true,
   },
+  plugins: [
+    VitePWA({
+      registerType: 'prompt',
+      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icon-512.png'],
+      manifest: manifestData
+    })
+  ]
 });

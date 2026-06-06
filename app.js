@@ -6,6 +6,7 @@
 
 import { Preferences } from "@capacitor/preferences";
 import { KeepAwake } from "@capacitor-community/keep-awake";
+import { registerSW } from "virtual:pwa-register";
 
 (function () {
   "use strict";
@@ -2392,6 +2393,17 @@ import { KeepAwake } from "@capacitor-community/keep-awake";
         versionEl.textContent = `Counters v${__APP_VERSION__}`;
       }
     }
+
+    const updateSW = registerSW({
+      onNeedRefresh() {
+        showConfirmDialog("A new version is available. Reload?", () => {
+          updateSW(true);
+        });
+      },
+      onOfflineReady() {
+        showToast("App ready to work offline");
+      },
+    });
   };
 
   // Bootstrap when DOM ready
