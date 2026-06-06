@@ -809,7 +809,7 @@ import { registerSW } from "virtual:pwa-register";
     // Update Topbar View Title
     const viewTitle = $("#app-view-title");
     if (viewTitle) {
-      if (tabId === "counters") viewTitle.textContent = "Counters";
+      if (tabId === "counters") viewTitle.textContent = "Counters HELLO JIMMY";
       else if (tabId === "dice") viewTitle.textContent = "Dice";
       else if (tabId === "timer") viewTitle.textContent = "Timer";
     }
@@ -1163,14 +1163,54 @@ import { registerSW } from "virtual:pwa-register";
       dialog.close();
       if (state.counters.length === 0) return;
       showConfirmDialog("Are you sure you want to delete all counters?", () => {
-        state.counters = [];
-        state.history = [];
-        saveCounters();
-        saveHistory();
-        renderCountersList();
-        renderHistory();
-        showToast("All counters deleted");
-        playResetSound();
+        const completeDeletion = () => {
+          state.counters = [];
+          state.history = [];
+          saveCounters();
+          saveHistory();
+          renderCountersList();
+          renderHistory();
+          showToast("All counters deleted");
+          playResetSound();
+        };
+
+        const cards = $$(".counter-card");
+        if (cards.length > 0) {
+          cards.forEach((cardEl, index) => {
+            const h = cardEl.offsetHeight;
+            cardEl.classList.remove("animate-entry", "animate-reset");
+            cardEl.style.overflow = "hidden";
+            cardEl.style.pointerEvents = "none";
+            cardEl.style.height = `${h}px`; // Lock height synchronously
+
+            const delay = index * 0.06; // 60ms cascade stagger
+            const rotateDir = Math.random() > 0.5 ? 1 : -1;
+            const rotateAngle = 25 + Math.random() * 45;
+            const dropY = 180 + Math.random() * 80;
+            const dropX = (Math.random() - 0.5) * 120;
+            const origin = rotateDir > 0 ? "top left" : "top right";
+
+            requestAnimationFrame(() => {
+              cardEl.style.transformOrigin = origin;
+              // Delay layout collapse (height, padding, margin) so the card falls out first, offset by stagger delay
+              cardEl.style.transition = `transform 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) ${delay}s, opacity 0.4s ease-in ${delay + 0.1}s, height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay + 0.3}s, margin-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay + 0.3}s, margin-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay + 0.3}s, padding-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay + 0.3}s, padding-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay + 0.3}s, border-width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay + 0.3}s`;
+              
+              requestAnimationFrame(() => {
+                cardEl.style.transform = `translate(${dropX}px, ${dropY}px) rotate(${rotateDir * rotateAngle}deg)`;
+                cardEl.style.opacity = "0";
+                cardEl.style.height = "0px";
+                cardEl.style.marginTop = "0px";
+                cardEl.style.marginBottom = "0px";
+                cardEl.style.paddingTop = "0px";
+                cardEl.style.paddingBottom = "0px";
+                cardEl.style.borderWidth = "0px";
+              });
+            });
+          });
+          setTimeout(completeDeletion, 700 + (cards.length * 60));
+        } else {
+          completeDeletion();
+        }
       });
     });
   };
@@ -1364,21 +1404,38 @@ import { registerSW } from "virtual:pwa-register";
           dialog.close();
 
           if (cardEl) {
-            // Lock height to current actual pixel height to allow smooth CSS transition to 0
-            cardEl.style.height = `${cardEl.offsetHeight}px`;
+            const h = cardEl.offsetHeight;
+            cardEl.classList.remove('animate-entry', 'animate-reset');
+            cardEl.style.overflow = 'hidden';
+            cardEl.style.pointerEvents = 'none';
+            cardEl.style.height = `${h}px`; // Lock height synchronously
 
-            // Force a reflow to make the height lock take effect
-            void cardEl.offsetHeight;
+            // Wait 1 frame for browser to paint the height lock
+            requestAnimationFrame(() => {
+              const rotateDir = Math.random() > 0.5 ? 1 : -1;
+              const rotateAngle = 25 + Math.random() * 30;
+              const dropY = 180 + Math.random() * 50;
+              const dropX = (Math.random() - 0.5) * 80;
+              const origin = rotateDir > 0 ? "top left" : "top right";
 
-            cardEl.classList.add("animate-exit");
-            const animations = cardEl.getAnimations();
-            if (animations.length > 0) {
-              Promise.allSettled(animations.map((a) => a.finished)).then(
-                completeDeletion,
-              );
-            } else {
-              setTimeout(completeDeletion, 300);
-            }
+              cardEl.style.transformOrigin = origin;
+              // Delay layout collapse (height, padding, margin) so the card falls out first
+              cardEl.style.transition = "transform 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53), opacity 0.4s ease-in 0.1s, height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, margin-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, margin-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, padding-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, padding-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, border-width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s";
+              
+              // Wait 1 MORE frame to guarantee the transition is active BEFORE changing styles
+              requestAnimationFrame(() => {
+                cardEl.style.transform = `translate(${dropX}px, ${dropY}px) rotate(${rotateDir * rotateAngle}deg)`;
+                cardEl.style.opacity = "0";
+                cardEl.style.height = "0px";
+                cardEl.style.marginTop = "0px";
+                cardEl.style.marginBottom = "0px";
+                cardEl.style.paddingTop = "0px";
+                cardEl.style.paddingBottom = "0px";
+                cardEl.style.borderWidth = "0px";
+              });
+            });
+
+            setTimeout(completeDeletion, 700);
           } else {
             completeDeletion();
           }
