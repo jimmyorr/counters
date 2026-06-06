@@ -5,6 +5,7 @@
    ========================================================================== */
 
 import { Preferences } from "@capacitor/preferences";
+import { KeepAwake } from "@capacitor-community/keep-awake";
 
 (function () {
   "use strict";
@@ -31,6 +32,7 @@ import { Preferences } from "@capacitor/preferences";
       soundEnabled: true,
       quickAddValues: [5, 10, 15, 20, 50, 100],
       themeHue: 205,
+      keepAwake: false,
     },
     history: [],
     currentTab: "counters",
@@ -86,6 +88,10 @@ import { Preferences } from "@capacitor/preferences";
           "--theme-hue",
           state.settings.themeHue,
         );
+      }
+
+      if (state.settings.keepAwake) {
+        KeepAwake.keepAwake().catch((err) => console.warn("KeepAwake failed:", err));
       }
 
       if (savedHistory) {
@@ -1487,6 +1493,8 @@ import { Preferences } from "@capacitor/preferences";
   // ------------------------------------------------------------------------
   const loadSettingsIntoDOM = () => {
     $("#setting-sound").checked = state.settings.soundEnabled;
+    const keepAwakeEl = $("#setting-keep-awake");
+    if (keepAwakeEl) keepAwakeEl.checked = state.settings.keepAwake;
     $("#setting-theme").value =
       localStorage.getItem("counters-theme") || "system";
     $("#setting-quick-add-values").value =
@@ -1501,6 +1509,21 @@ import { Preferences } from "@capacitor/preferences";
       saveSettings();
       playClickSound();
     });
+
+    // Keep Awake Toggle
+    const keepAwakeToggle = $("#setting-keep-awake");
+    if (keepAwakeToggle) {
+      keepAwakeToggle.addEventListener("change", (e) => {
+        state.settings.keepAwake = e.target.checked;
+        saveSettings();
+        if (state.settings.keepAwake) {
+          KeepAwake.keepAwake().catch((err) => console.warn("KeepAwake enable failed:", err));
+        } else {
+          KeepAwake.allowSleep().catch((err) => console.warn("KeepAwake disable failed:", err));
+        }
+        playClickSound();
+      });
+    }
 
     // Theme Hue Slider
     const hueSlider = $("#setting-theme-hue");
