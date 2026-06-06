@@ -1,5 +1,22 @@
 apply plugin: 'com.android.application'
 
+import groovy.json.JsonSlurper
+
+def getAppVersion() {
+    def jsonFile = file('../../package.json')
+    def parsedJson = new JsonSlurper().parseText(jsonFile.text)
+    return parsedJson.version
+}
+
+def getAppVersionCode() {
+    def version = getAppVersion()
+    def parts = version.split('\\.')
+    def major = parts[0].toInteger()
+    def minor = parts[1].toInteger()
+    def patch = parts[2].toInteger()
+    return major * 10000 + minor * 100 + patch
+}
+
 android {
     namespace = "com.cowneck.counters"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +24,8 @@ android {
         applicationId "com.cowneck.counters"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode getAppVersionCode()
+        versionName getAppVersion()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
