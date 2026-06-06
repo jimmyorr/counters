@@ -587,7 +587,25 @@ html[data-layout="grid"] .counter-card {
 
 /* Grid display resizing */
 html[data-layout="grid"] .value-display {
-  font-size: 34px;
+  font-size: 32px;
+}
+
+html[data-layout="grid"] .card-value-body {
+  min-width: 40%;
+  padding: 0 4px;
+}
+
+html[data-layout="grid"] .card-direct-zone {
+  flex: 1 1 30%;
+  min-width: 32px;
+}
+
+html[data-layout="grid"] .card-direct-zone-minus {
+  padding-left: 10px;
+}
+
+html[data-layout="grid"] .card-direct-zone-plus {
+  padding-right: 10px;
 }
 
 .card-value-body:active .value-display {
