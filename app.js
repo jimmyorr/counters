@@ -1103,6 +1103,13 @@ import { registerSW } from "virtual:pwa-register";
       dialog.close();
       if (state.counters.length === 0) return;
       
+      // FIRST: Capture current positions for FLIP animation
+      const firstPositions = {};
+      $$(".counter-card").forEach(card => {
+        const id = card.getAttribute("data-counter-id");
+        if (id) firstPositions[id] = card.getBoundingClientRect();
+      });
+
       // Fisher-Yates shuffle
       for (let i = state.counters.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -1117,16 +1124,37 @@ import { registerSW } from "virtual:pwa-register";
       }
 
       saveCounters();
+      renderCountersList(); // Renders new DOM elements
 
-      const listWrapper = $("#counters-list-wrapper");
-      if (listWrapper) {
-        listWrapper.classList.remove("animate-shuffle");
-        void listWrapper.offsetWidth; // Trigger reflow
-        listWrapper.classList.add("animate-shuffle");
-        setTimeout(() => listWrapper.classList.remove("animate-shuffle"), 400);
-      }
+      // LAST, INVERT, PLAY
+      $$(".counter-card").forEach(card => {
+        const id = card.getAttribute("data-counter-id");
+        const first = firstPositions[id];
+        if (first) {
+          const last = card.getBoundingClientRect();
+          const deltaX = first.left - last.left;
+          const deltaY = first.top - last.top;
 
-      renderCountersList();
+          // INVERT: move new card to old position instantly
+          card.style.transition = 'none';
+          card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+          card.style.zIndex = '10';
+
+          // PLAY: animate back to new position
+          requestAnimationFrame(() => {
+            void card.offsetWidth; // Force reflow
+            card.style.transition = 'transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            card.style.transform = 'translate(0, 0)';
+            
+            setTimeout(() => {
+              card.style.zIndex = '';
+              card.style.transition = '';
+              card.style.transform = '';
+            }, 450);
+          });
+        }
+      });
+
       showToast("Counters shuffled");
       playClickSound();
     });
