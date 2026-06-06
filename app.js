@@ -1083,6 +1083,15 @@ import { registerSW } from "virtual:pwa-register";
             addHistoryLog(counter, "Reset counter", oldValue, counter.value);
           });
           saveCounters();
+          
+          const listWrapper = $("#counters-list-wrapper");
+          if (listWrapper) {
+            listWrapper.classList.remove("animate-reset");
+            void listWrapper.offsetWidth; // Trigger reflow
+            listWrapper.classList.add("animate-reset");
+            setTimeout(() => listWrapper.classList.remove("animate-reset"), 700);
+          }
+
           renderCountersList();
           showToast("All counters reset");
           playResetSound();
@@ -1114,6 +1123,7 @@ import { registerSW } from "virtual:pwa-register";
         listWrapper.classList.remove("animate-shuffle");
         void listWrapper.offsetWidth; // Trigger reflow
         listWrapper.classList.add("animate-shuffle");
+        setTimeout(() => listWrapper.classList.remove("animate-shuffle"), 400);
       }
 
       renderCountersList();
