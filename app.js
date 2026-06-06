@@ -11,6 +11,22 @@ import { registerSW } from "virtual:pwa-register";
 (function () {
   "use strict";
 
+  // Google Analytics Sidecar (Web only)
+  if (!window.Capacitor?.isNativePlatform()) {
+    const gtagScript = document.createElement("script");
+    gtagScript.async = true;
+    gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=G-6RNVL7JZVJ";
+    document.head.appendChild(gtagScript);
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      window.dataLayer.push(arguments);
+    }
+    window.gtag = gtag;
+    gtag("js", new Date());
+    gtag("config", "G-6RNVL7JZVJ");
+  }
+
   // Central patch to track when dialogs are opened.
   // This is used to prevent synthetic 'click' events from instantly closing them.
   const originalShowModal = HTMLDialogElement.prototype.showModal;
