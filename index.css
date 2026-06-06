@@ -252,7 +252,7 @@ body > .app-nav {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: env(safe-area-inset-top, 0px) 16px 0;
+  padding: env(safe-area-inset-top, 0px) calc(16px + env(safe-area-inset-right, 0px)) 0 calc(16px + env(safe-area-inset-left, 0px));
   z-index: 100;
 }
 
@@ -336,7 +336,7 @@ body > .app-nav {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  padding: 16px;
+  padding: 16px calc(16px + env(safe-area-inset-right, 0px)) 16px calc(16px + env(safe-area-inset-left, 0px));
   scroll-behavior: smooth;
   z-index: 10;
 }
@@ -1364,7 +1364,7 @@ input:checked + .slider-round:before {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   align-items: center;
-  padding-bottom: env(safe-area-inset-bottom, 0px); /* Notch screen styling */
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); /* Notch screen styling */
   z-index: 100;
 }
 
@@ -1478,7 +1478,7 @@ dialog[open]::backdrop {
   display: flex;
   flex-direction: column;
   max-height: 92vh;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   transition-property: transform, display, overlay;
   transition-duration: 0.4s;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -2258,7 +2258,7 @@ dialog[open].options-menu-dialog {
    -------------------------------------------------------------------------- */
 .toast-notification {
   position: fixed;
-  bottom: 84px;
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%) translateY(0);
   background-color: var(--bg-tertiary);
