@@ -1,6 +1,6 @@
 {
   "name": "counters",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "Minimalist score keeping app",
   "main": "index.html",
   "scripts": {
