@@ -109,7 +109,9 @@ import confetti from "canvas-confetti";
       }
 
       if (state.settings.keepAwake) {
-        KeepAwake.keepAwake().catch((err) => console.warn("KeepAwake failed:", err));
+        KeepAwake.keepAwake().catch((err) =>
+          console.warn("KeepAwake failed:", err),
+        );
       }
 
       if (savedHistory) {
@@ -368,8 +370,9 @@ import confetti from "canvas-confetti";
       leaderContainer.style.setProperty("--leader-bg", `${themeHex}15`);
       leaderContainer.style.setProperty("--leader-border", `${themeHex}40`);
 
-      leaderContainer.querySelector(".leader-icon svg").innerHTML =
-        `<path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/>`;
+      leaderContainer.querySelector(
+        ".leader-icon svg",
+      ).innerHTML = `<path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/>`;
       leaderText.textContent = leader.label;
     } else if (type === "lowest") {
       // Find lowest value counter. In case of a tie, choose the one that appears first on screen (lowest index).
@@ -395,8 +398,9 @@ import confetti from "canvas-confetti";
       leaderContainer.style.setProperty("--leader-bg", `${themeHex}15`);
       leaderContainer.style.setProperty("--leader-border", `${themeHex}40`);
 
-      leaderContainer.querySelector(".leader-icon svg").innerHTML =
-        `<path d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"/>`;
+      leaderContainer.querySelector(
+        ".leader-icon svg",
+      ).innerHTML = `<path d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"/>`;
       leaderText.textContent = lowLeader.label;
     } else if (type === "total") {
       // Find sum of all values
@@ -408,8 +412,9 @@ import confetti from "canvas-confetti";
       leaderContainer.style.removeProperty("--leader-bg");
       leaderContainer.style.removeProperty("--leader-border");
 
-      leaderContainer.querySelector(".leader-icon svg").innerHTML =
-        `<path d="M19 18v2H5v-2l6-6-6-6V4h14v2h-9.35L14 12l-4.35 6H19z"/>`;
+      leaderContainer.querySelector(
+        ".leader-icon svg",
+      ).innerHTML = `<path d="M19 18v2H5v-2l6-6-6-6V4h14v2h-9.35L14 12l-4.35 6H19z"/>`;
       leaderText.textContent = `Total: ${formatNumber(totalValue)}`;
     }
   };
@@ -480,16 +485,22 @@ import confetti from "canvas-confetti";
         const isNewClass = counter.isNew ? " animate-entry" : "";
         delete counter.isNew;
         return `
-        <div class="counter-card ${swatchClass}${isNewClass}" data-counter-id="${counter.id}" style="--card-theme: ${cardThemeHex}; --card-text: #ffffff">
+        <div class="counter-card ${swatchClass}${isNewClass}" data-counter-id="${
+          counter.id
+        }" style="--card-theme: ${cardThemeHex}; --card-text: #ffffff">
           <!-- Card Top Info Bar -->
           <div class="card-header">
-            <button class="card-btn btn-counter-reset" title="Reset value" aria-label="Reset value for ${counter.label}">
+            <button class="card-btn btn-counter-reset" title="Reset value" aria-label="Reset value for ${
+              counter.label
+            }">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                 <path d="M5.828 7l2.536 2.536L6.95 10.95 2 6l4.95-4.95 1.414 1.414L5.828 5H13a8 8 0 1 1 0 16H4v-2h9a6 6 0 1 0 0-12H5.828z"/>
               </svg>
             </button>
             <span class="counter-label">${counter.label}</span>
-            <button class="card-btn btn-counter-edit" title="Edit details" aria-label="Edit details for ${counter.label}">
+            <button class="card-btn btn-counter-edit" title="Edit details" aria-label="Edit details for ${
+              counter.label
+            }">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                 <path d="M5 18.084V22h3.916L21.416 9.497l-3.916-3.916L5 18.084zm3.084 1.916H7v-1.084l11.5-11.5 1.084 1.084L8.084 20zM19.416 3.584L21.416 5.584a2 2 0 0 1 0 2.828L20.416 9.412l-3.916-3.916L17.5 4.5a2 2 0 0 1 2.828 0z"/>
               </svg>
@@ -914,7 +925,7 @@ import confetti from "canvas-confetti";
 
       const inputEl = $("#calc-number-input");
       let valStr = inputEl?.value || "";
-      
+
       if (valStr.length > 14) {
         valStr = valStr.slice(0, 14);
         if (inputEl) inputEl.value = valStr;
@@ -926,7 +937,9 @@ import confetti from "canvas-confetti";
       if (!val || isNaN(val)) {
         submitBtn.textContent = isMinus ? "Subtract" : "Add";
       } else {
-        submitBtn.textContent = `${isMinus ? "Subtract" : "Add"} ${formatNumber(val)}`;
+        submitBtn.textContent = `${isMinus ? "Subtract" : "Add"} ${formatNumber(
+          val,
+        )}`;
       }
     };
 
@@ -1084,16 +1097,31 @@ import confetti from "canvas-confetti";
             addHistoryLog(counter, "Reset counter", oldValue, counter.value);
           });
           saveCounters();
-          
+
+          renderCountersList();
+
           const listWrapper = $("#counters-list-wrapper");
           if (listWrapper) {
             listWrapper.classList.remove("animate-reset");
             void listWrapper.offsetWidth; // Trigger reflow
             listWrapper.classList.add("animate-reset");
-            setTimeout(() => listWrapper.classList.remove("animate-reset"), 700);
+
+            $$(".counter-card").forEach((card) => {
+              // Add a random delay to make them not perfectly in sync
+              const randomDelay = Math.random() * 0.25;
+              card.style.animationDelay = `${randomDelay}s`;
+              card.style.animationFillMode = "backwards";
+            });
+
+            setTimeout(() => {
+              listWrapper.classList.remove("animate-reset");
+              $$(".counter-card").forEach((c) => {
+                c.style.animationDelay = "";
+                c.style.animationFillMode = "";
+              });
+            }, 850);
           }
 
-          renderCountersList();
           showToast("All counters reset");
           playResetSound();
         },
@@ -1103,24 +1131,26 @@ import confetti from "canvas-confetti";
     $("#menu-btn-shuffle-counters")?.addEventListener("click", () => {
       dialog.close();
       if (state.counters.length === 0) return;
-      
+
       // FIRST: Capture current positions for FLIP animation
       const firstPositions = {};
-      $$(".counter-card").forEach(card => {
+      $$(".counter-card").forEach((card) => {
         const id = card.getAttribute("data-counter-id");
         if (id) firstPositions[id] = card.getBoundingClientRect();
       });
 
       // Capture original order
-      const originalOrder = state.counters.map(c => c.id).join(',');
-
+      const originalOrder = state.counters.map((c) => c.id).join(",");
 
       // Fisher-Yates shuffle
       for (let i = state.counters.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [state.counters[i], state.counters[j]] = [state.counters[j], state.counters[i]];
+        [state.counters[i], state.counters[j]] = [
+          state.counters[j],
+          state.counters[i],
+        ];
       }
-      
+
       // Turn off auto-sort if it's on, otherwise it will just sort itself back
       if (state.settings.autoSort) {
         state.settings.autoSort = false;
@@ -1132,7 +1162,7 @@ import confetti from "canvas-confetti";
       renderCountersList(); // Renders new DOM elements
 
       // LAST, INVERT, PLAY
-      $$(".counter-card").forEach(card => {
+      $$(".counter-card").forEach((card) => {
         const id = card.getAttribute("data-counter-id");
         const first = firstPositions[id];
         if (first) {
@@ -1141,40 +1171,41 @@ import confetti from "canvas-confetti";
           const deltaY = first.top - last.top;
 
           // INVERT: move new card to old position instantly
-          card.style.transition = 'none';
+          card.style.transition = "none";
           card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-          card.style.zIndex = '10';
+          card.style.zIndex = "10";
 
           // PLAY: animate back to new position
           requestAnimationFrame(() => {
             void card.offsetWidth; // Force reflow
-            card.style.transition = 'transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            card.style.transform = 'translate(0, 0)';
-            
+            card.style.transition =
+              "transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)";
+            card.style.transform = "translate(0, 0)";
+
             setTimeout(() => {
-              card.style.zIndex = '';
-              card.style.transition = '';
-              card.style.transform = '';
+              card.style.zIndex = "";
+              card.style.transition = "";
+              card.style.transform = "";
             }, 450);
           });
         }
       });
 
-      const newOrder = state.counters.map(c => c.id).join(',');
-      
+      const newOrder = state.counters.map((c) => c.id).join(",");
+
       if (state.counters.length >= 3 && originalOrder === newOrder) {
         showToast("Perfect shuffle! Exact same order!");
-        if (typeof confetti === 'function') {
+        if (typeof confetti === "function") {
           confetti({
             particleCount: 150,
             spread: 80,
-            origin: { y: 0.6 }
+            origin: { y: 0.6 },
           });
         }
       } else {
         showToast("Counters shuffled");
       }
-      
+
       playClickSound();
     });
 
@@ -1212,10 +1243,26 @@ import confetti from "canvas-confetti";
             requestAnimationFrame(() => {
               cardEl.style.transformOrigin = origin;
               // Delay layout collapse (height, padding, margin) so the card falls out first, offset by stagger delay
-              cardEl.style.transition = `transform 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) ${delay}s, opacity 0.4s ease-in ${delay + 0.1}s, height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay + 0.3}s, margin-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay + 0.3}s, margin-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay + 0.3}s, padding-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay + 0.3}s, padding-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay + 0.3}s, border-width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${delay + 0.3}s`;
-              
+              cardEl.style.transition = `transform 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) ${delay}s, opacity 0.4s ease-in ${
+                delay + 0.1
+              }s, height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${
+                delay + 0.3
+              }s, margin-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${
+                delay + 0.3
+              }s, margin-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${
+                delay + 0.3
+              }s, padding-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${
+                delay + 0.3
+              }s, padding-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${
+                delay + 0.3
+              }s, border-width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${
+                delay + 0.3
+              }s`;
+
               requestAnimationFrame(() => {
-                cardEl.style.transform = `translate(${dropX}px, ${dropY}px) rotate(${rotateDir * rotateAngle}deg)`;
+                cardEl.style.transform = `translate(${dropX}px, ${dropY}px) rotate(${
+                  rotateDir * rotateAngle
+                }deg)`;
                 cardEl.style.opacity = "0";
                 cardEl.style.height = "0px";
                 cardEl.style.marginTop = "0px";
@@ -1226,7 +1273,7 @@ import confetti from "canvas-confetti";
               });
             });
           });
-          setTimeout(completeDeletion, 700 + (cards.length * 60));
+          setTimeout(completeDeletion, 700 + cards.length * 60);
         } else {
           completeDeletion();
         }
@@ -1424,9 +1471,9 @@ import confetti from "canvas-confetti";
 
           if (cardEl) {
             const h = cardEl.offsetHeight;
-            cardEl.classList.remove('animate-entry', 'animate-reset');
-            cardEl.style.overflow = 'hidden';
-            cardEl.style.pointerEvents = 'none';
+            cardEl.classList.remove("animate-entry", "animate-reset");
+            cardEl.style.overflow = "hidden";
+            cardEl.style.pointerEvents = "none";
             cardEl.style.height = `${h}px`; // Lock height synchronously
 
             // Wait 1 frame for browser to paint the height lock
@@ -1439,11 +1486,14 @@ import confetti from "canvas-confetti";
 
               cardEl.style.transformOrigin = origin;
               // Delay layout collapse (height, padding, margin) so the card falls out first
-              cardEl.style.transition = "transform 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53), opacity 0.4s ease-in 0.1s, height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, margin-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, margin-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, padding-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, padding-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, border-width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s";
-              
+              cardEl.style.transition =
+                "transform 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53), opacity 0.4s ease-in 0.1s, height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, margin-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, margin-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, padding-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, padding-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, border-width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s";
+
               // Wait 1 MORE frame to guarantee the transition is active BEFORE changing styles
               requestAnimationFrame(() => {
-                cardEl.style.transform = `translate(${dropX}px, ${dropY}px) rotate(${rotateDir * rotateAngle}deg)`;
+                cardEl.style.transform = `translate(${dropX}px, ${dropY}px) rotate(${
+                  rotateDir * rotateAngle
+                }deg)`;
                 cardEl.style.opacity = "0";
                 cardEl.style.height = "0px";
                 cardEl.style.marginTop = "0px";
@@ -1679,9 +1729,13 @@ import confetti from "canvas-confetti";
         state.settings.keepAwake = e.target.checked;
         saveSettings();
         if (state.settings.keepAwake) {
-          KeepAwake.keepAwake().catch((err) => console.warn("KeepAwake enable failed:", err));
+          KeepAwake.keepAwake().catch((err) =>
+            console.warn("KeepAwake enable failed:", err),
+          );
         } else {
-          KeepAwake.allowSleep().catch((err) => console.warn("KeepAwake disable failed:", err));
+          KeepAwake.allowSleep().catch((err) =>
+            console.warn("KeepAwake disable failed:", err),
+          );
         }
         playClickSound();
       });
@@ -1808,7 +1862,9 @@ import confetti from "canvas-confetti";
       if (oldValue === newValue) {
         progressionVal = "";
       } else {
-        progressionVal = `${formatNumber(oldValue)} → ${formatNumber(newValue)}`;
+        progressionVal = `${formatNumber(oldValue)} → ${formatNumber(
+          newValue,
+        )}`;
       }
     } else {
       progressionVal = `${formatNumber(oldValue)} → ${formatNumber(newValue)}`;
@@ -1968,8 +2024,9 @@ import confetti from "canvas-confetti";
             state.calcPendingValue = "";
             state.calcPendingOperation = "plus";
 
-            $("#calc-dialog-title").textContent =
-              `${counter.label}: ${formatNumber(counter.value)}`;
+            $("#calc-dialog-title").textContent = `${
+              counter.label
+            }: ${formatNumber(counter.value)}`;
             $("#calc-number-input").value = "";
             if (window.updateCalcDisplayDOM) {
               window.updateCalcDisplayDOM();
@@ -2117,11 +2174,14 @@ import confetti from "canvas-confetti";
             state.calcPendingValue = "";
             state.calcPendingOperation = "plus";
             const titleEl = $("#calc-dialog-title");
-            if (titleEl) titleEl.textContent = `${counter.label}: ${formatNumber(counter.value)}`;
+            if (titleEl)
+              titleEl.textContent = `${counter.label}: ${formatNumber(
+                counter.value,
+              )}`;
             const inputEl = $("#calc-number-input");
             if (inputEl) inputEl.value = "";
             if (window.updateCalcDisplayDOM) window.updateCalcDisplayDOM();
-            
+
             const dialog = $("#calculator-dialog");
             if (dialog) {
               const hexColor = getCounterHex(counter);

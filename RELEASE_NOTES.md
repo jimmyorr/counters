@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.0.18
+
+- **Animations:** Added smooth FLIP animations for shuffling, dynamic falling effects for deletions, reset animations, and a confetti explosion for perfect shuffles.
+- **Analytics:** Integrated Capacitor Firebase Analytics for cross-platform compliance and dynamic initialization, updating the privacy policy accordingly.
+- **Build:** Updated Capacitor runtime, dependencies, and service worker assets for production.
+
+
 ## 0.0.13
 
 - **Settings:** Added a "Keep screen awake" toggle functionality using native Capacitor plugins and the Web Wake Lock API.
