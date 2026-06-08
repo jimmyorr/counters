@@ -2304,6 +2304,7 @@ dialog[open].options-menu-dialog {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
+  white-space: pre-wrap;
 }
 
 /* --------------------------------------------------------------------------

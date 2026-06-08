@@ -1194,7 +1194,7 @@ import confetti from "canvas-confetti";
       const newOrder = state.counters.map((c) => c.id).join(",");
 
       if (state.counters.length >= 3 && originalOrder === newOrder) {
-        showToast("Perfect shuffle! Exact same order!");
+        showToast("Perfect shuffle!\nExact same order!");
         if (typeof confetti === "function") {
           confetti({
             particleCount: 150,
