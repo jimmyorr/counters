@@ -32,6 +32,7 @@
     "@capacitor-community/keep-awake": "^8.0.1",
     "@capacitor-firebase/analytics": "^8.3.0",
     "@capacitor/core": "^8.4.0",
-    "@capacitor/preferences": "^8.0.1"
+    "@capacitor/preferences": "^8.0.1",
+    "canvas-confetti": "^1.9.4"
   }
 }

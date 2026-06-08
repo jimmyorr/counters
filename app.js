@@ -7,6 +7,7 @@
 import { Preferences } from "@capacitor/preferences";
 import { KeepAwake } from "@capacitor-community/keep-awake";
 import { registerSW } from "virtual:pwa-register";
+import confetti from "canvas-confetti";
 
 (function () {
   "use strict";
@@ -1110,6 +1111,10 @@ import { registerSW } from "virtual:pwa-register";
         if (id) firstPositions[id] = card.getBoundingClientRect();
       });
 
+      // Capture original order
+      const originalOrder = state.counters.map(c => c.id).join(',');
+
+
       // Fisher-Yates shuffle
       for (let i = state.counters.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -1155,7 +1160,21 @@ import { registerSW } from "virtual:pwa-register";
         }
       });
 
-      showToast("Counters shuffled");
+      const newOrder = state.counters.map(c => c.id).join(',');
+      
+      if (state.counters.length >= 3 && originalOrder === newOrder) {
+        showToast("Perfect shuffle! Exact same order!");
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 150,
+            spread: 80,
+            origin: { y: 0.6 }
+          });
+        }
+      } else {
+        showToast("Counters shuffled");
+      }
+      
       playClickSound();
     });
 
