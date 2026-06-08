@@ -821,7 +821,7 @@ import confetti from "canvas-confetti";
     // Update Topbar View Title
     const viewTitle = $("#app-view-title");
     if (viewTitle) {
-      if (tabId === "counters") viewTitle.textContent = "Counters HELLO JIMMY";
+      if (tabId === "counters") viewTitle.textContent = "Counters";
       else if (tabId === "dice") viewTitle.textContent = "Dice";
       else if (tabId === "timer") viewTitle.textContent = "Timer";
     }
