@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "release": "npm version patch --no-git-tag-version && npm run build",
+    "release": "npm version patch --no-git-tag-version && node scripts/sync-version.js && npm run build",
     "preview": "vite preview",
     "ios": "npm run build && npx cap sync ios && npx cap open ios",
     "android": "npm run build && npx cap sync android && npx cap open android"
