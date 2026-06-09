@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About Counters</title>
+    <style>
+      :root {
+        --bg-color: #0f172a;
+        --card-bg: #1e293b;
+        --text-color: #cbd5e1;
+        --heading-color: #f8fafc;
+        --accent-color: #38bdf8;
+        --border-color: #334155;
+        --max-width: 760px;
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg-color: #f8fafc;
+          --card-bg: #ffffff;
+          --text-color: #334155;
+          --heading-color: #0f172a;
+          --accent-color: #0284c7;
+          --border-color: #e2e8f0;
+        }
+      }
+
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+          sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        line-height: 1.6;
+        margin: 0;
+        padding: 2rem 1.5rem;
+        display: flex;
+        justify-content: center;
+      }
+
+      .container {
+        max-width: var(--max-width);
+        width: 100%;
+      }
+
+      header {
+        margin-bottom: 3rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1.5rem;
+      }
+
+      h1 {
+        color: var(--heading-color);
+        font-size: 2.5rem;
+        margin: 0 0 0.5rem 0;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+      }
+
+      h2 {
+        color: var(--heading-color);
+        font-size: 1.5rem;
+        margin: 2.5rem 0 1rem 0;
+        font-weight: 700;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+      }
+
+      h3 {
+        color: var(--heading-color);
+        font-size: 1.15rem;
+        margin: 1.5rem 0 0.5rem 0;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0 0 1.25rem 0;
+      }
+
+      ul {
+        margin: 0 0 1.25rem 0;
+        padding-left: 1.5rem;
+      }
+
+      li {
+        margin-bottom: 0.5rem;
+      }
+
+      a {
+        color: var(--accent-color);
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .meta {
+        font-size: 0.875rem;
+        opacity: 0.8;
+        margin: 0;
+      }
+
+      .card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+      }
+
+      .card h2:first-of-type {
+        margin-top: 0;
+      }
+
+      .card p:last-child {
+        margin-bottom: 0;
+      }
+
+      footer {
+        margin-top: 4rem;
+        border-top: 1px solid var(--border-color);
+        padding-top: 1.5rem;
+        text-align: center;
+        font-size: 0.875rem;
+        opacity: 0.7;
+      }
+
+      .nav-links {
+        margin-top: 1rem;
+        display: flex;
+        gap: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>About Counters</h1>
+        <p class="meta">A minimalist score keeping application</p>
+        <div class="nav-links">
+          <a href="privacy.html">Privacy policy</a>
+        </div>
+      </header>
+
+      <main>
+        <p>
+          <strong>Counters</strong> is a clean, modern score tracker designed to
+          replace pen and paper for tabletop games, board games, habit tracking,
+          and more. With responsive controls, persistent local storage, and
+          built-in gaming tools, it makes keeping track of values seamless.
+        </p>
+
+        <h2>Frequently asked questions</h2>
+
+        <h3>1. Where is my data stored?</h3>
+        <p>
+          All your counters, history log entries, and custom layouts are saved
+          completely locally on your device. We do not use external cloud
+          servers for your data, meaning your scores are private and always
+          available offline.
+        </p>
+
+        <h3>2. How do I delete or edit a counter?</h3>
+        <p>
+          Tap the menu button or the counter settings icon on any individual
+          card to edit its name, change its color, reset its score, or delete it
+          entirely.
+        </p>
+
+        <div class="card">
+          <h2>Support & contact</h2>
+          <p>
+            If you need assistance, have feedback, want to report a bug, or have
+            a feature request, please reach out to us:
+          </p>
+          <ul>
+            <li><strong>Developer</strong>: Cowneck</li>
+            <li>
+              <strong>Email</strong>:
+              <a href="mailto:apps@cowneck.com">apps@cowneck.com</a>
+            </li>
+          </ul>
+        </div>
+      </main>
+
+      <footer>
+        <p>&copy; 2026 Cowneck. All rights reserved.</p>
+      </footer>
+    </div>
+  </body>
+</html>
