@@ -411,6 +411,7 @@
       id="calculator-dialog"
       class="bottom-sheet-dialog"
       aria-labelledby="calc-dialog-title"
+      autofocus
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
@@ -488,6 +489,7 @@
       id="edit-counter-dialog"
       class="bottom-sheet-dialog full-sheet-dialog"
       aria-labelledby="edit-dialog-title"
+      autofocus
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
@@ -519,7 +521,6 @@
             commandfor="edit-counter-dialog"
             command="close"
             aria-label="Close edit panel"
-            autofocus
           >
             <svg
               aria-hidden="true"
@@ -629,6 +630,7 @@
       id="main-menu-dialog"
       class="options-menu-dialog"
       aria-labelledby="main-menu-title"
+      autofocus
     >
       <div class="options-dialog-header">
         <h2 id="main-menu-title">Menu</h2>
@@ -734,6 +736,7 @@
       id="settings-dialog"
       class="bottom-sheet-dialog full-sheet-dialog"
       aria-labelledby="settings-dialog-title"
+      autofocus
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
@@ -875,6 +878,7 @@
       id="options-dialog"
       class="options-menu-dialog"
       aria-labelledby="options-dialog-title"
+      autofocus
     >
       <div class="options-dialog-header">
         <h2 id="options-dialog-title">Display options</h2>
@@ -1024,6 +1028,7 @@
       id="confirm-dialog"
       class="bottom-sheet-dialog"
       style="--sheet-theme: #f85c5c"
+      autofocus
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
@@ -1087,7 +1092,6 @@
             commandfor="history-dialog"
             command="close"
             aria-label="Close history"
-            autofocus
           >
             <svg
               aria-hidden="true"
@@ -1130,7 +1134,7 @@
     </dialog>
 
     <!-- 7. Minimal Edit label Dialog -->
-    <dialog id="edit-label-dialog" class="bottom-sheet-dialog">
+    <dialog id="edit-label-dialog" class="bottom-sheet-dialog" autofocus>
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
         <h2 class="sheet-title">Edit label</h2>
@@ -1175,7 +1179,7 @@
     </dialog>
 
     <!-- 8. Minimal Edit Value Dialog -->
-    <dialog id="edit-value-dialog" class="bottom-sheet-dialog">
+    <dialog id="edit-value-dialog" class="bottom-sheet-dialog" autofocus>
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
         <h2 class="sheet-title">Edit value</h2>

@@ -2465,7 +2465,9 @@ input.math-number-input:focus-visible {
   position: relative;
 }
 
-/* Remove focus ring on close buttons to prevent blue circles on iOS dialog autofocus */
+/* Remove focus ring on close buttons and dialogs to prevent outline on autofocus */
+dialog:focus,
+dialog:focus-visible,
 .sheet-close-btn:focus,
 .options-close-btn:focus,
 .sheet-close-btn:focus-visible,
