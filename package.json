@@ -4,6 +4,8 @@
   "description": "Minimalist score keeping app",
   "main": "index.html",
   "scripts": {
+    "predev": "node scripts/sync-about.js",
+    "prebuild": "node scripts/sync-about.js",
     "dev": "vite",
     "build": "vite build",
     "release": "npm version patch --no-git-tag-version && node scripts/sync-version.js && npm run build",

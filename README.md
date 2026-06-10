@@ -1,5 +1,7 @@
 # Counters
 
+## Promotional text
+
 Counters is an app for counting things.
 
 ## Description
