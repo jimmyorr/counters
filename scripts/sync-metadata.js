@@ -34,6 +34,9 @@ function extractSection(content, headerName) {
       }
     }
     if (inSection) {
+      if (line.startsWith('<!--')) {
+        continue;
+      }
       sectionLines.push(lines[i]);
     }
   }

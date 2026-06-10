@@ -2,10 +2,12 @@
 
 ## Promotional text
 
+<!-- Max 170 characters -->
 Counters is an app for counting things.
 
 ## Description
 
+<!-- Max 4,000 characters -->
 Counters is a minimalist app for tracking scores, life totals, and game states. Use it for board games, daily habits, or custom scoring systems.
 
 Features:
@@ -19,6 +21,12 @@ Features:
 • Total value display: Optional summary view to see the combined total value of all active counters.
 • Auto-sorting: Automatically arrange counters by highest or lowest score.
 • Dark & light modes: Fully supports your device's system-level color schemes.
+
+## Keywords
+
+<!-- Max 100 characters -->
+score,tracker,counter,game,boardgame,tally,dice,timer,points,life,calculator,habit,shuffle,mtg,dnd
+
 
 ## Development and deployment
 
@@ -55,8 +63,3 @@ Alternatively, you can run the release pipeline which increments the patch versi
 ```bash
 npm run release
 ```
-
-## Keywords
-
-score, counter, keeper, webapp, vanilla
-
