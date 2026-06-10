@@ -14,15 +14,16 @@ Counters is a minimalist app for tracking scores, life totals, and game states. 
 
 Features:
 
-- Dynamic counters: Add, edit, delete, and theme individual counters.
-- Smart calculator overlay: Quickly add or subtract values using the built-in calculator.
-- Complete history log: Records every single score change and reset.
-- Built-in utilities: Includes a dice roller and a precision stopwatch/timer.
-- Offline & persistent: Game state is saved completely locally. Resume exactly where you left off.
-- Shuffle & decider: Shuffle your counters with a single tap to randomly determine play order.
-- Total value display: Optional summary view to see the combined total value of all active counters.
-- Auto-sorting: Automatically arrange counters by highest or lowest score.
-- Dark & light modes: Fully supports your device's system-level color schemes.
+- Dynamic counters: Add, edit, delete, and set custom colors for individual counters.
+- Calculator overlay: Tap a counter to add or subtract custom values or quick-add presets.
+- Dice roller: Roll dice (d4 to d20) with adjustable quantities.
+- Stopwatch/timer: Track intervals or count down using quick-add presets.
+- History log: Record all counter adjustments, resets, and dice rolls.
+- Offline persistence: Save all app states locally to resume instantly.
+- Shuffle decider: Randomize counter order to determine play order.
+- Total value: View the combined sum of all active counters.
+- Auto-sorting: Arrange counters automatically by highest or lowest value.
+- Device themes: Support system light and dark modes with customizable color accents.
 
 ## Keywords
 
