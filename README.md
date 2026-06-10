@@ -22,7 +22,7 @@ Features:
 - Offline persistence: Save all app states locally to resume instantly.
 - Shuffle decider: Randomize counter order to determine play order.
 - Total value: View the combined sum of all active counters.
-- Auto-sorting: Arrange counters automatically by highest or lowest value.
+- Counter sorting: Sort counters automatically by value, or drag and drop to reorder.
 - Device themes: Support system light and dark modes with customizable color accents.
 
 ## Keywords
