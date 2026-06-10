@@ -820,9 +820,11 @@ html[data-layout="grid"] .card-direct-zone-plus {
   transition: all var(--trans-fast);
 }
 
-.secondary-btn:hover {
-  border-color: var(--accent-color);
-  color: var(--text-primary);
+@media (hover: hover) {
+  .secondary-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--text-primary);
+  }
 }
 
 .secondary-btn:active {
@@ -2177,9 +2179,11 @@ dialog[open].options-menu-dialog {
   transition: all var(--trans-fast);
 }
 
-.select-row-btn:hover {
-  border-color: var(--accent-color);
-  color: var(--text-primary);
+@media (hover: hover) {
+  .select-row-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--text-primary);
+  }
 }
 
 .select-row-btn:active {
