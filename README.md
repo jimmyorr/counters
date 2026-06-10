@@ -55,3 +55,8 @@ Alternatively, you can run the release pipeline which increments the patch versi
 ```bash
 npm run release
 ```
+
+## Keywords
+
+score, counter, keeper, webapp, vanilla
+
