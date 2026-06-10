@@ -146,7 +146,9 @@ svg,
 /* Focus reset: remove outline on active click/tap to feel like a native app, but preserve it for accessibility via keyboard */
 button:focus,
 a:focus,
-select:focus {
+select:focus,
+div[tabindex]:focus,
+[tabindex]:focus {
   outline: none;
 }
 
@@ -2462,6 +2464,16 @@ input.math-number-input:focus-visible {
 .options-close-btn {
   position: relative;
 }
+
+/* Remove focus ring on close buttons to prevent blue circles on iOS dialog autofocus */
+.sheet-close-btn:focus,
+.options-close-btn:focus,
+.sheet-close-btn:focus-visible,
+.options-close-btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 
 .header-btn::after,
 .card-btn::after,
