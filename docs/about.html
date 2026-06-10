@@ -128,10 +128,16 @@
         opacity: 0.7;
       }
 
-      .nav-links {
-        margin-top: 1rem;
+      .footer-links {
+        margin-top: 0.75rem;
         display: flex;
-        gap: 1rem;
+        justify-content: center;
+        gap: 0.75rem;
+        font-size: 0.875rem;
+      }
+
+      .footer-links .separator {
+        opacity: 0.4;
       }
     </style>
   </head>
@@ -139,36 +145,28 @@
     <div class="container">
       <header>
         <h1>About Counters</h1>
-        <p class="meta">A minimalist score keeping application</p>
-        <div class="nav-links">
-          <a href="privacy.html">Privacy policy</a>
-        </div>
+        <p class="meta"><!-- sync-start:promo -->Counters is an app for counting things.<!-- sync-end:promo --></p>
       </header>
 
       <main>
+        <!-- sync-start:description -->
         <p>
-          <strong>Counters</strong> is a clean, modern score tracker designed to
-          replace pen and paper for tabletop games, board games, habit tracking,
-          and more. With responsive controls, persistent local storage, and
-          built-in gaming tools, it makes keeping track of values seamless.
+          Counters is a minimalist app for tracking scores, life totals, and game states. Use it for board games, daily habits, or custom scoring systems.
         </p>
-
-        <h2>Frequently asked questions</h2>
-
-        <h3>1. Where is my data stored?</h3>
-        <p>
-          All your counters, history log entries, and custom layouts are saved
-          completely locally on your device. We do not use external cloud
-          servers for your data, meaning your scores are private and always
-          available offline.
-        </p>
-
-        <h3>2. How do I delete or edit a counter?</h3>
-        <p>
-          Tap the menu button or the counter settings icon on any individual
-          card to edit its name, change its color, reset its score, or delete it
-          entirely.
-        </p>
+        <h2>Features</h2>
+        <ul>
+          <li><strong>Dynamic counters</strong>: Add, edit, delete, and set custom colors for individual counters.</li>
+          <li><strong>Calculator overlay</strong>: Tap a counter to add or subtract custom values or quick-add presets.</li>
+          <li><strong>Dice roller</strong>: Roll dice (d4 to d20) with adjustable quantities.</li>
+          <li><strong>Stopwatch/timer</strong>: Track intervals or count down using quick-add presets.</li>
+          <li><strong>History log</strong>: Record all counter adjustments, resets, and dice rolls.</li>
+          <li><strong>Offline persistence</strong>: Save all app states locally to resume instantly.</li>
+          <li><strong>Shuffle decider</strong>: Randomize counter order to determine play order.</li>
+          <li><strong>Total value</strong>: View the combined sum of all active counters.</li>
+          <li><strong>Auto-sorting</strong>: Arrange counters automatically by highest or lowest value.</li>
+          <li><strong>Device themes</strong>: Support system light and dark modes with customizable color accents.</li>
+        </ul>
+        <!-- sync-end:description -->
 
         <div class="card">
           <h2>Support & contact</h2>
@@ -188,6 +186,11 @@
 
       <footer>
         <p>&copy; 2026 Cowneck. All rights reserved.</p>
+        <div class="footer-links">
+          <a href="index.html">Home</a>
+          <span class="separator">&bull;</span>
+          <a href="privacy.html">Privacy policy</a>
+        </div>
       </footer>
     </div>
   </body>
