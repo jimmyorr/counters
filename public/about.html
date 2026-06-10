@@ -128,10 +128,16 @@
         opacity: 0.7;
       }
 
-      .nav-links {
-        margin-top: 1rem;
+      .footer-links {
+        margin-top: 0.75rem;
         display: flex;
-        gap: 1rem;
+        justify-content: center;
+        gap: 0.75rem;
+        font-size: 0.875rem;
+      }
+
+      .footer-links .separator {
+        opacity: 0.4;
       }
     </style>
   </head>
@@ -140,9 +146,6 @@
       <header>
         <h1>About Counters</h1>
         <p class="meta"><!-- sync-start:promo -->Counters is an app for counting things.<!-- sync-end:promo --></p>
-        <div class="nav-links">
-          <a href="privacy.html">Privacy policy</a>
-        </div>
       </header>
 
       <main>
@@ -164,23 +167,6 @@
         </ul>
         <!-- sync-end:description -->
 
-        <h2>Frequently asked questions</h2>
-
-        <h3>1. Where is my data stored?</h3>
-        <p>
-          All your counters, history log entries, and custom layouts are saved
-          completely locally on your device. We do not use external cloud
-          servers for your data, meaning your scores are private and always
-          available offline.
-        </p>
-
-        <h3>2. How do I delete or edit a counter?</h3>
-        <p>
-          Tap the menu button or the counter settings icon on any individual
-          card to edit its name, change its color, reset its score, or delete it
-          entirely.
-        </p>
-
         <div class="card">
           <h2>Support & contact</h2>
           <p>
@@ -199,6 +185,11 @@
 
       <footer>
         <p>&copy; 2026 Cowneck. All rights reserved.</p>
+        <div class="footer-links">
+          <a href="index.html">Home</a>
+          <span class="separator">&bull;</span>
+          <a href="privacy.html">Privacy policy</a>
+        </div>
       </footer>
     </div>
   </body>
