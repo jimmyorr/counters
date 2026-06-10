@@ -60,6 +60,7 @@ import confetti from "canvas-confetti";
     activeCounterIdForEdit: null,
     calcPendingOperation: "plus", // 'plus' or 'minus'
     calcPendingValue: "",
+    calcOpenedByKeyboard: false,
     autoSortTimeout: null,
   };
 
@@ -1060,6 +1061,20 @@ import confetti from "canvas-confetti";
       triggerAutoSortWithDebounce();
       playSuccessSound();
     });
+
+    dialog.addEventListener("close", () => {
+      if (!state.calcOpenedByKeyboard) {
+        const blurActive = () => {
+          const active = document.activeElement;
+          if (active && active.classList.contains("card-value-body")) {
+            active.blur();
+          }
+        };
+        blurActive();
+        queueMicrotask(blurActive);
+        requestAnimationFrame(blurActive);
+      }
+    });
   };
 
   // ------------------------------------------------------------------------
@@ -2023,6 +2038,7 @@ import confetti from "canvas-confetti";
             state.activeCounterIdForCalc = valuePressCounterId;
             state.calcPendingValue = "";
             state.calcPendingOperation = "plus";
+            state.calcOpenedByKeyboard = false;
 
             $("#calc-dialog-title").textContent = `${
               counter.label
@@ -2173,6 +2189,7 @@ import confetti from "canvas-confetti";
             state.activeCounterIdForCalc = counterId;
             state.calcPendingValue = "";
             state.calcPendingOperation = "plus";
+            state.calcOpenedByKeyboard = true;
             const titleEl = $("#calc-dialog-title");
             if (titleEl)
               titleEl.textContent = `${counter.label}: ${formatNumber(
