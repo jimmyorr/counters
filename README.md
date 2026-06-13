@@ -1,12 +1,22 @@
 # Counters
 
-## Promotional text
+## Store metadata
+
+<!-- Copy-ready metadata assets for store listings (Google Play Store, Apple App Store, and other distribution platforms). Storing these in version control ensures consistent description updates across platforms. -->
+
+### App title
+
+<!-- Max 30 characters -->
+
+Counters
+
+### Promotional text
 
 <!-- Max 170 characters -->
 
 Counters is an app for counting things.
 
-## Description
+### Description
 
 <!-- Max 4,000 characters -->
 
@@ -25,7 +35,7 @@ Features:
 - Counter sorting: Sort counters automatically by value, or drag and drop to reorder.
 - Device themes: Support system light and dark modes with customizable color accents.
 
-## Keywords
+### Keywords
 
 <!-- Max 100 characters -->
 

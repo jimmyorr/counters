@@ -24,7 +24,7 @@ function extractSection(content, headerName) {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    if (line.startsWith('## ') || line.startsWith('# ')) {
+    if (line.startsWith('#')) {
       if (inSection) {
         break; // Reached next header
       }
