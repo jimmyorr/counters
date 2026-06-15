@@ -2634,6 +2634,15 @@ import confetti from "canvas-confetti";
     setupBottomSheetDragging();
     setupCardDragDrop();
 
+    // Re-apply keep awake when app comes to foreground
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && state.settings.keepAwake) {
+        KeepAwake.keepAwake().catch((err) =>
+          console.warn("KeepAwake failed on resume:", err),
+        );
+      }
+    });
+
     // Set dynamic version from package.json via Vite define injection
     if (typeof __APP_VERSION__ !== "undefined") {
       const versionEl = document.getElementById("about-app-version");
