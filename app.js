@@ -2066,6 +2066,8 @@ import confetti from "canvas-confetti";
 
               setTimeout(() => {
                 dialog.showModal();
+                const input = $("#calc-number-input");
+                if (input) input.focus();
               }, 50);
               playClickSound(600, 700, 0.08, 0.05);
             }
@@ -2212,7 +2214,11 @@ import confetti from "canvas-confetti";
                 titleEl.style.setProperty("--pill-bg", `${hexColor}15`);
                 titleEl.style.setProperty("--pill-border", `${hexColor}40`);
               }
-              setTimeout(() => dialog.showModal(), 50);
+              setTimeout(() => {
+                dialog.showModal();
+                const input = $("#calc-number-input");
+                if (input) input.focus();
+              }, 50);
               playClickSound(600, 700, 0.08, 0.05);
             }
           }
