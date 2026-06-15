@@ -984,15 +984,13 @@ import confetti from "canvas-confetti";
 
     $("#calc-number-input")?.addEventListener("input", updateSubmitButtonText);
 
-    // Toggle calculator operators (+ / -)
-    $("#calc-op-minus").addEventListener("click", () => {
-      state.calcPendingOperation = "minus";
-      updateCalcDisplayDOM();
-      playClickSound();
-    });
-
-    $("#calc-op-plus").addEventListener("click", () => {
-      state.calcPendingOperation = "plus";
+    $(".operation-toggles").addEventListener("click", (e) => {
+      const btn = e.target.closest(".op-btn");
+      if (btn && !btn.classList.contains("active")) {
+        state.calcPendingOperation = btn.id === "calc-op-minus" ? "minus" : "plus";
+      } else {
+        state.calcPendingOperation = state.calcPendingOperation === "plus" ? "minus" : "plus";
+      }
       updateCalcDisplayDOM();
       playClickSound();
     });
