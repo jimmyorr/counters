@@ -984,6 +984,11 @@ import confetti from "canvas-confetti";
 
     $("#calc-number-input")?.addEventListener("input", updateSubmitButtonText);
 
+    // Prevent focus from shifting away from the text input when tapping the toggle
+    $(".operation-toggles").addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+    });
+
     $(".operation-toggles").addEventListener("click", (e) => {
       const btn = e.target.closest(".op-btn");
       if (btn && !btn.classList.contains("active")) {
