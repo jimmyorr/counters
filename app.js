@@ -1919,6 +1919,24 @@ import confetti from "canvas-confetti";
   // 17. Event Delegation & Interactions
   // ------------------------------------------------------------------------
   const bindDOMEvents = () => {
+    // Drop focus globally for pointer clicks to make the UI feel like a native app.
+    // This prevents dialogs from restoring focus to tapped buttons and removes false-positive focus rings.
+    // Keyboard a11y remains untouched because Enter/Space clicks have e.detail === 0.
+    document.addEventListener(
+      "click",
+      (e) => {
+        if (e.detail > 0 && document.activeElement instanceof HTMLElement) {
+          if (
+            !["INPUT", "TEXTAREA", "SELECT"].includes(
+              document.activeElement.tagName,
+            )
+          ) {
+            document.activeElement.blur();
+          }
+        }
+      },
+      true,
+    );
     let valuePressTimer = null;
     let valuePressActive = false;
     let valuePressMoved = false;
