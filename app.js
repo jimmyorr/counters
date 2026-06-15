@@ -618,9 +618,8 @@ import confetti from "canvas-confetti";
       if (state.settings.autoSort) return;
       const header = e.target.closest(".card-header");
       if (!header) return;
-      // Skip if tapping a button or the counter label inside the header
-      if (e.target.closest("button") || e.target.closest(".counter-label"))
-        return;
+      // Skip if tapping a button inside the header
+      if (e.target.closest("button")) return;
 
       const card = header.closest(".counter-card");
       if (!card) return;
@@ -659,6 +658,7 @@ import confetti from "canvas-confetti";
         offsetX,
         offsetY,
         moved: false,
+        target: e.target,
       };
 
       e.preventDefault();
@@ -683,7 +683,7 @@ import confetti from "canvas-confetti";
     const endDrag = (e) => {
       if (!dragState) return;
 
-      const { card, ghost, placeholder, moved } = dragState;
+      const { card, ghost, placeholder, moved, target } = dragState;
       dragState = null;
 
       // Clean up ghost and dragging state
@@ -693,6 +693,11 @@ import confetti from "canvas-confetti";
       if (!moved) {
         // Treat no-movement as a cancelled drag — just remove placeholder
         placeholder.remove();
+        
+        if (target && target.closest(".counter-label")) {
+          target.closest(".counter-label").click();
+        }
+        
         return;
       }
 
