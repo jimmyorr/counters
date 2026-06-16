@@ -1,6 +1,6 @@
 {
   "name": "counters",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Counters is an app for counting things.",
   "main": "index.html",
   "scripts": {
