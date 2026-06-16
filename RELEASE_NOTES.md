@@ -1,11 +1,15 @@
 # Release notes
 
-## 0.1.0
+## 0.1.1
 
 - **Interactions:** Expanded calculator toggle hit area, auto-focused inputs synchronously, and allowed clicking labels during drags.
 - **Accessibility:** Disabled focus rings globally for pointer taps for a native feel, while preserving keyboard a11y.
 - **Settings:** Configured keep-awake lock to automatically re-apply upon resuming from the background.
-- **Build:** Updated Capacitor core packages and service worker bundles.
+
+## 0.1.0
+
+- **Launch:** Initial release to the iOS App Store!
+- **Refining & polish:** Overhauled app metadata, streamlined feature descriptions in the About page, and refined theme management styles for production.
 
 ## 0.0.18
 
