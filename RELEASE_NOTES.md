@@ -1,11 +1,17 @@
 # Release notes
 
+## 0.1.0
+
+- **Interactions:** Expanded calculator toggle hit area, auto-focused inputs synchronously, and allowed clicking labels during drags.
+- **Accessibility:** Disabled focus rings globally for pointer taps for a native feel, while preserving keyboard a11y.
+- **Settings:** Configured keep-awake lock to automatically re-apply upon resuming from the background.
+- **Build:** Updated Capacitor core packages and service worker bundles.
+
 ## 0.0.18
 
 - **Animations:** Added smooth FLIP animations for shuffling, dynamic falling effects for deletions, reset animations, and a confetti explosion for perfect shuffles.
 - **Analytics:** Integrated Capacitor Firebase Analytics for cross-platform compliance and dynamic initialization, updating the privacy policy accordingly.
 - **Build:** Updated Capacitor runtime, dependencies, and service worker assets for production.
-
 
 ## 0.0.13
 
