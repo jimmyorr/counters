@@ -128,7 +128,7 @@ for (let i = 0; i < descLines.length; i++) {
     }
 
     if (line === 'Features:') {
-      htmlDescription += '        <h2>Features</h2>\n';
+      htmlDescription += '        <p>Features:</p>\n';
     } else {
       htmlDescription += `        <p>\n          ${line}\n        </p>\n`;
     }
