@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "953468510595",
+    "project_id": "counters-32e0a",
+    "storage_bucket": "counters-32e0a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:953468510595:android:ab1e82a4a5c6cedbed96b6",
+        "android_client_info": {
+          "package_name": "com.cowneck.counters"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCsAY7dbS6AFo4NhOaHy_vm8h2Ici6G4Xo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

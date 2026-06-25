@@ -8,6 +8,7 @@ import { Preferences } from "@capacitor/preferences";
 import { KeepAwake } from "@capacitor-community/keep-awake";
 import { registerSW } from "virtual:pwa-register";
 import confetti from "canvas-confetti";
+import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
 (function () {
   "use strict";
@@ -26,6 +27,11 @@ import confetti from "canvas-confetti";
     window.gtag = gtag;
     gtag("js", new Date());
     gtag("config", "G-6RNVL7JZVJ");
+  } else {
+    // Native App via Capacitor
+    FirebaseAnalytics.setEnabled({ enabled: true }).catch((err) => {
+      console.error("Failed to enable Firebase Analytics:", err);
+    });
   }
 
   // Central patch to track when dialogs are opened.
