@@ -17,7 +17,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
   if (!window.Capacitor?.isNativePlatform()) {
     const gtagScript = document.createElement("script");
     gtagScript.async = true;
-    gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=G-6RNVL7JZVJ";
+    gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=G-K0MFHHQ1RM";
     document.head.appendChild(gtagScript);
 
     window.dataLayer = window.dataLayer || [];
@@ -26,7 +26,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     }
     window.gtag = gtag;
     gtag("js", new Date());
-    gtag("config", "G-6RNVL7JZVJ");
+    gtag("config", "G-K0MFHHQ1RM");
   } else {
     // Native App via Capacitor
     FirebaseAnalytics.setEnabled({ enabled: true }).catch((err) => {
