@@ -1746,6 +1746,7 @@ dialog[open].bottom-sheet-dialog {
   gap: 8px;
   width: 100%;
   margin-bottom: 20px;
+  height: 56px;
 }
 
 #calc-btn-submit {
