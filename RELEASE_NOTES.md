@@ -1,5 +1,14 @@
 # Release notes
 
+## 0.1.3
+
+- **UI fixes:** Fixed an issue where the calculator dialog would stretch vertically on iPad.
+
+## 0.1.2
+
+- **Analytics:** Configured Google Analytics for native platforms and updated the web tracking ID.
+- **About page:** Redesigned with an animated background, store download links, and a browser playback button.
+
 ## 0.1.1
 
 - **Interactions:** Expanded calculator toggle hit area, auto-focused inputs synchronously, and allowed clicking labels during drags.
