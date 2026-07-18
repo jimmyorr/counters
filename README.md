@@ -10,17 +10,11 @@
 
 Counters
 
-### Promotional text
-
-<!-- Max 170 characters -->
-
-Counters is an app for counting things.
-
 ### Description
 
 <!-- Max 4,000 characters -->
 
-Counters is a minimalist app for tracking scores, life totals, and game states. Use it for board games, daily habits, or custom scoring systems.
+Counters is a minimalist app designed for counting things, like scores in games.
 
 Features:
 
