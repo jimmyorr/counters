@@ -584,6 +584,22 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
   // ------------------------------------------------------------------------
   // 8. Auto Sorting With Debounce Delay
   // ------------------------------------------------------------------------
+  const performAutoSortNow = () => {
+    if (!state.settings.autoSort) return;
+    if (state.settings.topBarContent === "lowest") {
+      state.counters.sort((a, b) => a.value - b.value);
+    } else {
+      state.counters.sort((a, b) => b.value - a.value);
+    }
+    saveCounters();
+    
+    if (document.startViewTransition) {
+      document.startViewTransition(() => renderCountersList());
+    } else {
+      renderCountersList();
+    }
+  };
+
   const triggerAutoSortWithDebounce = () => {
     if (!state.settings.autoSort) return;
 
@@ -592,18 +608,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     }
 
     state.autoSortTimeout = setTimeout(() => {
-      if (state.settings.topBarContent === "lowest") {
-        state.counters.sort((a, b) => a.value - b.value);
-      } else {
-        state.counters.sort((a, b) => b.value - a.value);
-      }
-      saveCounters();
-      
-      if (document.startViewTransition) {
-        document.startViewTransition(() => renderCountersList());
-      } else {
-        renderCountersList();
-      }
+      performAutoSortNow();
     }, 3000); // 3 seconds delay so cards do not jump while being actively tapped!
   };
 
@@ -1027,6 +1032,9 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         $(`#topbar-opt-total`).classList.toggle("active", option === "total");
         saveSettings();
         renderLeaderBar();
+        if (state.settings.autoSort) {
+          performAutoSortNow();
+        }
       });
     });
 
@@ -1034,7 +1042,11 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     $("#options-auto-sort").addEventListener("change", (e) => {
       state.settings.autoSort = e.target.checked;
       saveSettings();
-      renderCountersList();
+      if (state.settings.autoSort) {
+        performAutoSortNow();
+      } else {
+        renderCountersList();
+      }
     });
   };
 
