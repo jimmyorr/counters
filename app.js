@@ -530,7 +530,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         return `
         <div class="counter-card ${swatchClass}${isNewClass}" data-counter-id="${
           counter.id
-        }" style="--card-theme: ${cardThemeHex}; --card-text: #ffffff">
+        }" style="--card-theme: ${cardThemeHex}; --card-text: #ffffff; view-transition-name: counter-${counter.id};">
           <!-- Card Top Info Bar -->
           <div class="card-header">
             <button class="card-btn btn-counter-reset" title="Reset value" aria-label="Reset value for ${
@@ -598,7 +598,12 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         state.counters.sort((a, b) => b.value - a.value);
       }
       saveCounters();
-      renderCountersList();
+      
+      if (document.startViewTransition) {
+        document.startViewTransition(() => renderCountersList());
+      } else {
+        renderCountersList();
+      }
     }, 3000); // 3 seconds delay so cards do not jump while being actively tapped!
   };
 

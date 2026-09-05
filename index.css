@@ -391,6 +391,7 @@ html[data-layout="grid"] .counters-container {
   background-color: var(--card-theme, var(--bg-secondary));
   color: var(--card-text, var(--text-primary));
   border-radius: 16px;
+  view-transition-class: counter-card;
   height: auto;
   flex: 1;
   min-height: 80px;
@@ -2564,5 +2565,21 @@ dialog:focus-visible,
 @media (max-width: 400px) {
   .palette-grid .card-color-3 {
     display: none !important;
+  }
+}
+
+/* ------------------------------------------------------------------------ */
+/* View Transitions */
+/* ------------------------------------------------------------------------ */
+::view-transition-group(.counter-card) {
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
