@@ -570,8 +570,10 @@ html[data-layout="grid"] .counter-card {
   justify-content: center;
   cursor: pointer;
   flex: 0 1 auto;
-  min-width: 25%;
+  min-width: 56px;
+  max-width: calc(100% - 96px);
   padding: 0 8px;
+  box-sizing: border-box;
 }
 
 .value-display {
@@ -584,6 +586,7 @@ html[data-layout="grid"] .counter-card {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
   max-width: 100%;
 }
 
@@ -593,12 +596,13 @@ html[data-layout="grid"] .value-display {
 }
 
 html[data-layout="grid"] .card-value-body {
-  min-width: 40%;
+  min-width: 36px;
+  max-width: calc(100% - 64px);
   padding: 0 4px;
 }
 
 html[data-layout="grid"] .card-direct-zone {
-  flex: 1 1 30%;
+  flex: 1 1 0;
   min-width: 32px;
 }
 
@@ -623,7 +627,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
   opacity: 0.45; /* Always visible */
   background-color: rgba(255, 255, 255, 0);
   cursor: pointer;
-  flex: 1 1 40%;
+  flex: 1 1 0;
   min-width: 48px;
   transition: all var(--trans-normal);
 }
