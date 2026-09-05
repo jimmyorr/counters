@@ -1273,20 +1273,42 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
             void listWrapper.offsetWidth; // Trigger reflow
             listWrapper.classList.add("animate-reset");
 
-            $$(".counter-card").forEach((card) => {
-              // Add a random delay to make them not perfectly in sync
-              const randomDelay = Math.random() * 0.25;
-              card.style.animationDelay = `${randomDelay}s`;
+            const cards = Array.from($$(".counter-card"));
+            const animDuration = 0.85; // 850ms flip duration
+            const maxStagger = 0.16; // Tight 160ms window so all cards spin together without lockstep
+
+            // Generate well-distributed delays across the tight stagger window
+            const delays = cards.map((_, i) => {
+              const base = (i / Math.max(cards.length - 1, 1)) * maxStagger;
+              const jitter =
+                (Math.random() - 0.5) *
+                (maxStagger / Math.max(cards.length, 1)) *
+                0.5;
+              return Math.max(0, base + jitter);
+            });
+
+            // Fisher-Yates shuffle to assign delays in completely random order
+            for (let i = delays.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [delays[i], delays[j]] = [delays[j], delays[i]];
+            }
+
+            cards.forEach((card, index) => {
+              card.style.animationDelay = `${delays[index].toFixed(3)}s`;
               card.style.animationFillMode = "backwards";
             });
 
+            const maxDelay = Math.max(...delays, 0);
+            const totalDurationMs =
+              Math.round((animDuration + maxDelay) * 1000) + 100;
+
             setTimeout(() => {
               listWrapper.classList.remove("animate-reset");
-              $$(".counter-card").forEach((c) => {
+              cards.forEach((c) => {
                 c.style.animationDelay = "";
                 c.style.animationFillMode = "";
               });
-            }, 850);
+            }, totalDurationMs);
           }
 
           showToast("All counters reset");
@@ -2363,6 +2385,14 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           renderCountersList();
           triggerAutoSortWithDebounce();
           playResetSound();
+
+          const card = $(`.counter-card[data-counter-id="${counter.id}"]`);
+          if (card) {
+            card.classList.remove("animate-reset");
+            void card.offsetWidth; // Trigger reflow
+            card.classList.add("animate-reset");
+            setTimeout(() => card.classList.remove("animate-reset"), 950);
+          }
         });
         return;
       }

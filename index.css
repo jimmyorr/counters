@@ -1169,14 +1169,19 @@ html[data-layout="grid"] .card-direct-zone-plus {
   100% { transform: scale(1); opacity: 1; }
 }
 
-.animate-reset .counter-card {
-  animation: resetCardFlip 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.animate-reset .counter-card,
+.counter-card.animate-reset {
+  animation: resetCardFlip 0.85s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform-style: preserve-3d;
 }
 
 @keyframes resetCardFlip {
-  0% { transform: perspective(800px) rotateX(-90deg); opacity: 0; }
-  100% { transform: perspective(800px) rotateX(0deg); opacity: 1; }
+  0% {
+    transform: perspective(800px) rotateX(-360deg);
+  }
+  100% {
+    transform: perspective(800px) rotateX(0deg);
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -2465,7 +2470,9 @@ dialog[open].options-menu-dialog {
   .counter-card.animate-exit {
     animation: card-fade-out-reduced 0.15s ease-out forwards;
   }
-  .counter-card.shake-denied {
+  .counter-card.shake-denied,
+  .animate-reset .counter-card,
+  .counter-card.animate-reset {
     animation: none;
   }
 
