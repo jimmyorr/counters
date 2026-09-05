@@ -2395,6 +2395,26 @@ dialog[open].options-menu-dialog {
   }
 }
 
+/* Card denied/locked shake animation */
+.counter-card.shake-denied {
+  animation: card-shake-denied 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes card-shake-denied {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .bottom-sheet-dialog {
     transform: translate(-50%, 0);
@@ -2433,6 +2453,9 @@ dialog[open].options-menu-dialog {
   }
   .counter-card.animate-exit {
     animation: card-fade-out-reduced 0.15s ease-out forwards;
+  }
+  .counter-card.shake-denied {
+    animation: none;
   }
 
   @keyframes card-fade-in-reduced {

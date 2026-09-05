@@ -245,6 +245,15 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     playClickSound(300, 100, 0.18, 0.06);
   };
 
+  // Play a low-frequency double thud for denied/blocked actions
+  const playDeniedSound = () => {
+    if (!state.settings.soundEnabled) return;
+    playClickSound(240, 140, 0.06, 0.06);
+    setTimeout(() => {
+      playClickSound(190, 110, 0.07, 0.06);
+    }, 80);
+  };
+
   // Play a randomized rumbling white noise block for rolling dice
   const playDiceSound = () => {
     if (!state.settings.soundEnabled) return;
@@ -569,11 +578,18 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
   // ------------------------------------------------------------------------
   // 8b. Card Drag-and-Drop Reorder (active only when auto-sort is disabled)
   // ------------------------------------------------------------------------
+  let headerHoldSuppressedClick = false;
+
   const setupCardDragDrop = () => {
     const listWrapper = $("#counters-list-wrapper");
     if (!listWrapper) return;
 
     let dragState = null; // Tracks active drag session
+    let headerHoldTimer = null;
+    let headerHoldActive = false;
+    let headerHoldPointerId = null;
+    let headerHoldStartX = 0;
+    let headerHoldStartY = 0;
 
     const getCardEls = () => [
       ...listWrapper.querySelectorAll(
@@ -621,11 +637,38 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     };
 
     listWrapper.addEventListener("pointerdown", (e) => {
-      if (state.settings.autoSort) return;
       const header = e.target.closest(".card-header");
       if (!header) return;
       // Skip if tapping a button inside the header
       if (e.target.closest("button")) return;
+
+      if (state.settings.autoSort) {
+        headerHoldActive = true;
+        headerHoldPointerId = e.pointerId;
+        headerHoldStartX = e.clientX;
+        headerHoldStartY = e.clientY;
+        if (headerHoldTimer) clearTimeout(headerHoldTimer);
+        headerHoldTimer = setTimeout(() => {
+          if (!headerHoldActive) return;
+          headerHoldActive = false;
+          headerHoldSuppressedClick = true;
+          setTimeout(() => {
+            headerHoldSuppressedClick = false;
+          }, 400);
+
+          const card = header.closest(".counter-card");
+          if (card) {
+            card.classList.remove("shake-denied");
+            void card.offsetWidth;
+            card.classList.add("shake-denied");
+            setTimeout(() => card.classList.remove("shake-denied"), 350);
+          }
+
+          showToast("🚫 Auto-sorting enabled");
+          playDeniedSound();
+        }, 500);
+        return;
+      }
 
       const card = header.closest(".counter-card");
       if (!card) return;
@@ -671,6 +714,20 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     });
 
     listWrapper.addEventListener("pointermove", (e) => {
+      if (headerHoldActive && e.pointerId === headerHoldPointerId) {
+        const dist = Math.hypot(
+          e.clientX - headerHoldStartX,
+          e.clientY - headerHoldStartY,
+        );
+        if (dist > 15) {
+          headerHoldActive = false;
+          if (headerHoldTimer) {
+            clearTimeout(headerHoldTimer);
+            headerHoldTimer = null;
+          }
+        }
+      }
+
       if (!dragState) return;
       dragState.moved = true;
 
@@ -687,6 +744,14 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     });
 
     const endDrag = (e) => {
+      if (headerHoldActive && e.pointerId === headerHoldPointerId) {
+        headerHoldActive = false;
+        if (headerHoldTimer) {
+          clearTimeout(headerHoldTimer);
+          headerHoldTimer = null;
+        }
+      }
+
       if (!dragState) return;
 
       const { card, ghost, placeholder, moved, target } = dragState;
@@ -750,6 +815,13 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
     listWrapper.addEventListener("pointerup", endDrag);
     listWrapper.addEventListener("pointercancel", (e) => {
+      if (headerHoldActive && e.pointerId === headerHoldPointerId) {
+        headerHoldActive = false;
+        if (headerHoldTimer) {
+          clearTimeout(headerHoldTimer);
+          headerHoldTimer = null;
+        }
+      }
       if (!dragState) return;
       dragState.ghost.remove();
       dragState.card.classList.remove("dragging");
@@ -757,6 +829,20 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       dragState = null;
       renderCountersList();
     });
+
+    // Capture-phase click listener to suppress accidental click/edit-dialog after long press
+    listWrapper.addEventListener(
+      "click",
+      (e) => {
+        if (headerHoldSuppressedClick) {
+          headerHoldSuppressedClick = false;
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        }
+      },
+      true,
+    );
   };
 
   // ------------------------------------------------------------------------
@@ -2172,6 +2258,10 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       // 3.5. Click on the counter label text (opens minimal edit label dialog)
       const counterLabel = e.target.closest(".counter-label");
       if (counterLabel) {
+        if (headerHoldSuppressedClick) {
+          headerHoldSuppressedClick = false;
+          return;
+        }
         state.activeCounterIdForEdit = counterId;
         const labelInput = $("#edit-label-input");
         if (labelInput) {
