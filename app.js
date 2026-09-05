@@ -259,6 +259,17 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       playClickSound(190, 110, 0.07, 0.06);
     }, 80);
   };
+  // Timer countdown beep (3, 2, 1)
+  const playTimerBeep = () => {
+    if (!state.settings.soundEnabled) return;
+    playClickSound(800, 800, 0.06, 0.06, "sine");
+  };
+
+  // Timer finish: a deep "boop" to follow the "beeps"
+  const playTimerFinish = () => {
+    if (!state.settings.soundEnabled) return;
+    playClickSound(400, 400, 0.15, 0.06, "sine");
+  };
 
   const playHaptic = async (style = ImpactStyle.Light) => {
     if (!state.settings.hapticsEnabled || !window.Capacitor?.isNativePlatform()) return;
@@ -627,7 +638,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       document.body.appendChild(ghost);
       return { ghost, offsetX, offsetY };
     };
-
     // Moves the ghost to follow the pointer
     const moveGhost = (ghost, clientX, clientY, offsetX, offsetY) => {
       const x = clientX - offsetX;
@@ -2570,6 +2580,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     let countdownRemainingMs = 0;
     let timerRunning = false;
     let timerMode = "stopwatch"; // "stopwatch" or "countdown"
+    let timerLastBeepSecond = 0;
 
     const updateTimerDisplay = () => {
       let totalMs = 0;
@@ -2590,6 +2601,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
             timerMode = "stopwatch";
             stopwatchElapsedMs = 0;
             countdownRemainingMs = 0;
+            timerLastBeepSecond = 0;
             if (timerShakeIcon) {
               timerShakeIcon.classList.remove("active");
               void timerShakeIcon.offsetWidth; // trigger reflow
@@ -2598,7 +2610,14 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
                 timerShakeIcon.classList.remove("active");
               }, 400);
             }
-            playSuccessSound();
+            playTimerFinish();
+          }
+        } else if (timerRunning) {
+          const currentSecond = Math.ceil(totalMs / 1000);
+          if (currentSecond <= 3 && currentSecond > 0 && currentSecond !== timerLastBeepSecond) {
+            timerLastBeepSecond = currentSecond;
+            playTimerBeep();
+            playHaptic(ImpactStyle.Light);
           }
         }
       }
@@ -2680,6 +2699,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         timerRunning = false;
         stopwatchElapsedMs = 0;
         countdownRemainingMs = 0;
+        timerLastBeepSecond = 0;
         timerMode = "stopwatch";
         swStart.textContent = "Start";
         swStart.classList.remove("danger-btn-outline");
