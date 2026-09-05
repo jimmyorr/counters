@@ -355,7 +355,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     msgEl.textContent = message;
     confirmCallback = onConfirm;
     dialog.showModal();
-    playClickSound();
   };
 
   const setupConfirmDialog = () => {
@@ -365,12 +364,10 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     $("#confirm-btn-ok")?.addEventListener("click", () => {
       if (confirmCallback) confirmCallback();
       dialog.close();
-      playClickSound();
     });
 
     $("#confirm-btn-cancel")?.addEventListener("click", () => {
       dialog.close();
-      playClickSound();
     });
   };
 
@@ -986,7 +983,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       $(`#topbar-opt-total`).classList.toggle("active", type === "total");
 
       dialog.showModal();
-      playClickSound();
     };
 
     // Open view options when clicking on the leader container (top left)
@@ -1223,7 +1219,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
     openBtn.addEventListener("click", () => {
       dialog.showModal();
-      playClickSound();
     });
 
     $("#menu-btn-open-settings")?.addEventListener("click", () => {
@@ -1232,7 +1227,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       if (settingsDialog) {
         loadSettingsIntoDOM();
         settingsDialog.showModal();
-        playClickSound();
       }
     });
 
@@ -1994,7 +1988,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           event.preventDefault();
           event.stopPropagation();
           dialog.close();
-          playClickSound();
         }
       });
     });
@@ -2012,7 +2005,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     openBtn.addEventListener("click", () => {
       renderHistory();
       dialog.showModal();
-      playClickSound();
     });
 
     // Clear history logs
@@ -2118,7 +2110,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         const tab = btn.getAttribute("data-tab-btn");
         if (tab === state.currentTab) return;
         switchTab(tab);
-        playClickSound(600, 350, 0.05, 0.03);
       });
     });
 
@@ -2420,7 +2411,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         const dialog = btn.closest("dialog");
         if (dialog && dialog.open) {
           dialog.close();
-          playClickSound();
         }
       });
     });
