@@ -2571,6 +2571,10 @@ dialog:focus-visible,
 /* ------------------------------------------------------------------------ */
 /* View Transitions */
 /* ------------------------------------------------------------------------ */
+:root {
+  /* Disable full-page crossfade so backdrops and un-animated UI remain untouched */
+  view-transition-name: none;
+}
 #options-dialog[open] { view-transition-name: options-dialog; }
 #history-dialog[open] { view-transition-name: history-dialog; }
 #edit-counter-dialog[open] { view-transition-name: edit-counter-dialog; }
