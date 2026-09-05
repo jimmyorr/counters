@@ -7,6 +7,11 @@
 import { Preferences } from "@capacitor/preferences";
 import { KeepAwake } from "@capacitor-community/keep-awake";
 import { registerSW } from "virtual:pwa-register";
+import {
+  Haptics,
+  ImpactStyle,
+  NotificationType,
+} from "@capacitor/haptics";
 import confetti from "canvas-confetti";
 import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
@@ -54,6 +59,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       topBarContent: "highest",
       autoSort: false,
       soundEnabled: true,
+      hapticsEnabled: true,
       quickAddValues: [5, 10, 15, 20, 50, 100],
       themeHue: 205,
       keepAwake: false,
@@ -252,6 +258,19 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     setTimeout(() => {
       playClickSound(190, 110, 0.07, 0.06);
     }, 80);
+  };
+
+  const playHaptic = async (style = ImpactStyle.Light) => {
+    if (!state.settings.hapticsEnabled || !window.Capacitor?.isNativePlatform()) return;
+    try {
+      if (Object.values(NotificationType).includes(style)) {
+        await Haptics.notification({ type: style });
+      } else {
+        await Haptics.impact({ style });
+      }
+    } catch (err) {
+      console.warn("Haptics failed", err);
+    }
   };
 
   // Play a randomized rumbling white noise block for rolling dice
@@ -666,6 +685,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
           showToast("🚫 Auto-sorting enabled");
           playDeniedSound();
+          playHaptic(NotificationType.Error);
         }, 500);
         return;
       }
@@ -699,6 +719,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       } catch (_) {}
 
       card.classList.add("dragging");
+      playHaptic(ImpactStyle.Medium);
 
       dragState = {
         card,
@@ -1083,6 +1104,9 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
     $(".operation-toggles").addEventListener("click", (e) => {
       const btn = e.target.closest(".op-btn");
+      if (!btn) return;
+      playHaptic(ImpactStyle.Light);
+
       if (btn && !btn.classList.contains("active")) {
         state.calcPendingOperation = btn.id === "calc-op-minus" ? "minus" : "plus";
       } else {
@@ -1096,6 +1120,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     $("#calc-quick-add-container").addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-quick-val]");
       if (!btn) return;
+      playHaptic(ImpactStyle.Light);
 
       if (state.activeCounterIdForCalc === null) return;
 
@@ -1129,6 +1154,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
     // Calculate Checkmark confirm submit button
     $("#calc-btn-submit").addEventListener("click", () => {
+      playHaptic(ImpactStyle.Medium);
       if (state.activeCounterIdForCalc === null) return;
 
       const counter = state.counters.find(
@@ -1493,6 +1519,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     // Form submission (Save counter adjustments or Add counter)
     form.addEventListener("submit", (e) => {
       e.preventDefault();
+      playHaptic(ImpactStyle.Medium);
 
       const selectedSwatch = $(".palette-swatch.active");
       let colorId = 0;
@@ -1556,6 +1583,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
     // Delete counter trash bin button
     $("#edit-btn-delete").addEventListener("click", () => {
+      playHaptic(ImpactStyle.Medium);
       if (
         state.activeCounterIdForEdit === "new" ||
         state.activeCounterIdForEdit === null
@@ -1827,6 +1855,14 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
   // ------------------------------------------------------------------------
   const loadSettingsIntoDOM = () => {
     $("#setting-sound").checked = state.settings.soundEnabled;
+    const hapticSetting = $("#setting-haptic");
+    if (hapticSetting) {
+      if (window.Capacitor?.isNativePlatform()) {
+        hapticSetting.checked = state.settings.hapticsEnabled;
+      } else {
+        $("#setting-row-haptic").style.display = "none";
+      }
+    }
     const keepAwakeEl = $("#setting-keep-awake");
     if (keepAwakeEl) keepAwakeEl.checked = state.settings.keepAwake;
     $("#setting-theme").value =
@@ -1843,6 +1879,17 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       saveSettings();
       playClickSound();
     });
+
+    // Haptic Toggle
+    const hapticToggle = $("#setting-haptic");
+    if (hapticToggle) {
+      hapticToggle.addEventListener("change", (e) => {
+        state.settings.hapticsEnabled = e.target.checked;
+        saveSettings();
+        playClickSound();
+        playHaptic(ImpactStyle.Light);
+      });
+    }
 
     // Keep Awake Toggle
     const keepAwakeToggle = $("#setting-keep-awake");
@@ -2229,6 +2276,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
         renderCountersList();
         triggerAutoSortWithDebounce();
+        playHaptic(ImpactStyle.Light);
         playClickSound(450, 200, 0.06, 0.05);
         return;
       }
@@ -2251,6 +2299,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
         renderCountersList();
         triggerAutoSortWithDebounce();
+        playHaptic(ImpactStyle.Light);
         playClickSound(650, 350, 0.06, 0.05);
         return;
       }
@@ -2411,6 +2460,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       const typeButtons = diceTypeSelector.querySelectorAll(".dice-type-btn");
       typeButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
+          playHaptic(ImpactStyle.Light);
           typeButtons.forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
           currentDiceType = parseInt(btn.getAttribute("data-type")) || 6;
@@ -2423,6 +2473,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     if (btnDiceMinus) {
       btnDiceMinus.addEventListener("click", () => {
         if (currentDiceCount > 1) {
+          playHaptic(ImpactStyle.Light);
           currentDiceCount--;
           if (diceCountDisplay) {
             diceCountDisplay.textContent = currentDiceCount;
@@ -2436,6 +2487,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     if (btnDicePlus) {
       btnDicePlus.addEventListener("click", () => {
         if (currentDiceCount < 20) {
+          playHaptic(ImpactStyle.Light);
           currentDiceCount++;
           if (diceCountDisplay) {
             diceCountDisplay.textContent = currentDiceCount;
@@ -2454,6 +2506,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       diceResultCard
     ) {
       btnRollAction.addEventListener("click", () => {
+        playHaptic(ImpactStyle.Light);
         // Trigger shaking animation
         diceShakeIcon.classList.add("active");
         btnRollAction.disabled = true;
@@ -2499,6 +2552,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
           btnRollAction.disabled = false;
           playClickSound(600, 800, 0.08, 0.05);
+          playHaptic(ImpactStyle.Medium);
         }, 400);
       });
     }
@@ -2584,6 +2638,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
         if (!timerRunning) {
           // Play/Start
+          playHaptic(ImpactStyle.Medium);
           timerRunning = true;
           timerStartTime = Date.now();
           swStart.textContent = "Pause";
@@ -2593,6 +2648,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           playClickSound(650, 450, 0.05, 0.03);
         } else {
           // Pause
+          playHaptic(ImpactStyle.Medium);
           timerRunning = false;
           const delta = Date.now() - timerStartTime;
           if (timerMode === "stopwatch") {
@@ -2611,6 +2667,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       });
 
       swReset.addEventListener("click", () => {
+        playHaptic(ImpactStyle.Medium);
         timerRunning = false;
         stopwatchElapsedMs = 0;
         countdownRemainingMs = 0;
@@ -2627,6 +2684,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     // Bind increment buttons click
     incButtons.forEach((btn) => {
       btn.addEventListener("click", () => {
+        playHaptic(ImpactStyle.Light);
         const secs = parseInt(btn.getAttribute("data-secs")) || 10;
         const addMs = secs * 1000;
 
