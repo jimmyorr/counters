@@ -2571,6 +2571,45 @@ dialog:focus-visible,
 /* ------------------------------------------------------------------------ */
 /* View Transitions */
 /* ------------------------------------------------------------------------ */
+#options-modal[open] { view-transition-name: options-modal; }
+#history-modal[open] { view-transition-name: history-modal; }
+#edit-modal[open] { view-transition-name: edit-modal; }
+#add-counter-modal[open] { view-transition-name: add-counter-modal; }
+#settings-dialog[open] { view-transition-name: settings-dialog; }
+#main-menu-dialog[open] { view-transition-name: main-menu-dialog; }
+#confirm-dialog[open] { view-transition-name: confirm-dialog; }
+#calculator-dialog[open] { view-transition-name: calculator-dialog; }
+
+::view-transition-group(options-modal),
+::view-transition-group(history-modal),
+::view-transition-group(edit-modal),
+::view-transition-group(add-counter-modal),
+::view-transition-group(settings-dialog),
+::view-transition-group(main-menu-dialog),
+::view-transition-group(confirm-dialog),
+::view-transition-group(calculator-dialog) {
+  z-index: 9999;
+}
+
+::view-transition-old(options-modal),
+::view-transition-new(options-modal),
+::view-transition-old(history-modal),
+::view-transition-new(history-modal),
+::view-transition-old(edit-modal),
+::view-transition-new(edit-modal),
+::view-transition-old(add-counter-modal),
+::view-transition-new(add-counter-modal),
+::view-transition-old(settings-dialog),
+::view-transition-new(settings-dialog),
+::view-transition-old(main-menu-dialog),
+::view-transition-new(main-menu-dialog),
+::view-transition-old(confirm-dialog),
+::view-transition-new(confirm-dialog),
+::view-transition-old(calculator-dialog),
+::view-transition-new(calculator-dialog) {
+  /* Prevent the dialogs themselves from animating */
+  animation: none !important;
+}
 ::view-transition-group(.counter-card) {
   animation-duration: 0.4s;
   animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
