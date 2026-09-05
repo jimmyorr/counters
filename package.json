@@ -1,7 +1,7 @@
 {
   "name": "counters",
   "version": "0.1.3",
-  "description": "Counters is an app for counting things.",
+  "description": "Counters is a minimalist app designed for counting things, like scores in games.",
   "main": "index.html",
   "scripts": {
     "predev": "node scripts/sync-metadata.js",

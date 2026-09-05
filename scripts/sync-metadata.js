@@ -44,19 +44,16 @@ function extractSection(content, headerName) {
   return sectionLines.join('\n').trim();
 }
 
-// 1. Extract Promotional Text
-const promoText = extractSection(readmeContent, 'Promotional text');
-if (!promoText) {
-  console.error('Error: Could not extract "Promotional text" from README.md.');
-  process.exit(1);
-}
-
-// 2. Extract Description & Features
+// 1. Extract Description & Features
 const descriptionRaw = extractSection(readmeContent, 'Description');
 if (!descriptionRaw) {
   console.error('Error: Could not extract "Description" from README.md.');
   process.exit(1);
 }
+const descParagraph = descriptionRaw.split('\n')[0].trim();
+
+// 2. Extract Promotional Text (optional, falls back to description first paragraph)
+const promoText = extractSection(readmeContent, 'Promotional text');
 
 // 3. Extract Keywords
 const keywordsRaw = extractSection(readmeContent, 'Keywords');
@@ -73,8 +70,8 @@ const keywords = keywordsRaw
 
 // --- UPDATE package.json ---
 const packageJson = JSON.parse(packageJsonContent);
-// Use promotional text as description for package.json (short description)
-packageJson.description = promoText;
+// Use promotional text as description for package.json if available, otherwise fallback to description first paragraph
+packageJson.description = promoText || descParagraph;
 packageJson.keywords = keywords;
 // Write package.json with correct formatting (preserve indentation/newlines)
 const updatedPackageJson = JSON.stringify(packageJson, null, 2) + '\n';
@@ -83,7 +80,6 @@ console.log('Successfully updated description and keywords in package.json');
 
 // --- UPDATE index.html ---
 // Extract first paragraph of description for meta description tag
-const descParagraph = descriptionRaw.split('\n')[0].trim();
 const metaDescriptionHtml = `    <meta\n      name="description"\n      content="${descParagraph}"\n    />`;
 const metaStartTag = '<!-- sync-start:meta-description -->';
 const metaEndTag = '<!-- sync-end:meta-description -->';
@@ -142,8 +138,14 @@ if (inList) {
 // Replace promo text
 const promoStartTag = '<!-- sync-start:promo -->';
 const promoEndTag = '<!-- sync-end:promo -->';
+// Check if an outer <div class="promo"> wrapper exists around the tags and normalize it
+const outerPromoRegex = new RegExp(`\\s*<div class="promo">\\s*${promoStartTag}[\\s\\S]*?${promoEndTag}\\s*</div>`);
+if (outerPromoRegex.test(aboutContent)) {
+  aboutContent = aboutContent.replace(outerPromoRegex, `\n        ${promoStartTag}${promoEndTag}`);
+}
 const promoRegex = new RegExp(`${promoStartTag}[\\s\\S]*?${promoEndTag}`);
-aboutContent = aboutContent.replace(promoRegex, `${promoStartTag}${promoText}${promoEndTag}`);
+const promoReplacement = promoText ? `\n        <div class="promo">\n          ${promoText}\n        </div>\n      ` : '';
+aboutContent = aboutContent.replace(promoRegex, `${promoStartTag}${promoReplacement}${promoEndTag}`);
 
 // Replace description text
 const descStartTag = '<!-- sync-start:description -->';
@@ -152,4 +154,4 @@ const descRegex = new RegExp(`${descStartTag}[\\s\\S]*?${descEndTag}`);
 aboutContent = aboutContent.replace(descRegex, `${descStartTag}\n${htmlDescription}        ${descEndTag}`);
 
 fs.writeFileSync(aboutPath, aboutContent, 'utf8');
-console.log('Successfully updated promotional text and description in public/about.html');
+console.log('Successfully updated description in public/about.html');

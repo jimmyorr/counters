@@ -1114,6 +1114,13 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       }
     });
 
+    $("#menu-btn-open-display-options")?.addEventListener("click", () => {
+      dialog.close();
+      if (window.openOptionsDialog) {
+        window.openOptionsDialog();
+      }
+    });
+
     $("#menu-btn-reset-counters")?.addEventListener("click", () => {
       dialog.close();
       if (state.counters.length === 0) return;
