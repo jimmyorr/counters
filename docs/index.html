@@ -31,7 +31,7 @@
     <!-- sync-start:meta-description -->
     <meta
       name="description"
-      content="Counters is a minimalist app for tracking scores, life totals, and game states. Use it for board games, daily habits, or custom scoring systems."
+      content="Counters is a minimalist app designed for counting things, like scores in games."
     />
     <!-- sync-end:meta-description -->
 
@@ -80,8 +80,8 @@
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-I4zOBdty.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-D8rb9t9w.css">
+    <script type="module" crossorigin src="./assets/index-DHD60Q7i.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-B2Cp6dCZ.css">
   <link rel="manifest" href="./manifest.webmanifest"></head>
   <body>
     <!-- App Header -->
@@ -290,7 +290,7 @@
         role="tabpanel"
       >
         <div class="placeholder-container">
-          <div class="placeholder-icon">
+          <div class="placeholder-icon shake-animation" id="timer-shake-icon">
             <svg
               aria-hidden="true"
               xmlns="http://www.w3.org/2000/svg"
@@ -673,6 +673,22 @@
             <span>Settings</span>
           </button>
 
+          <button class="select-row-btn" id="menu-btn-open-display-options">
+            <svg
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="currentColor"
+            >
+              <path
+                d="M3 3h8v8H3V3zm0 10h8v8H3v-8zM13 3h8v8h-8V3zm0 10h8v8h-8v-8z"
+              />
+            </svg>
+            <span>Display options</span>
+          </button>
+
           <div
             style="height: 1px; background: var(--border-light); margin: 4px 0"
           ></div>
@@ -830,6 +846,26 @@
                 <span class="slider-round"></span>
               </label>
             </div>
+
+            <!-- Haptic Toggle -->
+            <div class="settings-row" id="setting-row-haptic">
+              <div class="settings-info">
+                <span class="setting-title">Haptic feedback</span>
+                <span class="setting-desc"
+                  >Vibrate device on interactions</span
+                >
+              </div>
+              <label class="switch-toggle">
+                <input
+                  type="checkbox"
+                  id="setting-haptic"
+                  aria-label="Haptic feedback"
+                  checked
+                />
+                <span class="slider-round"></span>
+              </label>
+            </div>
+
 
             <!-- Keep Awake Toggle -->
             <div class="settings-row">

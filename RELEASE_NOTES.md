@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.1.4
+
+- **UI & Animation:** Added smooth auto-sorting animations, timer shake/pop effects, and denied drag feedback.
+- **Audio & Haptics:** Added Capacitor haptics, timer countdown beeps, and reduced audio fatigue on menus.
+- **Bug Fixes:** Resolved View Transition UI glitches, forced immediate sorts on setting changes, and fixed 3-digit layouts.
 ## 0.1.3
 
 - **UI fixes:** Fixed an issue where the calculator dialog would stretch vertically on iPad.
