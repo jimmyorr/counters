@@ -2562,6 +2562,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     const swReset = $("#btn-timer-placeholder-reset");
     const swDisplay = $("#placeholder-stopwatch-display");
     const incButtons = $$(".timer-inc-btn");
+    const timerShakeIcon = $("#timer-shake-icon");
 
     let timerInterval = null;
     let timerStartTime = 0;
@@ -2589,6 +2590,14 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
             timerMode = "stopwatch";
             stopwatchElapsedMs = 0;
             countdownRemainingMs = 0;
+            if (timerShakeIcon) {
+              timerShakeIcon.classList.remove("active");
+              void timerShakeIcon.offsetWidth; // trigger reflow
+              timerShakeIcon.classList.add("active");
+              setTimeout(() => {
+                timerShakeIcon.classList.remove("active");
+              }, 400);
+            }
             playSuccessSound();
           }
         }
@@ -2701,6 +2710,14 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         }
 
         playClickSound(600, 500, 0.05, 0.03);
+        if (timerShakeIcon) {
+          timerShakeIcon.classList.remove("pop");
+          void timerShakeIcon.offsetWidth;
+          timerShakeIcon.classList.add("pop");
+          setTimeout(() => {
+            timerShakeIcon.classList.remove("pop");
+          }, 250);
+        }
         updateTimerDisplay();
       });
     });
