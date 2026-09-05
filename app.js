@@ -1004,7 +1004,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       $("#layout-opt-grid").classList.remove("active");
       saveSettings();
       renderCountersList();
-      playClickSound();
     });
 
     $("#layout-opt-grid").addEventListener("click", () => {
@@ -1014,7 +1013,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       $("#layout-opt-list").classList.remove("active");
       saveSettings();
       renderCountersList();
-      playClickSound();
     });
 
     // Top Bar content settings options
@@ -1029,7 +1027,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         $(`#topbar-opt-total`).classList.toggle("active", option === "total");
         saveSettings();
         renderLeaderBar();
-        playClickSound();
       });
     });
 
@@ -1038,7 +1035,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       state.settings.autoSort = e.target.checked;
       saveSettings();
       renderCountersList();
-      playClickSound();
     });
   };
 
