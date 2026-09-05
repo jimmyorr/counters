@@ -593,7 +593,9 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     }
     saveCounters();
     
-    if (document.startViewTransition) {
+    // View Transitions struggle with <dialog> backdrops and Top Layer z-indexes. 
+    // If a menu is open, just do an instant re-render to avoid visual glitches.
+    if (document.startViewTransition && !document.querySelector("dialog[open]")) {
       document.startViewTransition(() => renderCountersList());
     } else {
       renderCountersList();

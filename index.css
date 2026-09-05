@@ -2575,49 +2575,6 @@ dialog:focus-visible,
   /* Disable full-page crossfade so backdrops and un-animated UI remain untouched */
   view-transition-name: none;
 }
-#options-dialog[open] { view-transition-name: options-dialog; }
-#history-dialog[open] { view-transition-name: history-dialog; }
-#edit-counter-dialog[open] { view-transition-name: edit-counter-dialog; }
-#settings-dialog[open] { view-transition-name: settings-dialog; }
-#main-menu-dialog[open] { view-transition-name: main-menu-dialog; }
-#confirm-dialog[open] { view-transition-name: confirm-dialog; }
-#calculator-dialog[open] { view-transition-name: calculator-dialog; }
-#edit-label-dialog[open] { view-transition-name: edit-label-dialog; }
-#edit-value-dialog[open] { view-transition-name: edit-value-dialog; }
-
-::view-transition-group(options-dialog),
-::view-transition-group(history-dialog),
-::view-transition-group(edit-counter-dialog),
-::view-transition-group(settings-dialog),
-::view-transition-group(main-menu-dialog),
-::view-transition-group(confirm-dialog),
-::view-transition-group(calculator-dialog),
-::view-transition-group(edit-label-dialog),
-::view-transition-group(edit-value-dialog) {
-  z-index: 9999;
-}
-
-::view-transition-old(options-dialog),
-::view-transition-new(options-dialog),
-::view-transition-old(history-dialog),
-::view-transition-new(history-dialog),
-::view-transition-old(edit-counter-dialog),
-::view-transition-new(edit-counter-dialog),
-::view-transition-old(settings-dialog),
-::view-transition-new(settings-dialog),
-::view-transition-old(main-menu-dialog),
-::view-transition-new(main-menu-dialog),
-::view-transition-old(confirm-dialog),
-::view-transition-new(confirm-dialog),
-::view-transition-old(calculator-dialog),
-::view-transition-new(calculator-dialog),
-::view-transition-old(edit-label-dialog),
-::view-transition-new(edit-label-dialog),
-::view-transition-old(edit-value-dialog),
-::view-transition-new(edit-value-dialog) {
-  /* Prevent the dialogs themselves from animating */
-  animation: none !important;
-}
 ::view-transition-group(.counter-card) {
   animation-duration: 0.4s;
   animation-timing-function: cubic-bezier(0.25, 1, 0.5, 1);
