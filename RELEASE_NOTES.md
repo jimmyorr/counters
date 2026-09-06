@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.1.5
+
+- **Navigation & gestures:** Added fluid horizontal swipe navigation between tabs with peek effects and card hold delay.
+- **Drag & drop:** Improved grid slot targeting and eliminated gesture conflicts during tab swipes.
+- **Haptics & animations:** Added native haptics for reset/delete actions and improved score reset flip animations.
+
 ## 0.1.4
 
 - **UI & Animation:** Added smooth auto-sorting animations, timer shake/pop effects, and denied drag feedback.
