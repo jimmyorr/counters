@@ -629,6 +629,8 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     if (!listWrapper) return;
 
     let dragState = null; // Tracks active drag session
+    let pendingDrag = null; // Tracks pending hold before drag activates
+    let pendingDragTimer = null;
     let headerHoldTimer = null;
     let headerHoldActive = false;
     let headerHoldPointerId = null;
@@ -730,45 +732,72 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       const card = header.closest(".counter-card");
       if (!card) return;
 
-      // If the entry animation is still running, strip it immediately
-      // so that getBoundingClientRect captures the true un-transformed bounds.
-      if (card.classList.contains("animate-entry")) {
-        card.classList.remove("animate-entry");
-      }
-
-      // Measure pointer offset relative to card top-left
-      const rect = card.getBoundingClientRect();
-      const offsetX = e.clientX - rect.left;
-      const offsetY = e.clientY - rect.top;
-
-      const { ghost } = createGhost(card, offsetX, offsetY);
-
-      // Placeholder mimics the card's dimensions
-      const placeholder = document.createElement("div");
-      placeholder.className = "drag-placeholder";
-      placeholder.style.height = `${rect.height}px`;
-      placeholder.style.minHeight = `${rect.height}px`;
-      listWrapper.insertBefore(placeholder, card);
-
-      // Capture pointer first BEFORE hiding the original card to prevent browser pointer cancel!
-      try {
-        listWrapper.setPointerCapture(e.pointerId);
-      } catch (_) {}
-
-      card.classList.add("dragging");
-      playHaptic(ImpactStyle.Medium);
-
-      dragState = {
+      // Hold threshold (350ms) to distinguish intentional drag from swiping
+      if (pendingDragTimer) clearTimeout(pendingDragTimer);
+      pendingDrag = {
         card,
-        ghost,
-        placeholder,
-        offsetX,
-        offsetY,
-        moved: false,
+        header,
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY,
+        currentX: e.clientX,
+        currentY: e.clientY,
         target: e.target,
       };
 
-      e.preventDefault();
+      pendingDragTimer = setTimeout(() => {
+        if (!pendingDrag) return;
+        const p = pendingDrag;
+        pendingDrag = null;
+        pendingDragTimer = null;
+
+        // If the entry animation is still running, strip it immediately
+        // so that getBoundingClientRect captures the true un-transformed bounds.
+        if (p.card.classList.contains("animate-entry")) {
+          p.card.classList.remove("animate-entry");
+        }
+
+        // Measure pointer offset relative to card top-left
+        const rect = p.card.getBoundingClientRect();
+        const offsetX = p.currentX - rect.left;
+        const offsetY = p.currentY - rect.top;
+
+        const { ghost } = createGhost(p.card, offsetX, offsetY);
+
+        // Placeholder mimics the card's dimensions
+        const placeholder = document.createElement("div");
+        placeholder.className = "drag-placeholder";
+        placeholder.style.height = `${rect.height}px`;
+        placeholder.style.minHeight = `${rect.height}px`;
+        listWrapper.insertBefore(placeholder, p.card);
+
+        // Capture pointer first BEFORE hiding the original card to prevent browser pointer cancel!
+        try {
+          listWrapper.setPointerCapture(p.pointerId);
+        } catch (_) {}
+
+        p.card.classList.add("dragging");
+        playHaptic(ImpactStyle.Medium);
+
+        headerHoldSuppressedClick = true;
+        setTimeout(() => {
+          headerHoldSuppressedClick = false;
+        }, 400);
+
+        dragState = {
+          card: p.card,
+          ghost,
+          placeholder,
+          offsetX,
+          offsetY,
+          moved: false,
+          target: p.target,
+        };
+
+        // Disable tab slider scrolling while dragging
+        const tabsSlider = $("#tabs-slider");
+        if (tabsSlider) tabsSlider.style.overflowX = "hidden";
+      }, 350);
     });
 
     listWrapper.addEventListener("pointermove", (e) => {
@@ -783,6 +812,24 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
             clearTimeout(headerHoldTimer);
             headerHoldTimer = null;
           }
+        }
+      }
+
+      if (pendingDrag && e.pointerId === pendingDrag.pointerId) {
+        const dist = Math.hypot(
+          e.clientX - pendingDrag.startX,
+          e.clientY - pendingDrag.startY,
+        );
+        // If movement exceeds tolerance before timer fires, cancel drag so horizontal swipe can happen
+        if (dist > 15) {
+          if (pendingDragTimer) {
+            clearTimeout(pendingDragTimer);
+            pendingDragTimer = null;
+          }
+          pendingDrag = null;
+        } else {
+          pendingDrag.currentX = e.clientX;
+          pendingDrag.currentY = e.clientY;
         }
       }
 
@@ -810,10 +857,22 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         }
       }
 
+      if (pendingDrag && e.pointerId === pendingDrag.pointerId) {
+        if (pendingDragTimer) {
+          clearTimeout(pendingDragTimer);
+          pendingDragTimer = null;
+        }
+        pendingDrag = null;
+      }
+
       if (!dragState) return;
 
       const { card, ghost, placeholder, moved, target } = dragState;
       dragState = null;
+
+      // Restore tab slider scrolling
+      const tabsSlider = $("#tabs-slider");
+      if (tabsSlider) tabsSlider.style.overflowX = "";
 
       // Clean up ghost and dragging state
       ghost.remove();
@@ -880,11 +939,21 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           headerHoldTimer = null;
         }
       }
+      if (pendingDrag && e.pointerId === pendingDrag.pointerId) {
+        if (pendingDragTimer) {
+          clearTimeout(pendingDragTimer);
+          pendingDragTimer = null;
+        }
+        pendingDrag = null;
+      }
       if (!dragState) return;
       dragState.ghost.remove();
       dragState.card.classList.remove("dragging");
       dragState.placeholder.remove();
       dragState = null;
+      
+      const tabsSlider = $("#tabs-slider");
+      if (tabsSlider) tabsSlider.style.overflowX = "";
       renderCountersList();
     });
 
@@ -953,7 +1022,8 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
   // ------------------------------------------------------------------------
   // 10. Navigation / Tab Switching
   // ------------------------------------------------------------------------
-  const switchTab = (tabId) => {
+  const updateTabUI = (tabId) => {
+    if (state.currentTab === tabId) return;
     state.currentTab = tabId;
 
     // Update footer button active class
@@ -962,15 +1032,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         btn.classList.add("active");
       } else {
         btn.classList.remove("active");
-      }
-    });
-
-    // Update screen tab visibility
-    $$(".tab-content").forEach((section) => {
-      if (section.getAttribute("data-view") === tabId) {
-        section.classList.add("active");
-      } else {
-        section.classList.remove("active");
       }
     });
 
@@ -985,6 +1046,18 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     // Dynamic render adjustments
     if (tabId === "counters") {
       renderCountersList();
+    }
+  };
+
+  const switchTab = (tabId) => {
+    updateTabUI(tabId);
+    
+    // Smoothly scroll the native snap container to the target tab
+    const slider = $("#tabs-slider");
+    const target = document.getElementById("tab-" + tabId);
+    if (slider && target) {
+      const scrollTargetX = target.offsetLeft - slider.offsetLeft;
+      slider.scrollTo({ left: scrollTargetX, behavior: "smooth" });
     }
   };
 
@@ -2171,6 +2244,25 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         switchTab(tab);
       });
     });
+
+    // Native scroll observer for Swipe "Peek" detection
+    const tabsSlider = $("#tabs-slider");
+    if (tabsSlider) {
+      const tabs = ["counters", "dice", "timer"];
+      let scrollTimeout;
+      
+      tabsSlider.addEventListener("scroll", () => {
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const width = tabsSlider.clientWidth;
+          const index = Math.round(tabsSlider.scrollLeft / width);
+          const currentVisibleTab = tabs[Math.min(index, tabs.length - 1)];
+          if (currentVisibleTab && state.currentTab !== currentVisibleTab) {
+            updateTabUI(currentVisibleTab);
+          }
+        }, 50);
+      });
+    }
 
     // Header buttons
     $("#btn-add-counter").addEventListener("click", () => {
