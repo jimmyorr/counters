@@ -14,6 +14,7 @@ let package = Package(
         .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "8.4.0"),
         .package(name: "CapacitorCommunityKeepAwake", path: "../../../node_modules/@capacitor-community/keep-awake"),
         .package(name: "CapacitorFirebaseAnalytics", path: "../../../node_modules/@capacitor-firebase/analytics"),
+        .package(name: "CapacitorHaptics", path: "../../../node_modules/@capacitor/haptics"),
         .package(name: "CapacitorPreferences", path: "../../../node_modules/@capacitor/preferences")
     ],
     targets: [
@@ -24,6 +25,7 @@ let package = Package(
                 .product(name: "Cordova", package: "capacitor-swift-pm"),
                 .product(name: "CapacitorCommunityKeepAwake", package: "CapacitorCommunityKeepAwake"),
                 .product(name: "CapacitorFirebaseAnalytics", package: "CapacitorFirebaseAnalytics"),
+                .product(name: "CapacitorHaptics", package: "CapacitorHaptics"),
                 .product(name: "CapacitorPreferences", package: "CapacitorPreferences")
             ]
         )
