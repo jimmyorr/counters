@@ -12,6 +12,7 @@ import {
   ImpactStyle,
   NotificationType,
 } from "@capacitor/haptics";
+import { Capacitor } from "@capacitor/core";
 import confetti from "canvas-confetti";
 import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
@@ -19,7 +20,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
   "use strict";
 
   // Google Analytics Sidecar (Web only)
-  if (!window.Capacitor?.isNativePlatform()) {
+  if (!Capacitor.isNativePlatform()) {
     const gtagScript = document.createElement("script");
     gtagScript.async = true;
     gtagScript.src = "https://www.googletagmanager.com/gtag/js?id=G-K0MFHHQ1RM";
@@ -272,7 +273,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
   };
 
   const playHaptic = async (style = ImpactStyle.Light) => {
-    if (!state.settings.hapticsEnabled || !window.Capacitor?.isNativePlatform()) return;
+    if (!state.settings.hapticsEnabled || !Capacitor.isNativePlatform()) return;
     try {
       if (Object.values(NotificationType).includes(style)) {
         await Haptics.notification({ type: style });
@@ -1898,7 +1899,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     $("#setting-sound").checked = state.settings.soundEnabled;
     const hapticSetting = $("#setting-haptic");
     if (hapticSetting) {
-      if (window.Capacitor?.isNativePlatform()) {
+      if (Capacitor.isNativePlatform()) {
         hapticSetting.checked = state.settings.hapticsEnabled;
       } else {
         $("#setting-row-haptic").style.display = "none";
