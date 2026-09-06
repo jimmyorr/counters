@@ -1022,6 +1022,9 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
   // ------------------------------------------------------------------------
   // 10. Navigation / Tab Switching
   // ------------------------------------------------------------------------
+  let isProgrammaticTabScroll = false;
+  let programmaticTabTimeout = null;
+
   const updateTabUI = (tabId) => {
     if (state.currentTab === tabId) return;
     state.currentTab = tabId;
@@ -1042,14 +1045,16 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       else if (tabId === "dice") viewTitle.textContent = "Dice";
       else if (tabId === "timer") viewTitle.textContent = "Timer";
     }
-
-    // Dynamic render adjustments
-    if (tabId === "counters") {
-      renderCountersList();
-    }
   };
 
   const switchTab = (tabId) => {
+    isProgrammaticTabScroll = true;
+    if (programmaticTabTimeout) clearTimeout(programmaticTabTimeout);
+    programmaticTabTimeout = setTimeout(() => {
+      isProgrammaticTabScroll = false;
+      programmaticTabTimeout = null;
+    }, 450);
+
     updateTabUI(tabId);
     
     // Smoothly scroll the native snap container to the target tab
@@ -2245,22 +2250,74 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       });
     });
 
-    // Native scroll observer for Swipe "Peek" detection
+    // Native scroll observer for Swipe detection & real-time header/nav synchronization
     const tabsSlider = $("#tabs-slider");
     if (tabsSlider) {
       const tabs = ["counters", "dice", "timer"];
-      let scrollTimeout;
-      
-      tabsSlider.addEventListener("scroll", () => {
-        if (scrollTimeout) clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          const width = tabsSlider.clientWidth;
-          const index = Math.round(tabsSlider.scrollLeft / width);
-          const currentVisibleTab = tabs[Math.min(index, tabs.length - 1)];
-          if (currentVisibleTab && state.currentTab !== currentVisibleTab) {
-            updateTabUI(currentVisibleTab);
+      let scrollRaf = null;
+
+      const syncTabFromScroll = () => {
+        const width = tabsSlider.clientWidth;
+        if (!width) return;
+        const index = Math.round(tabsSlider.scrollLeft / width);
+        const currentVisibleTab = tabs[Math.min(Math.max(index, 0), tabs.length - 1)];
+
+        if (isProgrammaticTabScroll) {
+          if (currentVisibleTab === state.currentTab) {
+            isProgrammaticTabScroll = false;
+            if (programmaticTabTimeout) {
+              clearTimeout(programmaticTabTimeout);
+              programmaticTabTimeout = null;
+            }
           }
-        }, 50);
+          return;
+        }
+
+        if (currentVisibleTab && state.currentTab !== currentVisibleTab) {
+          updateTabUI(currentVisibleTab);
+        }
+      };
+
+      // Reset programmatic flag if user starts interacting directly
+      tabsSlider.addEventListener("pointerdown", () => {
+        isProgrammaticTabScroll = false;
+        if (programmaticTabTimeout) {
+          clearTimeout(programmaticTabTimeout);
+          programmaticTabTimeout = null;
+        }
+      }, { passive: true });
+
+      // Support native scroll snap events if available (Chrome 129+)
+      if ("onscrollsnapchange" in HTMLElement.prototype) {
+        tabsSlider.addEventListener("scrollsnapchange", (e) => {
+          if (isProgrammaticTabScroll) return;
+          const target = e.snapTargetInline;
+          if (target && target.id) {
+            const tabId = target.id.replace("tab-", "");
+            if (tabs.includes(tabId) && state.currentTab !== tabId) {
+              updateTabUI(tabId);
+            }
+          }
+        });
+      }
+
+      // Real-time synchronization during scroll / swipe
+      tabsSlider.addEventListener("scroll", () => {
+        if (scrollRaf) return;
+        scrollRaf = requestAnimationFrame(() => {
+          scrollRaf = null;
+          syncTabFromScroll();
+        });
+      }, { passive: true });
+
+      // Final synchronization on scrollend
+      tabsSlider.addEventListener("scrollend", () => {
+        isProgrammaticTabScroll = false;
+        if (programmaticTabTimeout) {
+          clearTimeout(programmaticTabTimeout);
+          programmaticTabTimeout = null;
+        }
+        syncTabFromScroll();
       });
     }
 
