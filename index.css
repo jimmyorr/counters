@@ -1172,7 +1172,6 @@ html[data-layout="grid"] .card-direct-zone-plus {
 .animate-reset .counter-card,
 .counter-card.animate-reset {
   animation: resetCardFlip 0.85s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  transform-style: preserve-3d;
 }
 
 @keyframes resetCardFlip {
