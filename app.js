@@ -660,12 +660,25 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     };
 
     // Infers which slot (before which card) the pointer is hovering over
-    const getDropTarget = (clientY) => {
+    const getDropTarget = (clientX, clientY) => {
       const cards = getCardEls();
       for (const card of cards) {
         const rect = card.getBoundingClientRect();
-        const midY = rect.top + rect.height / 2;
-        if (clientY < midY) return card;
+        
+        if (state.settings.layout === "grid") {
+          // If pointer is above this card's row, insert before it
+          if (clientY < rect.top) return card;
+          
+          // If pointer is within this card's row vertically, check horizontal midpoint
+          if (clientY <= rect.bottom) {
+            const midX = rect.left + rect.width / 2;
+            if (clientX < midX) return card;
+          }
+        } else {
+          // List mode: 1D vertical check
+          const midY = rect.top + rect.height / 2;
+          if (clientY < midY) return card;
+        }
       }
       return null; // Insert at end
     };
@@ -784,7 +797,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         dragState.offsetY,
       );
 
-      const before = getDropTarget(e.clientY);
+      const before = getDropTarget(e.clientX, e.clientY);
       movePlaceholder(dragState.placeholder, before);
     });
 
