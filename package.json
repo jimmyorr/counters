@@ -1,6 +1,6 @@
 {
   "name": "counters",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Counters is a minimalist app designed for counting things, like scores in games.",
   "main": "index.html",
   "scripts": {
