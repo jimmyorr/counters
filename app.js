@@ -1318,6 +1318,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
           showToast("All counters reset");
           playResetSound();
+          playHaptic(ImpactStyle.Medium);
         },
       );
     });
@@ -1416,6 +1417,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           renderHistory();
           showToast("All counters deleted");
           playResetSound();
+          playHaptic(ImpactStyle.Medium);
         };
 
         const cards = $$(".counter-card");
@@ -1661,6 +1663,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
             renderCountersList();
             showToast(`Counter deleted`);
             playResetSound();
+            playHaptic(ImpactStyle.Medium);
           };
 
           dialog.close();
@@ -2057,6 +2060,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         saveHistory();
         renderHistory();
         playResetSound();
+        playHaptic(ImpactStyle.Medium);
       });
     });
   };
@@ -2390,6 +2394,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           renderCountersList();
           triggerAutoSortWithDebounce();
           playResetSound();
+          playHaptic(ImpactStyle.Medium);
 
           const card = $(`.counter-card[data-counter-id="${counter.id}"]`);
           if (card) {
@@ -2751,6 +2756,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         clearInterval(timerInterval);
         updateTimerDisplay();
         playResetSound();
+        playHaptic(ImpactStyle.Medium);
       });
     }
 
