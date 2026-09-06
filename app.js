@@ -266,10 +266,14 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     playClickSound(800, 800, 0.06, 0.06, "sine");
   };
 
-  // Timer finish: a deep "boop" to follow the "beeps"
+  // Timer finish: a deep "boop-boop" to follow the "beeps"
   const playTimerFinish = () => {
     if (!state.settings.soundEnabled) return;
     playClickSound(400, 400, 0.15, 0.06, "sine");
+    setTimeout(() => {
+      if (!state.settings.soundEnabled) return;
+      playClickSound(400, 400, 0.15, 0.06, "sine");
+    }, 200);
   };
 
   const playHaptic = async (style = ImpactStyle.Light) => {
@@ -2647,6 +2651,10 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
               }, 400);
             }
             playTimerFinish();
+            playHaptic(ImpactStyle.Medium);
+            setTimeout(() => {
+              playHaptic(ImpactStyle.Medium);
+            }, 200);
           }
         } else if (timerRunning) {
           const currentSecond = Math.ceil(totalMs / 1000);
