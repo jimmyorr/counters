@@ -1176,10 +1176,16 @@ html[data-layout="grid"] .card-direct-zone-plus {
 
 @keyframes resetCardFlip {
   0% {
-    transform: perspective(800px) rotateX(-360deg);
+    transform: scale(1);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1.02, 0.05);
+    opacity: 0.6;
   }
   100% {
-    transform: perspective(800px) rotateX(0deg);
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
