@@ -479,8 +479,8 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       listWrapper.style.display = "none";
       emptyState.classList.remove("hidden");
       renderLeaderBar();
-      const appMain = $(".app-main");
-      if (appMain) appMain.scrollTop = 0;
+      const tabCounters = $("#tab-counters");
+      if (tabCounters) tabCounters.scrollTop = 0;
       return;
     }
 
@@ -1499,7 +1499,14 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       dialog.close();
       if (state.counters.length === 0) return;
       showConfirmDialog("Are you sure you want to delete all counters?", () => {
+        const tabCounters = $("#tab-counters");
+        if (tabCounters) tabCounters.style.overflow = "hidden";
+
         const completeDeletion = () => {
+          if (tabCounters) {
+            tabCounters.style.overflow = "";
+            tabCounters.scrollTop = 0;
+          }
           state.counters = [];
           state.history = [];
           saveCounters();
@@ -1740,7 +1747,11 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           const counterId = state.activeCounterIdForEdit;
           const cardEl = $(`.counter-card[data-counter-id="${counterId}"]`);
 
+          const tabCounters = $("#tab-counters");
+          if (tabCounters) tabCounters.style.overflow = "hidden";
+
           const completeDeletion = () => {
+            if (tabCounters) tabCounters.style.overflow = "";
             if (counter) {
               addHistoryLog(
                 counter,
