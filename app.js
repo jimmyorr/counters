@@ -40,15 +40,12 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     });
   }
 
-  // Central patch to track when dialogs are opened.
+  // Central helper to track when dialogs are opened.
   // This is used to prevent synthetic 'click' events from instantly closing them.
-  const originalShowModal = HTMLDialogElement.prototype.showModal;
-  if (originalShowModal) {
-    HTMLDialogElement.prototype.showModal = function () {
-      this.dataset.openedAt = Date.now().toString();
-      originalShowModal.apply(this, arguments);
-    };
-  }
+  const openDialog = (dialog) => {
+    dialog.dataset.openedAt = Date.now().toString();
+    dialog.showModal();
+  };
 
   // ------------------------------------------------------------------------
   // 1. Core Reactive State System
@@ -359,7 +356,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
     msgEl.textContent = message;
     confirmCallback = onConfirm;
-    dialog.showModal();
+    openDialog(dialog);
   };
 
   const setupConfirmDialog = () => {
@@ -1090,7 +1087,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       $(`#topbar-opt-lowest`).classList.toggle("active", type === "lowest");
       $(`#topbar-opt-total`).classList.toggle("active", type === "total");
 
-      dialog.showModal();
+      openDialog(dialog);
     };
 
     // Open view options when clicking on the leader container (top left)
@@ -1329,7 +1326,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     if (!dialog || !openBtn) return;
 
     openBtn.addEventListener("click", () => {
-      dialog.showModal();
+      openDialog(dialog);
     });
 
     $("#menu-btn-open-settings")?.addEventListener("click", () => {
@@ -1337,7 +1334,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       const settingsDialog = $("#settings-dialog");
       if (settingsDialog) {
         loadSettingsIntoDOM();
-        settingsDialog.showModal();
+        openDialog(settingsDialog);
       }
     });
 
@@ -1991,7 +1988,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     const dialog = $("#edit-counter-dialog");
     if (dialog) {
       dialog.style.setProperty("--sheet-theme", sheetThemeHex);
-      dialog.showModal();
+      openDialog(dialog);
 
       const labelInput = $("#edit-label");
       // Intentionally NOT focusing the input to prevent mobile keyboard from popping up
@@ -2151,7 +2148,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
     openBtn.addEventListener("click", () => {
       renderHistory();
-      dialog.showModal();
+      openDialog(dialog);
     });
 
     // Clear history logs
@@ -2382,7 +2379,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
                 const hexColor = getCounterHex(counter);
                 dialog.style.setProperty("--sheet-theme", hexColor);
                 setTimeout(() => {
-                  dialog.showModal();
+                  openDialog(dialog);
                 }, 50);
                 playClickSound();
               }
@@ -2451,7 +2448,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
                 titleEl.style.setProperty("--pill-border", `${hexColor}40`);
               }
 
-              dialog.showModal();
+              openDialog(dialog);
               const input = $("#calc-number-input");
               if (input) input.focus();
               playClickSound(600, 700, 0.08, 0.05);
@@ -2540,7 +2537,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         if (dialog) {
           const hexColor = getCounterHex(counter);
           dialog.style.setProperty("--sheet-theme", hexColor);
-          dialog.showModal();
+          openDialog(dialog);
           if (labelInput) {
             labelInput.focus();
             labelInput.select();
@@ -2614,7 +2611,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
                 titleEl.style.setProperty("--pill-bg", `${hexColor}15`);
                 titleEl.style.setProperty("--pill-border", `${hexColor}40`);
               }
-              dialog.showModal();
+              openDialog(dialog);
               const input = $("#calc-number-input");
               if (input) input.focus();
               playClickSound(600, 700, 0.08, 0.05);
