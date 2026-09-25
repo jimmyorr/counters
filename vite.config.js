@@ -13,9 +13,6 @@ export default defineConfig({
   build: {
     outDir: 'docs',
     emptyOutDir: true,
-    rollupOptions: {
-      external: ['firebase/analytics'],
-    },
   },
   plugins: [
     VitePWA({
