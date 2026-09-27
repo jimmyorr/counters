@@ -79,14 +79,15 @@ import { log } from "./logger.js";
   };
 
   // Pre-configured counter palette color swatches
+  // All presets are dark enough for white text at 4.5:1, so cards never mix text colors
   const colorSwatches = [
-    { id: 0, class: "card-color-0", hex: "#162e8a" }, // Deep Blue
-    { id: 1, class: "card-color-1", hex: "#e86a1a" }, // Bright Orange
-    { id: 2, class: "card-color-2", hex: "#ca265a" }, // Crimson Pink
-    { id: 3, class: "card-color-3", hex: "#5b6973" }, // Slate Grey
-    { id: 4, class: "card-color-4", hex: "#167648" }, // Forest Green
-    { id: 5, class: "card-color-5", hex: "#e69f00" }, // Golden Yellow
-    { id: 6, class: "card-color-6", hex: "#1096a6" }, // Teal
+    { id: 0, class: "card-color-0", hex: "#162e8a" }, // Deep blue
+    { id: 1, class: "card-color-1", hex: "#c15713" }, // Burnt orange
+    { id: 2, class: "card-color-2", hex: "#ca265a" }, // Crimson pink
+    { id: 3, class: "card-color-3", hex: "#5b6973" }, // Slate grey
+    { id: 4, class: "card-color-4", hex: "#167648" }, // Forest green
+    { id: 5, class: "card-color-5", hex: "#8a4b12" }, // Brown
+    { id: 6, class: "card-color-6", hex: "#0e818f" }, // Teal
     { id: 7, class: "card-color-7", hex: "#622ea1" }, // Purple
   ];
 
@@ -236,9 +237,14 @@ import { log } from "./logger.js";
       return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
     };
     const lum = 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
-    // WCAG contrast against white vs. black. Pure black (not near-black) keeps
-    // mid-tones like teal above 4.5:1 even under the card header's dark overlay.
-    return 1.05 / (lum + 0.05) >= (lum + 0.05) / 0.05 ? "#ffffff" : "#000000";
+    const whiteContrast = 1.05 / (lum + 0.05);
+    const blackContrast = (lum + 0.05) / 0.05;
+    // Prefer white whenever it passes WCAG AA (4.5:1). White only gains contrast
+    // under the card header's dark overlay, while black loses it, so a color
+    // where black barely wins on the body could still fail in the header.
+    if (whiteContrast >= 4.5) return "#ffffff";
+    // Otherwise (light custom colors) use pure black, which beats near-black.
+    return whiteContrast >= blackContrast ? "#ffffff" : "#000000";
   };
 
   // Helper: Theme a bottom sheet with a counter color and readable text on it

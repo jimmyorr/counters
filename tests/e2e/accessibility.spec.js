@@ -92,8 +92,19 @@ test.describe('color contrast', () => {
     }
   });
 
+  test('every preset uses white text so cards never mix text colors', async ({ page }) => {
+    const presets = Array.from({ length: 8 }, (_, i) => counter(`p${i}`, `Preset ${i}`, 0, { color: i }));
+    await seed(page, { counters: [...presets, counter('pale', 'Pale', 0, { color: '#f5f0c8' })] });
+    await page.goto('/');
+    for (const { id } of presets) {
+      await expect(card(page, id).locator('.counter-label'), `card ${id}`).toHaveCSS('color', 'rgb(255, 255, 255)');
+    }
+    // Custom colors still switch to black when they're too light for white
+    await expect(card(page, 'pale').locator('.counter-label')).toHaveCSS('color', 'rgb(0, 0, 0)');
+  });
+
   test('calculator submit button is readable on a light counter color', async ({ page }) => {
-    await seed(page, { counters: [counter('y', 'Yellow', 0, { color: 5 })] });
+    await seed(page, { counters: [counter('y', 'Yellow', 0, { color: '#f5d547' })] });
     await page.goto('/');
     await card(page, 'y').locator('.card-value-body').click();
     expect(await contrast(page, page.locator('#calc-btn-submit'))).toBeGreaterThanOrEqual(4.5);
