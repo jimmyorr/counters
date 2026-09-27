@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.1.9
+
+- **Bug fixes:** Fixed card resets to honor configured values, sanitized counter labels in HTML, synced bottom navigation accessibility states, and cleared stale leader pill text.
+- **Developer experience:** Added a structured logger with startup banner, release verification checks, and enforced zero lint warnings.
+
 ## 0.1.5
 
 - **Navigation & gestures:** Added fluid horizontal swipe navigation between tabs with peek effects and card hold delay.
