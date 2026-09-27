@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <script>window.__APP_VERSION__ = "0.1.12";
-window.__COMMIT_HASH__ = "a47435d";
+    <script>window.__APP_VERSION__ = "0.1.13";
+window.__COMMIT_HASH__ = "1dee194";
 window.__IS_DIRTY__ = false;</script>
 
 
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
 
     <!-- Premium PWA / Native Mobile App Fullscreen Mode -->
@@ -76,8 +76,8 @@ window.__IS_DIRTY__ = false;</script>
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-DqzUXBx2.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-Bl-JY5Mr.css">
+    <script type="module" crossorigin src="./assets/index-C27Pyfyu.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Cn6FPxrh.css">
   <link rel="manifest" href="./manifest.webmanifest"></head>
   <body>
     <!-- App Header -->
@@ -1088,6 +1088,7 @@ window.__IS_DIRTY__ = false;</script>
 
     <dialog
       id="confirm-dialog"
+      aria-labelledby="confirm-dialog-title"
       class="bottom-sheet-dialog"
       style="--sheet-theme: #f85c5c"
       autofocus
@@ -1197,10 +1198,10 @@ window.__IS_DIRTY__ = false;</script>
     </dialog>
 
     <!-- 7. Minimal Edit label Dialog -->
-    <dialog id="edit-label-dialog" class="bottom-sheet-dialog" autofocus>
+    <dialog id="edit-label-dialog" class="bottom-sheet-dialog" aria-labelledby="edit-label-title" autofocus>
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
-        <h2 class="sheet-title">Edit label</h2>
+        <h2 class="sheet-title" id="edit-label-title">Edit label</h2>
       </div>
       <div class="bottom-sheet-body" style="padding-top: 10px">
         <form
@@ -1242,10 +1243,10 @@ window.__IS_DIRTY__ = false;</script>
     </dialog>
 
     <!-- 8. Minimal Edit Value Dialog -->
-    <dialog id="edit-value-dialog" class="bottom-sheet-dialog" autofocus>
+    <dialog id="edit-value-dialog" class="bottom-sheet-dialog" aria-labelledby="edit-value-title" autofocus>
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
-        <h2 class="sheet-title">Edit value</h2>
+        <h2 class="sheet-title" id="edit-value-title">Edit value</h2>
       </div>
       <div class="bottom-sheet-body" style="padding-top: 10px">
         <form
@@ -1287,8 +1288,11 @@ window.__IS_DIRTY__ = false;</script>
       </div>
     </dialog>
 
+    <!-- Screen reader announcements for value changes -->
+    <div class="visually-hidden" id="sr-announcer" aria-live="polite"></div>
+
     <!-- Subtle feedback toast -->
-    <div class="toast-notification hidden" id="toast-wrapper">
+    <div class="toast-notification hidden" id="toast-wrapper" role="status">
       <span class="toast-message" id="toast-text">Counter deleted</span>
       <button class="toast-action" id="toast-action" type="button" hidden>
         Undo

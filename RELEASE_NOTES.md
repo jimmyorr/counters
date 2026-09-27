@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.1.13
+
+- **Accessibility:** Screen readers now announce counter names, values, and toasts. Card text switches to black or white for contrast, pinch zoom works, and reduced motion is respected.
+- **Bug fixes:** Fixed a long press with auto-sort on also opening the label editor, and typing jumping between edit fields.
+- **Code cleanup:** Removed about 430 lines of dead and duplicated code.
+
 ## 0.1.12
 
 - **Bug fixes:** Fixed the timer losing time when adding time while running, deleting the wrong counter during auto-sort, and the calculator ignoring Enter.
