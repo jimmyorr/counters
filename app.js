@@ -1875,6 +1875,12 @@ import { log } from "./logger.js";
 
           const completeDeletion = () => {
             if (tabCounters) tabCounters.style.overflow = "";
+            // Re-resolve the index: auto-sort may have reordered the array
+            // during the exit animation, making the captured idx stale
+            const deletedIndex = state.counters.findIndex(
+              (c) => c.id === counterId,
+            );
+            if (deletedIndex === -1) return;
             let deletedLogId = null;
             if (counter) {
               addHistoryLog(
@@ -1885,9 +1891,8 @@ import { log } from "./logger.js";
               );
               deletedLogId = state.history[0]?.id || null;
             }
-            const deletedCounter = state.counters[idx];
-            const deletedIndex = idx;
-            state.counters.splice(idx, 1);
+            const deletedCounter = state.counters[deletedIndex];
+            state.counters.splice(deletedIndex, 1);
             saveCounters();
             renderCountersList();
             showToast(`Counter deleted`, {
