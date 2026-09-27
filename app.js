@@ -1524,7 +1524,9 @@ import { log } from "./logger.js";
         typeof navigator.share === "function"
       ) {
         try {
-          await navigator.share({ title: "Counters", text });
+          // Note: no title param — it renders as a duplicate header above
+          // the text in the share sheet, which already starts with one.
+          await navigator.share({ text });
         } catch (e) {
           // User dismissed the share sheet — not an error
           if (e && e.name !== "AbortError") {
