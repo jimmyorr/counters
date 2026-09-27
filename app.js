@@ -165,6 +165,20 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     return Number(num).toLocaleString("en-US");
   };
 
+  // Helper: Escape HTML special chars before interpolating user text into HTML
+  const escapeHtml = (str) =>
+    String(str ?? "").replace(
+      /[&<>"']/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[c],
+    );
+
   // Helper: DOM Element Selectors
   const $ = (selector) => document.querySelector(selector);
   const $$ = (selector) => document.querySelectorAll(selector);
@@ -536,15 +550,15 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           <!-- Card Top Info Bar -->
           <div class="card-header">
             <button class="card-btn btn-counter-reset" title="Reset value" aria-label="Reset value for ${
-              counter.label
+              escapeHtml(counter.label)
             }">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                 <path d="M5.828 7l2.536 2.536L6.95 10.95 2 6l4.95-4.95 1.414 1.414L5.828 5H13a8 8 0 1 1 0 16H4v-2h9a6 6 0 1 0 0-12H5.828z"/>
               </svg>
             </button>
-            <span class="counter-label">${counter.label}</span>
+            <span class="counter-label">${escapeHtml(counter.label)}</span>
             <button class="card-btn btn-counter-edit" title="Edit details" aria-label="Edit details for ${
-              counter.label
+              escapeHtml(counter.label)
             }">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
                 <path d="M5 18.084V22h3.916L21.416 9.497l-3.916-3.916L5 18.084zm3.084 1.916H7v-1.084l11.5-11.5 1.084 1.084L8.084 20zM19.416 3.584L21.416 5.584a2 2 0 0 1 0 2.828L20.416 9.412l-3.916-3.916L17.5 4.5a2 2 0 0 1 2.828 0z"/>
@@ -1002,7 +1016,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           <div class="history-badge"></div>
           <div class="history-details">
             <div class="history-row-top">
-              <span class="history-counter">${log.counterLabel}</span>
+              <span class="history-counter">${escapeHtml(log.counterLabel)}</span>
               <span class="history-time">${log.timestamp}</span>
             </div>
             <div class="history-row-bottom">
