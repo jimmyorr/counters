@@ -5,12 +5,12 @@
   "main": "index.html",
   "scripts": {
     "predev": "node scripts/sync-metadata.js",
-    "prebuild": "node scripts/sync-metadata.js",
+    "prebuild": "node scripts/check-clean-source.js --mode=source && node scripts/sync-metadata.js",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --max-warnings=0",
     "test": "npm run lint",
-    "release": "npm version patch --no-git-tag-version && node scripts/sync-version.js && npm run build",
+    "release": "node scripts/check-clean-source.js --mode=all && npm version patch --no-git-tag-version && node scripts/sync-version.js && npm run build",
     "preview": "vite preview",
     "ios": "npm run build && npx cap sync ios && npx cap open ios",
     "android": "npm run build && npx cap sync android && npx cap open android"
