@@ -2555,9 +2555,10 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
       // 5. Quick Reset value target
       if (e.target.closest(".btn-counter-reset")) {
-        showConfirmDialog(`Reset value for ${counter.label} to 0?`, () => {
+        const resetTarget = counter.resetValue || 0;
+        showConfirmDialog(`Reset value for ${counter.label} to ${resetTarget}?`, () => {
           const oldValue = counter.value;
-          counter.value = 0;
+          counter.value = resetTarget;
           saveCounters();
           addHistoryLog(counter, "Reset value", oldValue, counter.value);
 
