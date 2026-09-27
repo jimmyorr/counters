@@ -216,8 +216,12 @@ import { log } from "./logger.js";
   };
 
   // Helper: Get Counter Hex Color
+  // Colors are either a preset swatch index or a custom "#rrggbb" string
+  const isCustomColor = (color) =>
+    typeof color === "string" && color.startsWith("#");
+
   const getCounterHex = (counter) => {
-    if (typeof counter.color === "string" && counter.color.startsWith("#")) {
+    if (isCustomColor(counter.color)) {
       return counter.color;
     }
     const presetSwatch = colorSwatches[counter.color] || colorSwatches[0];
@@ -504,62 +508,9 @@ import { log } from "./logger.js";
     leaderContainer.style.pointerEvents = "auto";
 
     const type = state.settings.topBarContent;
+    const icon = leaderContainer.querySelector(".leader-icon svg");
 
-    if (type === "highest") {
-      // Find highest value counter. In case of a tie, choose the one that appears first on screen (lowest index).
-      const leader = [...state.counters]
-        .map((counter, index) => ({ counter, index }))
-        .sort((a, b) => {
-          if (b.counter.value !== a.counter.value) {
-            return b.counter.value - a.counter.value;
-          }
-          return a.index - b.index;
-        })[0]?.counter;
-      let themeHex;
-      if (typeof leader.color === "string" && leader.color.startsWith("#")) {
-        themeHex = leader.color;
-      } else {
-        const swatch = colorSwatches[leader.color] || colorSwatches[0];
-        themeHex = swatch.hex;
-      }
-      leaderContainer.style.setProperty("--leader-color", themeHex);
-      leaderContainer.style.setProperty("--leader-bg", `${themeHex}15`);
-      leaderContainer.style.setProperty("--leader-border", `${themeHex}40`);
-
-      leaderContainer.querySelector(
-        ".leader-icon svg",
-      ).innerHTML = `<path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/>`;
-      leaderText.textContent = leader.label;
-    } else if (type === "lowest") {
-      // Find lowest value counter. In case of a tie, choose the one that appears first on screen (lowest index).
-      const lowLeader = [...state.counters]
-        .map((counter, index) => ({ counter, index }))
-        .sort((a, b) => {
-          if (a.counter.value !== b.counter.value) {
-            return a.counter.value - b.counter.value;
-          }
-          return a.index - b.index;
-        })[0]?.counter;
-      let themeHex;
-      if (
-        typeof lowLeader.color === "string" &&
-        lowLeader.color.startsWith("#")
-      ) {
-        themeHex = lowLeader.color;
-      } else {
-        const swatch = colorSwatches[lowLeader.color] || colorSwatches[0];
-        themeHex = swatch.hex;
-      }
-      leaderContainer.style.setProperty("--leader-color", themeHex);
-      leaderContainer.style.setProperty("--leader-bg", `${themeHex}15`);
-      leaderContainer.style.setProperty("--leader-border", `${themeHex}40`);
-
-      leaderContainer.querySelector(
-        ".leader-icon svg",
-      ).innerHTML = `<path d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"/>`;
-      leaderText.textContent = lowLeader.label;
-    } else if (type === "total") {
-      // Find sum of all values
+    if (type === "total") {
       const totalValue = state.counters.reduce(
         (sum, item) => sum + item.value,
         0,
@@ -567,12 +518,24 @@ import { log } from "./logger.js";
       leaderContainer.style.removeProperty("--leader-color");
       leaderContainer.style.removeProperty("--leader-bg");
       leaderContainer.style.removeProperty("--leader-border");
-
-      leaderContainer.querySelector(
-        ".leader-icon svg",
-      ).innerHTML = `<path d="M19 18v2H5v-2l6-6-6-6V4h14v2h-9.35L14 12l-4.35 6H19z"/>`;
+      icon.innerHTML = `<path d="M19 18v2H5v-2l6-6-6-6V4h14v2h-9.35L14 12l-4.35 6H19z"/>`;
       leaderText.textContent = `Total: ${formatNumber(totalValue)}`;
+      return;
     }
+
+    // Highest or lowest value. Sort is stable, so ties go to the counter shown first.
+    const isLowest = type === "lowest";
+    const leader = [...state.counters].sort((a, b) =>
+      isLowest ? a.value - b.value : b.value - a.value,
+    )[0];
+    const themeHex = getCounterHex(leader);
+    leaderContainer.style.setProperty("--leader-color", themeHex);
+    leaderContainer.style.setProperty("--leader-bg", `${themeHex}15`);
+    leaderContainer.style.setProperty("--leader-border", `${themeHex}40`);
+    icon.innerHTML = isLowest
+      ? `<path d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"/>`
+      : `<path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/>`;
+    leaderText.textContent = leader.label;
   };
 
   // Compile individual counter card templates into the wrapper list
@@ -626,18 +589,10 @@ import { log } from "./logger.js";
     // Inject rendered HTML for each array item
     listWrapper.innerHTML = state.counters
       .map((counter) => {
-        let cardThemeHex;
-        let swatchClass = "";
-        if (
-          typeof counter.color === "string" &&
-          counter.color.startsWith("#")
-        ) {
-          cardThemeHex = counter.color;
-        } else {
-          const preset = colorSwatches[counter.color] || colorSwatches[0];
-          cardThemeHex = preset.hex;
-          swatchClass = preset.class;
-        }
+        const cardThemeHex = getCounterHex(counter);
+        const swatchClass = isCustomColor(counter.color)
+          ? ""
+          : (colorSwatches[counter.color] || colorSwatches[0]).class;
         const isNewClass = counter.isNew ? " animate-entry" : "";
         delete counter.isNew;
         // Name the counter in every control so screen readers can tell cards apart
@@ -747,6 +702,30 @@ import { log } from "./logger.js";
     let headerHoldPointerId = null;
     let headerHoldStartX = 0;
     let headerHoldStartY = 0;
+
+    // Cancel holds that haven't turned into an auto-sort warning or a drag yet
+    const cancelHeaderHold = () => {
+      headerHoldActive = false;
+      if (headerHoldTimer) {
+        clearTimeout(headerHoldTimer);
+        headerHoldTimer = null;
+      }
+    };
+    const cancelPendingDrag = () => {
+      if (pendingDragTimer) {
+        clearTimeout(pendingDragTimer);
+        pendingDragTimer = null;
+      }
+      pendingDrag = null;
+    };
+    const cancelHoldsFor = (pointerId) => {
+      if (headerHoldActive && pointerId === headerHoldPointerId) {
+        cancelHeaderHold();
+      }
+      if (pendingDrag && pointerId === pendingDrag.pointerId) {
+        cancelPendingDrag();
+      }
+    };
 
     const getCardEls = () => [
       ...listWrapper.querySelectorAll(
@@ -919,13 +898,7 @@ import { log } from "./logger.js";
           e.clientX - headerHoldStartX,
           e.clientY - headerHoldStartY,
         );
-        if (dist > 15) {
-          headerHoldActive = false;
-          if (headerHoldTimer) {
-            clearTimeout(headerHoldTimer);
-            headerHoldTimer = null;
-          }
-        }
+        if (dist > 15) cancelHeaderHold();
       }
 
       if (pendingDrag && e.pointerId === pendingDrag.pointerId) {
@@ -935,11 +908,7 @@ import { log } from "./logger.js";
         );
         // If movement exceeds tolerance before timer fires, cancel drag so horizontal swipe can happen
         if (dist > 15) {
-          if (pendingDragTimer) {
-            clearTimeout(pendingDragTimer);
-            pendingDragTimer = null;
-          }
-          pendingDrag = null;
+          cancelPendingDrag();
         } else {
           pendingDrag.currentX = e.clientX;
           pendingDrag.currentY = e.clientY;
@@ -962,22 +931,7 @@ import { log } from "./logger.js";
     });
 
     const endDrag = (e) => {
-      if (headerHoldActive && e.pointerId === headerHoldPointerId) {
-        headerHoldActive = false;
-        if (headerHoldTimer) {
-          clearTimeout(headerHoldTimer);
-          headerHoldTimer = null;
-        }
-      }
-
-      if (pendingDrag && e.pointerId === pendingDrag.pointerId) {
-        if (pendingDragTimer) {
-          clearTimeout(pendingDragTimer);
-          pendingDragTimer = null;
-        }
-        pendingDrag = null;
-      }
-
+      cancelHoldsFor(e.pointerId);
       if (!dragState) return;
 
       const { card, ghost, placeholder, moved, target } = dragState;
@@ -1042,20 +996,7 @@ import { log } from "./logger.js";
 
     listWrapper.addEventListener("pointerup", endDrag);
     listWrapper.addEventListener("pointercancel", (e) => {
-      if (headerHoldActive && e.pointerId === headerHoldPointerId) {
-        headerHoldActive = false;
-        if (headerHoldTimer) {
-          clearTimeout(headerHoldTimer);
-          headerHoldTimer = null;
-        }
-      }
-      if (pendingDrag && e.pointerId === pendingDrag.pointerId) {
-        if (pendingDragTimer) {
-          clearTimeout(pendingDragTimer);
-          pendingDragTimer = null;
-        }
-        pendingDrag = null;
-      }
+      cancelHoldsFor(e.pointerId);
       if (!dragState) return;
       dragState.ghost.remove();
       dragState.card.classList.remove("dragging");
@@ -1100,15 +1041,10 @@ import { log } from "./logger.js";
     emptyView.classList.add("hidden");
     listWrapper.innerHTML = state.history
       .map((logItem) => {
-        let themeHex;
-        if (logItem.color === "system") {
-          themeHex = "var(--accent-color)";
-        } else if (typeof logItem.color === "string" && logItem.color.startsWith("#")) {
-          themeHex = logItem.color;
-        } else {
-          const swatch = colorSwatches[logItem.color] || colorSwatches[0];
-          themeHex = swatch.hex;
-        }
+        const themeHex =
+          logItem.color === "system"
+            ? "var(--accent-color)"
+            : getCounterHex(logItem);
 
         return `
         <div class="history-item" style="--history-theme: ${themeHex}">
@@ -1177,35 +1113,32 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   // 11. Options Overlay Dialog logic
   // ------------------------------------------------------------------------
+  const openOptionsDialog = () => {
+    // Sync dialog display to state configs before showing
+    $("#options-auto-sort").checked = state.settings.autoSort;
+
+    if (state.settings.layout === "grid") {
+      $("#layout-opt-grid").classList.add("active");
+      $("#layout-opt-list").classList.remove("active");
+    } else {
+      $("#layout-opt-list").classList.add("active");
+      $("#layout-opt-grid").classList.remove("active");
+    }
+
+    const type = state.settings.topBarContent;
+    $(`#topbar-opt-highest`).classList.toggle("active", type === "highest");
+    $(`#topbar-opt-lowest`).classList.toggle("active", type === "lowest");
+    $(`#topbar-opt-total`).classList.toggle("active", type === "total");
+
+    openDialog($("#options-dialog"));
+  };
+
   const setupOptionsDialog = () => {
     const dialog = $("#options-dialog");
     if (!dialog) return;
 
-    const openOptionsDialog = () => {
-      // Sync dialog display to state configs before showing
-      $("#options-auto-sort").checked = state.settings.autoSort;
-
-      if (state.settings.layout === "grid") {
-        $("#layout-opt-grid").classList.add("active");
-        $("#layout-opt-list").classList.remove("active");
-      } else {
-        $("#layout-opt-list").classList.add("active");
-        $("#layout-opt-grid").classList.remove("active");
-      }
-
-      const type = state.settings.topBarContent;
-      $(`#topbar-opt-highest`).classList.toggle("active", type === "highest");
-      $(`#topbar-opt-lowest`).classList.toggle("active", type === "lowest");
-      $(`#topbar-opt-total`).classList.toggle("active", type === "total");
-
-      openDialog(dialog);
-    };
-
     // Open view options when clicking on the leader container (top left)
     $("#header-leader-container")?.addEventListener("click", openOptionsDialog);
-
-    // Make openOptionsDialog available to other menus
-    window.openOptionsDialog = openOptionsDialog;
 
     // Handle standard layout button switches
     $("#layout-opt-list").addEventListener("click", () => {
@@ -1259,66 +1192,88 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   // 12. Calculator Dialog Sheet Logic (Accumulating math value)
   // ------------------------------------------------------------------------
+  const updateSubmitButtonText = () => {
+    const submitBtn = $("#calc-btn-submit");
+    if (!submitBtn) return;
+
+    const inputEl = $("#calc-number-input");
+    let valStr = inputEl?.value || "";
+
+    if (valStr.length > 14) {
+      valStr = valStr.slice(0, 14);
+      if (inputEl) inputEl.value = valStr;
+    }
+
+    const val = parseFloat(valStr);
+    const isMinus = state.calcPendingOperation === "minus";
+
+    if (!val || isNaN(val)) {
+      submitBtn.textContent = isMinus ? "Subtract" : "Add";
+    } else {
+      submitBtn.textContent = `${isMinus ? "Subtract" : "Add"} ${formatNumber(
+        val,
+      )}`;
+    }
+  };
+
+  const updateCalcDisplayDOM = () => {
+    const opIndicator = $(".math-op-indicator");
+    const opMinus = $("#calc-op-minus");
+    const opPlus = $("#calc-op-plus");
+
+    const sign = state.calcPendingOperation === "plus" ? "+" : "−";
+
+    if (opIndicator) {
+      opIndicator.textContent = sign;
+    }
+
+    // Dynamically update quick add button signs (+ / -) to match toggled operator
+    $$("#calc-quick-add-container button").forEach((btn) => {
+      const val = btn.getAttribute("data-quick-val");
+      btn.textContent = `${sign}${formatNumber(parseFloat(val))}`;
+    });
+
+    if (opMinus && opPlus) {
+      opMinus.classList.toggle(
+        "active",
+        state.calcPendingOperation === "minus",
+      );
+      opPlus.classList.toggle(
+        "active",
+        state.calcPendingOperation === "plus",
+      );
+    }
+
+    updateSubmitButtonText();
+  };
+
+  const openCalculator = (counterId, { byKeyboard = false } = {}) => {
+    const counter = state.counters.find((c) => c.id === counterId);
+    const dialog = $("#calculator-dialog");
+    if (!counter || !dialog) return;
+
+    state.activeCounterIdForCalc = counterId;
+    state.calcPendingOperation = "plus";
+    state.calcOpenedByKeyboard = byKeyboard;
+
+    const hexColor = getCounterHex(counter);
+    const titleEl = $("#calc-dialog-title");
+    titleEl.textContent = `${counter.label}: ${formatNumber(counter.value)}`;
+    titleEl.style.setProperty("--pill-bg", `${hexColor}15`);
+    titleEl.style.setProperty("--pill-border", `${hexColor}40`);
+    const input = $("#calc-number-input");
+    input.value = "";
+    updateCalcDisplayDOM();
+    setSheetTheme(dialog, hexColor);
+
+    openDialog(dialog);
+    input.focus();
+    playClickSound(600, 700, 0.08, 0.05);
+  };
+
   const setupCalculatorDialog = () => {
     const dialog = $("#calculator-dialog");
     if (!dialog) return;
-
-    const updateSubmitButtonText = () => {
-      const submitBtn = $("#calc-btn-submit");
-      if (!submitBtn) return;
-
-      const inputEl = $("#calc-number-input");
-      let valStr = inputEl?.value || "";
-
-      if (valStr.length > 14) {
-        valStr = valStr.slice(0, 14);
-        if (inputEl) inputEl.value = valStr;
-      }
-
-      const val = parseFloat(valStr);
-      const isMinus = state.calcPendingOperation === "minus";
-
-      if (!val || isNaN(val)) {
-        submitBtn.textContent = isMinus ? "Subtract" : "Add";
-      } else {
-        submitBtn.textContent = `${isMinus ? "Subtract" : "Add"} ${formatNumber(
-          val,
-        )}`;
-      }
-    };
-
-    const updateCalcDisplayDOM = () => {
-      const opIndicator = $(".math-op-indicator");
-      const opMinus = $("#calc-op-minus");
-      const opPlus = $("#calc-op-plus");
-
-      const sign = state.calcPendingOperation === "plus" ? "+" : "−";
-
-      if (opIndicator) {
-        opIndicator.textContent = sign;
-      }
-
-      // Dynamically update quick add button signs (+ / -) to match toggled operator
-      $$("#calc-quick-add-container button").forEach((btn) => {
-        const val = btn.getAttribute("data-quick-val");
-        btn.textContent = `${sign}${formatNumber(parseFloat(val))}`;
-      });
-
-      if (opMinus && opPlus) {
-        opMinus.classList.toggle(
-          "active",
-          state.calcPendingOperation === "minus",
-        );
-        opPlus.classList.toggle(
-          "active",
-          state.calcPendingOperation === "plus",
-        );
-      }
-
-      updateSubmitButtonText();
-    };
-
-    window.updateCalcDisplayDOM = updateCalcDisplayDOM;
 
     $("#calc-number-input")?.addEventListener("input", updateSubmitButtonText);
 
@@ -1349,78 +1304,47 @@ import { log } from "./logger.js";
       playClickSound();
     });
 
-    // Quick Accumulating Buttons Taps (Instant apply & close)
+    // Add or subtract an amount from the active counter, then close
+    const applyToActiveCounter = (amount) => {
+      const counter = state.counters.find(
+        (c) => c.id === state.activeCounterIdForCalc,
+      );
+      if (!counter) return;
+
+      const oldValue = counter.value;
+      const signedDelta =
+        state.calcPendingOperation === "plus" ? amount : -amount;
+      counter.value += signedDelta;
+      saveCounters();
+
+      const label =
+        signedDelta > 0 ? `+${formatNumber(amount)}` : `−${formatNumber(amount)}`;
+      addHistoryLog(counter, label, oldValue, counter.value);
+      announceValue(counter);
+
+      dialog.close();
+      renderCountersList();
+      triggerAutoSortWithDebounce();
+      playSuccessSound();
+    };
+
+    // Quick-add buttons apply instantly
     $("#calc-quick-add-container").addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-quick-val]");
       if (!btn) return;
       playHaptic(ImpactStyle.Light);
-
-      if (state.activeCounterIdForCalc === null) return;
-
-      const counter = state.counters.find(
-        (c) => c.id === state.activeCounterIdForCalc,
-      );
-      if (!counter) return;
-
-      const deltaValue = parseFloat(btn.getAttribute("data-quick-val") || "0");
-      if (deltaValue === 0) return;
-
-      const oldValue = counter.value;
-      const signedDelta =
-        state.calcPendingOperation === "plus" ? deltaValue : -deltaValue;
-
-      counter.value += signedDelta;
-      saveCounters();
-
-      // History logging
-      const label =
-        signedDelta > 0
-          ? `+${formatNumber(deltaValue)}`
-          : `−${formatNumber(deltaValue)}`;
-      addHistoryLog(counter, label, oldValue, counter.value);
-      announceValue(counter);
-
-      dialog.close();
-      renderCountersList();
-      triggerAutoSortWithDebounce();
-      playSuccessSound();
+      const amount = parseFloat(btn.getAttribute("data-quick-val") || "0");
+      if (amount !== 0) applyToActiveCounter(amount);
     });
 
-    // Calculate Checkmark confirm submit button
     $("#calc-btn-submit").addEventListener("click", () => {
       playHaptic(ImpactStyle.Medium);
-      if (state.activeCounterIdForCalc === null) return;
-
-      const counter = state.counters.find(
-        (c) => c.id === state.activeCounterIdForCalc,
-      );
-      if (!counter) return;
-
-      const deltaValue = parseFloat($("#calc-number-input").value || "0");
-      if (deltaValue === 0) {
+      const amount = parseFloat($("#calc-number-input").value || "0");
+      if (amount === 0) {
         dialog.close();
         return;
       }
-
-      const oldValue = counter.value;
-      const signedDelta =
-        state.calcPendingOperation === "plus" ? deltaValue : -deltaValue;
-
-      counter.value += signedDelta;
-      saveCounters();
-
-      // History logging
-      const label =
-        signedDelta > 0
-          ? `+${formatNumber(deltaValue)}`
-          : `−${formatNumber(deltaValue)}`;
-      addHistoryLog(counter, label, oldValue, counter.value);
-      announceValue(counter);
-
-      dialog.close();
-      renderCountersList();
-      triggerAutoSortWithDebounce();
-      playSuccessSound();
+      applyToActiveCounter(amount);
     });
 
     dialog.addEventListener("close", () => {
@@ -1435,6 +1359,44 @@ import { log } from "./logger.js";
         queueMicrotask(blurActive);
         requestAnimationFrame(blurActive);
       }
+    });
+  };
+
+  // Animate a card tumbling off screen, then collapse the space it left.
+  // tilt, drop, and drift are the random ranges (deg, px, px) on top of the base motion.
+  const animateCardFallOut = (
+    cardEl,
+    { delay = 0, tilt = 30, drop = 50, drift = 80 } = {},
+  ) => {
+    const h = cardEl.offsetHeight;
+    cardEl.classList.remove("animate-entry", "animate-reset");
+    cardEl.style.overflow = "hidden";
+    cardEl.style.pointerEvents = "none";
+    cardEl.style.height = `${h}px`; // Lock height synchronously
+
+    const rotateDir = Math.random() > 0.5 ? 1 : -1;
+    const rotateAngle = 25 + Math.random() * tilt;
+    const dropY = 180 + Math.random() * drop;
+    const dropX = (Math.random() - 0.5) * drift;
+    const collapsing = ["height", "margin-top", "margin-bottom", "padding-top", "padding-bottom", "border-width"];
+    const bounce = "0.3s cubic-bezier(0.34, 1.56, 0.64, 1)";
+
+    // Wait 1 frame for the browser to paint the height lock
+    requestAnimationFrame(() => {
+      cardEl.style.transformOrigin = rotateDir > 0 ? "top left" : "top right";
+      // Delay the layout collapse so the card falls out first
+      cardEl.style.transition = [
+        `transform 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) ${delay}s`,
+        `opacity 0.4s ease-in ${delay + 0.1}s`,
+        ...collapsing.map((prop) => `${prop} ${bounce} ${delay + 0.3}s`),
+      ].join(", ");
+
+      // Wait 1 more frame so the transition is active before changing styles
+      requestAnimationFrame(() => {
+        cardEl.style.transform = `translate(${dropX}px, ${dropY}px) rotate(${rotateDir * rotateAngle}deg)`;
+        cardEl.style.opacity = "0";
+        for (const prop of collapsing) cardEl.style.setProperty(prop, "0px");
+      });
     });
   };
 
@@ -1461,9 +1423,7 @@ import { log } from "./logger.js";
 
     $("#menu-btn-open-display-options")?.addEventListener("click", () => {
       dialog.close();
-      if (window.openOptionsDialog) {
-        window.openOptionsDialog();
-      }
+      openOptionsDialog();
     });
 
     $("#menu-btn-reset-counters")?.addEventListener("click", () => {
@@ -1729,50 +1689,12 @@ import { log } from "./logger.js";
         const cards = $$(".counter-card");
         if (cards.length > 0 && !prefersReducedMotion()) {
           cards.forEach((cardEl, index) => {
-            const h = cardEl.offsetHeight;
-            cardEl.classList.remove("animate-entry", "animate-reset");
-            cardEl.style.overflow = "hidden";
-            cardEl.style.pointerEvents = "none";
-            cardEl.style.height = `${h}px`; // Lock height synchronously
-
-            const delay = index * 0.06; // 60ms cascade stagger
-            const rotateDir = Math.random() > 0.5 ? 1 : -1;
-            const rotateAngle = 25 + Math.random() * 45;
-            const dropY = 180 + Math.random() * 80;
-            const dropX = (Math.random() - 0.5) * 120;
-            const origin = rotateDir > 0 ? "top left" : "top right";
-
-            requestAnimationFrame(() => {
-              cardEl.style.transformOrigin = origin;
-              // Delay layout collapse (height, padding, margin) so the card falls out first, offset by stagger delay
-              cardEl.style.transition = `transform 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) ${delay}s, opacity 0.4s ease-in ${
-                delay + 0.1
-              }s, height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${
-                delay + 0.3
-              }s, margin-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${
-                delay + 0.3
-              }s, margin-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${
-                delay + 0.3
-              }s, padding-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${
-                delay + 0.3
-              }s, padding-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${
-                delay + 0.3
-              }s, border-width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) ${
-                delay + 0.3
-              }s`;
-
-              requestAnimationFrame(() => {
-                cardEl.style.transform = `translate(${dropX}px, ${dropY}px) rotate(${
-                  rotateDir * rotateAngle
-                }deg)`;
-                cardEl.style.opacity = "0";
-                cardEl.style.height = "0px";
-                cardEl.style.marginTop = "0px";
-                cardEl.style.marginBottom = "0px";
-                cardEl.style.paddingTop = "0px";
-                cardEl.style.paddingBottom = "0px";
-                cardEl.style.borderWidth = "0px";
-              });
+            // 60ms cascade stagger
+            animateCardFallOut(cardEl, {
+              delay: index * 0.06,
+              tilt: 45,
+              drop: 80,
+              drift: 120,
             });
           });
           setTimeout(completeDeletion, 700 + cards.length * 60);
@@ -1988,40 +1910,7 @@ import { log } from "./logger.js";
           dialog.close();
 
           if (cardEl && !prefersReducedMotion()) {
-            const h = cardEl.offsetHeight;
-            cardEl.classList.remove("animate-entry", "animate-reset");
-            cardEl.style.overflow = "hidden";
-            cardEl.style.pointerEvents = "none";
-            cardEl.style.height = `${h}px`; // Lock height synchronously
-
-            // Wait 1 frame for browser to paint the height lock
-            requestAnimationFrame(() => {
-              const rotateDir = Math.random() > 0.5 ? 1 : -1;
-              const rotateAngle = 25 + Math.random() * 30;
-              const dropY = 180 + Math.random() * 50;
-              const dropX = (Math.random() - 0.5) * 80;
-              const origin = rotateDir > 0 ? "top left" : "top right";
-
-              cardEl.style.transformOrigin = origin;
-              // Delay layout collapse (height, padding, margin) so the card falls out first
-              cardEl.style.transition =
-                "transform 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53), opacity 0.4s ease-in 0.1s, height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, margin-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, margin-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, padding-top 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, padding-bottom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, border-width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s";
-
-              // Wait 1 MORE frame to guarantee the transition is active BEFORE changing styles
-              requestAnimationFrame(() => {
-                cardEl.style.transform = `translate(${dropX}px, ${dropY}px) rotate(${
-                  rotateDir * rotateAngle
-                }deg)`;
-                cardEl.style.opacity = "0";
-                cardEl.style.height = "0px";
-                cardEl.style.marginTop = "0px";
-                cardEl.style.marginBottom = "0px";
-                cardEl.style.paddingTop = "0px";
-                cardEl.style.paddingBottom = "0px";
-                cardEl.style.borderWidth = "0px";
-              });
-            });
-
+            animateCardFallOut(cardEl);
             setTimeout(completeDeletion, 700);
           } else {
             completeDeletion();
@@ -2178,31 +2067,20 @@ import { log } from "./logger.js";
     $("#edit-reset-val").value = counter.resetValue;
 
     // Set palette swatch selected
-    let sheetThemeHex = colorSwatches[0].hex;
+    const isCustom = isCustomColor(counter.color);
+    const sheetThemeHex = getCounterHex(counter);
     $$(".palette-swatch").forEach((swatch) => {
       const colorId = swatch.getAttribute("data-color-id");
-      swatch.classList.remove("active");
-
-      if (typeof counter.color === "string" && counter.color.startsWith("#")) {
-        if (colorId === "custom") {
-          swatch.classList.add("active");
-          swatch.style.backgroundColor = counter.color;
-          sheetThemeHex = counter.color;
-          const input = swatch.querySelector("input");
-          if (input) input.value = counter.color;
-        }
-      } else {
-        if (parseInt(colorId) === counter.color) {
-          swatch.classList.add("active");
-          const presetSwatch = colorSwatches[counter.color] || colorSwatches[0];
-          sheetThemeHex = presetSwatch.hex;
-        }
-        if (colorId === "custom") {
-          const appThemeHex = getThemeHex();
-          swatch.style.backgroundColor = appThemeHex;
-          const input = swatch.querySelector("input");
-          if (input) input.value = appThemeHex;
-        }
+      swatch.classList.toggle(
+        "active",
+        isCustom ? colorId === "custom" : parseInt(colorId) === counter.color,
+      );
+      if (colorId === "custom") {
+        // Show the counter's custom color, or start the picker at the app theme color
+        const customHex = isCustom ? counter.color : getThemeHex();
+        swatch.style.backgroundColor = customHex;
+        const input = swatch.querySelector("input");
+        if (input) input.value = customHex;
       }
     });
 
@@ -2660,39 +2538,7 @@ import { log } from "./logger.js";
         }
 
         if (!valuePressMoved) {
-          const counter = state.counters.find(
-            (c) => c.id === valuePressCounterId,
-          );
-          if (counter) {
-            state.activeCounterIdForCalc = valuePressCounterId;
-            state.calcPendingOperation = "plus";
-            state.calcOpenedByKeyboard = false;
-
-            $("#calc-dialog-title").textContent = `${
-              counter.label
-            }: ${formatNumber(counter.value)}`;
-            $("#calc-number-input").value = "";
-            if (window.updateCalcDisplayDOM) {
-              window.updateCalcDisplayDOM();
-            }
-
-            const dialog = $("#calculator-dialog");
-            if (dialog) {
-              const hexColor = getCounterHex(counter);
-              setSheetTheme(dialog, hexColor);
-
-              const titleEl = $("#calc-dialog-title");
-              if (titleEl) {
-                titleEl.style.setProperty("--pill-bg", `${hexColor}15`);
-                titleEl.style.setProperty("--pill-border", `${hexColor}40`);
-              }
-
-              openDialog(dialog);
-              const input = $("#calc-number-input");
-              if (input) input.focus();
-              playClickSound(600, 700, 0.08, 0.05);
-            }
-          }
+          openCalculator(valuePressCounterId);
         }
       });
 
@@ -2714,19 +2560,21 @@ import { log } from "./logger.js";
       const counter = state.counters.find((c) => c.id === counterId);
       if (!counter) return;
 
-      // 1. Direct Edge Subtract click target
-      const zoneMinus = e.target.closest(".card-direct-zone-minus");
-      if (zoneMinus) {
-        zoneMinus.classList.add("zone-active-flash");
-        setTimeout(() => zoneMinus.classList.remove("zone-active-flash"), 300);
+      // 1. Direct edge +/- zones step by the counter's increment
+      const zone = e.target.closest(".card-direct-zone");
+      if (zone) {
+        const isPlus = zone.classList.contains("card-direct-zone-plus");
+        zone.classList.add("zone-active-flash");
+        setTimeout(() => zone.classList.remove("zone-active-flash"), 300);
 
         const oldValue = counter.value;
-        counter.value -= counter.increment || 1;
+        const step = counter.increment || 1;
+        counter.value += isPlus ? step : -step;
         announceValue(counter);
         saveCounters();
         addHistoryLog(
           counter,
-          `−${formatNumber(counter.increment)}`,
+          `${isPlus ? "+" : "−"}${formatNumber(counter.increment)}`,
           oldValue,
           counter.value,
         );
@@ -2734,31 +2582,8 @@ import { log } from "./logger.js";
         renderCountersList();
         triggerAutoSortWithDebounce();
         playHaptic(ImpactStyle.Light);
-        playClickSound(450, 200, 0.06, 0.05);
-        return;
-      }
-
-      // 2. Direct Edge Add click target
-      const zonePlus = e.target.closest(".card-direct-zone-plus");
-      if (zonePlus) {
-        zonePlus.classList.add("zone-active-flash");
-        setTimeout(() => zonePlus.classList.remove("zone-active-flash"), 300);
-
-        const oldValue = counter.value;
-        counter.value += counter.increment || 1;
-        announceValue(counter);
-        saveCounters();
-        addHistoryLog(
-          counter,
-          `+${formatNumber(counter.increment)}`,
-          oldValue,
-          counter.value,
-        );
-
-        renderCountersList();
-        triggerAutoSortWithDebounce();
-        playHaptic(ImpactStyle.Light);
-        playClickSound(650, 350, 0.06, 0.05);
+        if (isPlus) playClickSound(650, 350, 0.06, 0.05);
+        else playClickSound(450, 200, 0.06, 0.05);
         return;
       }
 
@@ -2830,35 +2655,9 @@ import { log } from "./logger.js";
         const valueBody = e.target.closest(".card-value-body");
         if (valueBody) {
           e.preventDefault();
-          const counterId = card.getAttribute("data-counter-id");
-          const counter = state.counters.find((c) => c.id === counterId);
-          if (counter) {
-            state.activeCounterIdForCalc = counterId;
-            state.calcPendingOperation = "plus";
-            state.calcOpenedByKeyboard = true;
-            const titleEl = $("#calc-dialog-title");
-            if (titleEl)
-              titleEl.textContent = `${counter.label}: ${formatNumber(
-                counter.value,
-              )}`;
-            const inputEl = $("#calc-number-input");
-            if (inputEl) inputEl.value = "";
-            if (window.updateCalcDisplayDOM) window.updateCalcDisplayDOM();
-
-            const dialog = $("#calculator-dialog");
-            if (dialog) {
-              const hexColor = getCounterHex(counter);
-              setSheetTheme(dialog, hexColor);
-              if (titleEl) {
-                titleEl.style.setProperty("--pill-bg", `${hexColor}15`);
-                titleEl.style.setProperty("--pill-border", `${hexColor}40`);
-              }
-              openDialog(dialog);
-              const input = $("#calc-number-input");
-              if (input) input.focus();
-              playClickSound(600, 700, 0.08, 0.05);
-            }
-          }
+          openCalculator(card.getAttribute("data-counter-id"), {
+            byKeyboard: true,
+          });
           return;
         }
 
