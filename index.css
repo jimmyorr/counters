@@ -270,7 +270,7 @@ body > .app-nav {
 
 .app-title {
   font-size: 19px;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.2px;
   color: var(--text-primary);
 }
@@ -1546,7 +1546,7 @@ dialog[open].bottom-sheet-dialog {
 
 .sheet-title {
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   text-align: center;
 }
