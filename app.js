@@ -400,6 +400,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     if (state.counters.length === 0) {
       leaderContainer.style.opacity = "0";
       leaderContainer.style.pointerEvents = "none";
+      leaderText.textContent = "";
       return;
     }
 
