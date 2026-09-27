@@ -167,3 +167,16 @@ test.describe('reduced motion', () => {
     expect(transforms.every((t) => t === '')).toBe(true);
   });
 });
+
+test('every dialog has an accessible name', async ({ page }) => {
+  await page.goto('/');
+  const unnamed = await page.evaluate(() =>
+    [...document.querySelectorAll('dialog')]
+      .filter((d) => {
+        const id = d.getAttribute('aria-labelledby');
+        return !d.getAttribute('aria-label') && !(id && document.getElementById(id)?.textContent.trim());
+      })
+      .map((d) => d.id),
+  );
+  expect(unnamed).toEqual([]);
+});

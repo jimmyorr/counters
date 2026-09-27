@@ -1083,6 +1083,7 @@
 
     <dialog
       id="confirm-dialog"
+      aria-labelledby="confirm-dialog-title"
       class="bottom-sheet-dialog"
       style="--sheet-theme: #f85c5c"
       autofocus
@@ -1192,10 +1193,10 @@
     </dialog>
 
     <!-- 7. Minimal Edit label Dialog -->
-    <dialog id="edit-label-dialog" class="bottom-sheet-dialog" autofocus>
+    <dialog id="edit-label-dialog" class="bottom-sheet-dialog" aria-labelledby="edit-label-title" autofocus>
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
-        <h2 class="sheet-title">Edit label</h2>
+        <h2 class="sheet-title" id="edit-label-title">Edit label</h2>
       </div>
       <div class="bottom-sheet-body" style="padding-top: 10px">
         <form
@@ -1237,10 +1238,10 @@
     </dialog>
 
     <!-- 8. Minimal Edit Value Dialog -->
-    <dialog id="edit-value-dialog" class="bottom-sheet-dialog" autofocus>
+    <dialog id="edit-value-dialog" class="bottom-sheet-dialog" aria-labelledby="edit-value-title" autofocus>
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
-        <h2 class="sheet-title">Edit value</h2>
+        <h2 class="sheet-title" id="edit-value-title">Edit value</h2>
       </div>
       <div class="bottom-sheet-body" style="padding-top: 10px">
         <form
