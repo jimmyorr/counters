@@ -258,28 +258,60 @@ import { log } from "./logger.js";
     return presetSwatch.hex;
   };
 
-  // Helper: Black or white text, whichever contrasts more with a #rrggbb background
-  const getReadableTextColor = (hex) => {
-    if (!/^#[0-9a-f]{6}$/i.test(hex)) return "#ffffff";
+  // Helpers: WCAG relative luminance and contrast ratio for #rrggbb colors
+  const relativeLuminance = (hex) => {
     const channel = (i) => {
       const c = parseInt(hex.slice(i, i + 2), 16) / 255;
       return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
     };
-    const lum = 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
-    const whiteContrast = 1.05 / (lum + 0.05);
-    const blackContrast = (lum + 0.05) / 0.05;
+    return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+  };
+  const contrastRatio = (a, b) => {
+    const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+
+  // Helper: Mix a #rrggbb color toward another by t (0-1)
+  const mixHex = (hex, toward, t) =>
+    "#" +
+    [1, 3, 5]
+      .map((i) => {
+        const from = parseInt(hex.slice(i, i + 2), 16);
+        const to = parseInt(toward.slice(i, i + 2), 16);
+        return Math.round(from + (to - from) * t).toString(16).padStart(2, "0");
+      })
+      .join("");
+
+  // Helper: Black or white text, whichever contrasts more with a #rrggbb background
+  const getReadableTextColor = (hex) => {
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) return "#ffffff";
+    const whiteContrast = contrastRatio(hex, "#ffffff");
     // Prefer white whenever it passes WCAG AA (4.5:1). White only gains contrast
     // under the card header's dark overlay, while black loses it, so a color
     // where black barely wins on the body could still fail in the header.
     if (whiteContrast >= 4.5) return "#ffffff";
     // Otherwise (light custom colors) use pure black, which beats near-black.
-    return whiteContrast >= blackContrast ? "#ffffff" : "#000000";
+    return whiteContrast >= contrastRatio(hex, "#000000") ? "#ffffff" : "#000000";
+  };
+
+  // Helper: The counter color as text on a light surface tinted 10% with it
+  // (e.g. the calculator's title pill). Starts at the usual 85% shade and
+  // darkens only as far as needed for 4.5:1, so pale colors stay readable.
+  const getInkOnLightTint = (hex) => {
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) return "#000000";
+    const surface = mixHex("#ffffff", hex, 0.1);
+    for (let t = 0.15; t < 1; t += 0.05) {
+      const ink = mixHex(hex, "#000000", t);
+      if (contrastRatio(ink, surface) >= 4.5) return ink;
+    }
+    return "#000000";
   };
 
   // Helper: Theme a bottom sheet with a counter color and readable text on it
   const setSheetTheme = (dialog, hex) => {
     dialog.style.setProperty("--sheet-theme", hex);
     dialog.style.setProperty("--sheet-text", getReadableTextColor(hex));
+    dialog.style.setProperty("--sheet-ink-light", getInkOnLightTint(hex));
   };
 
   // ------------------------------------------------------------------------

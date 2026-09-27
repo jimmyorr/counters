@@ -1574,7 +1574,8 @@ dialog[open].bottom-sheet-dialog {
 }
 
 .light-mode .sheet-title-pill {
-  color: color-mix(in srgb, var(--sheet-theme, var(--text-primary)) 85%, black);
+  /* Set per counter in JS so pale colors still reach 4.5:1 */
+  color: var(--sheet-ink-light, var(--text-primary));
   background-color: color-mix(in srgb, var(--sheet-theme, var(--bg-tertiary)) 10%, transparent);
   border-color: color-mix(in srgb, var(--sheet-theme, var(--border-light)) 30%, transparent);
 }

@@ -59,7 +59,9 @@ test.describe('color contrast', () => {
     locator.evaluate((el) => {
       const rgba = (css) => {
         const [r, g, b, a = 1] = css.match(/[\d.]+/g).map(Number);
-        return { rgb: [r, g, b], a };
+        // color-mix() results compute as color(srgb r g b / a) with 0-1 channels
+        const scale = css.startsWith('color(srgb') ? 255 : 1;
+        return { rgb: [r * scale, g * scale, b * scale], a };
       };
       const lum = ([r, g, b]) => {
         const f = (c) => ((c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
@@ -111,6 +113,22 @@ test.describe('color contrast', () => {
       expect(await contrast(page, card(page, id).locator('.counter-label'))).toBeGreaterThanOrEqual(4.5);
     }
   });
+
+  for (const palette of PALETTES) {
+    test(`${palette}: calculator title is readable in light mode for every color`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: 'light' });
+      await seed(page, { counters: presets(), settings: { palette } });
+      await page.goto('/');
+      for (let i = 0; i < 8; i++) {
+        await card(page, `p${i}`).locator('.card-value-body').click();
+        const title = page.locator('#calc-dialog-title');
+        await expect(title).toBeVisible();
+        expect(await contrast(page, title), `${palette} slot ${i}`).toBeGreaterThanOrEqual(4.5);
+        await page.keyboard.press('Escape');
+        await expect(page.locator('#calculator-dialog')).toBeHidden();
+      }
+    });
+  }
 
   test('contrast tests cover every palette in the app', async ({ page }) => {
     await page.goto('/');
