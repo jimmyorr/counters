@@ -1042,11 +1042,9 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
     // Update footer button active class
     $$("[data-tab-btn]").forEach((btn) => {
-      if (btn.getAttribute("data-tab-btn") === tabId) {
-        btn.classList.add("active");
-      } else {
-        btn.classList.remove("active");
-      }
+      const isActive = btn.getAttribute("data-tab-btn") === tabId;
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
     // Update Topbar View Title
