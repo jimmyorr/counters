@@ -1689,9 +1689,9 @@ import { log } from "./logger.js";
       }
 
       const label = $("#edit-label").value.trim();
-      const value = parseInt($("#edit-value-input-details").value || "0");
-      const increment = parseInt($("#edit-increment").value || "1");
-      const resetValue = parseInt($("#edit-reset-val").value || "0");
+      const value = parseFloat($("#edit-value-input-details").value || "0");
+      const increment = parseFloat($("#edit-increment").value || "1");
+      const resetValue = parseFloat($("#edit-reset-val").value || "0");
 
       if (state.activeCounterIdForEdit === "new") {
         // Create new counter
@@ -1863,7 +1863,7 @@ import { log } from "./logger.js";
 
       const newValueStr = $("#edit-value-input").value;
       if (newValueStr === "") return;
-      const newValue = parseInt(newValueStr);
+      const newValue = parseFloat(newValueStr);
 
       const counter = state.counters.find(
         (c) => c.id === state.activeCounterIdForEdit,
