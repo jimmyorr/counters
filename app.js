@@ -1505,6 +1505,57 @@ import { log } from "./logger.js";
       playClickSound();
     });
 
+    $("#menu-btn-share-counters")?.addEventListener("click", async () => {
+      dialog.close();
+      if (state.counters.length === 0) {
+        showToast("No counters to share");
+        return;
+      }
+
+      const lines = ["Counters"];
+      state.counters.forEach((counter) => {
+        lines.push(`${counter.label}: ${formatNumber(counter.value)}`);
+      });
+      const text = lines.join("\n");
+
+      // Prefer the native share sheet (includes Copy on iOS/Android)
+      if (
+        typeof navigator !== "undefined" &&
+        typeof navigator.share === "function"
+      ) {
+        try {
+          await navigator.share({ title: "Counters", text });
+        } catch (e) {
+          // User dismissed the share sheet — not an error
+          if (e && e.name !== "AbortError") {
+            log.warn("Share failed:", e);
+          }
+        }
+        return;
+      }
+
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("Copied to clipboard");
+      } catch (e) {
+        log.warn("Clipboard write failed, trying legacy copy:", e);
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand("copy");
+          showToast("Copied to clipboard");
+        } catch {
+          showToast("Could not share counters");
+        }
+        ta.remove();
+      }
+    });
+
     $("#menu-btn-delete-all")?.addEventListener("click", () => {
       dialog.close();
       if (state.counters.length === 0) return;
