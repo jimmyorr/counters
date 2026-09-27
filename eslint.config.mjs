@@ -31,7 +31,7 @@ export default [
     },
   },
   {
-    files: ['vite.config.js'],
+    files: ['vite.config.js', 'playwright.config.js', 'tests/**/*.js'],
     languageOptions: {
       sourceType: 'module',
       globals: {

@@ -23,6 +23,7 @@ Guidelines and rules for AI coding assistants working in the Counters repository
 ## Server & verification rules
 
 * **Use existing server**: Do not start a local development server (e.g., `npm run dev`). A development server is already running on port 5173. Use `http://localhost:5173` for all browser-based verification. Avoid browser-based verification unless it is absolutely necessary.
+* **Headless tests**: Prefer `npm run test:e2e` (Playwright, headless Chrome) over manual browser checks. It starts its own Vite server on port 5199 (or reuses one already there), so it doesn't conflict with the rule above. Set `BASE_URL` to test a different server. Tests live in `tests/e2e/` and should import `test`/`expect` from `./fixtures.js`, which blocks third-party requests and fails on uncaught page errors. Run it when changing UI behavior or startup/network code.
 
 ## Directory rules
 
