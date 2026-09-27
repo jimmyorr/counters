@@ -1244,6 +1244,14 @@ import { log } from "./logger.js";
 
     $("#calc-number-input")?.addEventListener("input", updateSubmitButtonText);
 
+    // The calculator isn't a <form>, so wire Enter (and the mobile "Go" key) to submit
+    $("#calc-number-input")?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.isComposing) {
+        e.preventDefault();
+        $("#calc-btn-submit")?.click();
+      }
+    });
+
     // Prevent focus from shifting away from the text input when tapping the toggle
     $(".operation-toggles").addEventListener("pointerdown", (e) => {
       e.preventDefault();
