@@ -1384,10 +1384,16 @@ import { log } from "./logger.js";
       showConfirmDialog(
         "Reset all counters to their base target values?",
         () => {
+          const prevValues = state.counters.map((c) => ({
+            id: c.id,
+            value: c.value,
+          }));
+          const addedLogIds = [];
           state.counters.forEach((counter) => {
             const oldValue = counter.value;
             counter.value = counter.resetValue || 0;
             addHistoryLog(counter, "Reset counter", oldValue, counter.value);
+            if (state.history[0]) addedLogIds.push(state.history[0].id);
           });
           saveCounters();
 
@@ -1437,7 +1443,27 @@ import { log } from "./logger.js";
             }, totalDurationMs);
           }
 
-          showToast("All counters reset");
+          showToast("All counters reset", {
+            actionLabel: "Undo",
+            duration: 5000,
+            onAction: () => {
+              prevValues.forEach(({ id, value }) => {
+                const c = state.counters.find((x) => x.id === id);
+                if (c) c.value = value;
+              });
+              // Remove the "Reset counter" history entries — the reset never happened
+              if (addedLogIds.length > 0) {
+                state.history = state.history.filter(
+                  (h) => !addedLogIds.includes(h.id),
+                );
+              }
+              saveCounters();
+              saveHistory();
+              renderCountersList();
+              renderHistory();
+              showToast("Counters restored");
+            },
+          });
           playResetSound();
           playHaptic(ImpactStyle.Medium);
         },
@@ -1590,13 +1616,27 @@ import { log } from "./logger.js";
             tabCounters.style.overflow = "";
             tabCounters.scrollTop = 0;
           }
+          const deletedCounters = state.counters;
+          const deletedHistory = state.history;
           state.counters = [];
           state.history = [];
           saveCounters();
           saveHistory();
           renderCountersList();
           renderHistory();
-          showToast("All counters deleted");
+          showToast("All counters deleted", {
+            actionLabel: "Undo",
+            duration: 5000,
+            onAction: () => {
+              state.counters = deletedCounters;
+              state.history = deletedHistory;
+              saveCounters();
+              saveHistory();
+              renderCountersList();
+              renderHistory();
+              showToast("Counters restored");
+            },
+          });
           playResetSound();
           playHaptic(ImpactStyle.Medium);
         };
