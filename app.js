@@ -343,20 +343,40 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   let toastTimeout = null;
 
-  const showToast = (message) => {
+  const showToast = (message, options = {}) => {
     const toast = $("#toast-wrapper");
     const toastText = $("#toast-text");
+    const toastAction = $("#toast-action");
 
     if (!toast || !toastText) return;
 
     toastText.textContent = message;
+
+    const { actionLabel, onAction, duration = 2500 } = options;
+    if (toastAction) {
+      if (actionLabel && typeof onAction === "function") {
+        toastAction.textContent = actionLabel;
+        toastAction.hidden = false;
+        toastAction.onclick = () => {
+          if (toastTimeout) clearTimeout(toastTimeout);
+          toast.classList.add("hidden");
+          toastAction.hidden = true;
+          onAction();
+        };
+      } else {
+        toastAction.hidden = true;
+        toastAction.onclick = null;
+      }
+    }
+
     toast.classList.remove("hidden");
 
     if (toastTimeout) clearTimeout(toastTimeout);
 
     toastTimeout = setTimeout(() => {
       toast.classList.add("hidden");
-    }, 2500);
+      if (toastAction) toastAction.hidden = true;
+    }, duration);
   };
 
   // ------------------------------------------------------------------------
@@ -1815,6 +1835,7 @@ import { log } from "./logger.js";
 
           const completeDeletion = () => {
             if (tabCounters) tabCounters.style.overflow = "";
+            let deletedLogId = null;
             if (counter) {
               addHistoryLog(
                 counter,
@@ -1822,11 +1843,34 @@ import { log } from "./logger.js";
                 counter.value,
                 counter.value,
               );
+              deletedLogId = state.history[0]?.id || null;
             }
+            const deletedCounter = state.counters[idx];
+            const deletedIndex = idx;
             state.counters.splice(idx, 1);
             saveCounters();
             renderCountersList();
-            showToast(`Counter deleted`);
+            showToast(`Counter deleted`, {
+              actionLabel: "Undo",
+              duration: 5000,
+              onAction: () => {
+                // Restore at the original position
+                const at = Math.min(deletedIndex, state.counters.length);
+                state.counters.splice(at, 0, deletedCounter);
+                // Remove the "Deleted counter" history entry — the delete never happened
+                if (deletedLogId) {
+                  const hIdx = state.history.findIndex(
+                    (h) => h.id === deletedLogId,
+                  );
+                  if (hIdx !== -1) state.history.splice(hIdx, 1);
+                }
+                saveCounters();
+                saveHistory();
+                renderCountersList();
+                renderHistory();
+                showToast(`Counter restored`);
+              },
+            });
             playResetSound();
             playHaptic(ImpactStyle.Medium);
           };

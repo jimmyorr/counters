@@ -2361,6 +2361,9 @@ dialog[open].options-menu-dialog {
   z-index: 300;
   pointer-events: none;
   opacity: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   transition:
     transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
     opacity 0.2s ease-out;
@@ -2377,6 +2380,20 @@ dialog[open].options-menu-dialog {
   font-weight: 500;
   color: var(--text-primary);
   white-space: pre-wrap;
+}
+
+.toast-action {
+  pointer-events: auto;
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 4px 8px;
+  font-family: var(--font-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-color);
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 /* --------------------------------------------------------------------------
