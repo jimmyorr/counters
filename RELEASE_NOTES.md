@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.1.12
+
+- **Bug fixes:** Fixed the timer losing time when adding time while running, deleting the wrong counter during auto-sort, and the calculator ignoring Enter.
+- **Reliability:** Stopped two open tabs overwriting each other, saved the theme with other settings, and bundled fonts so a slow network can't block startup.
+- **Developer experience:** Added a Playwright test suite that runs before every release.
+
 ## 0.1.10
 
 - **Sharing:** Added sharing all counters from the main menu.
