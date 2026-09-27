@@ -366,6 +366,17 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   let toastTimeout = null;
 
+  // Announce a counter's new value to screen readers via the polite live region.
+  // Clear first so repeating the same text is still announced.
+  const announceValue = (counter) => {
+    const announcer = $("#sr-announcer");
+    if (!announcer) return;
+    announcer.textContent = "";
+    requestAnimationFrame(() => {
+      announcer.textContent = `${counter.label}: ${formatNumber(counter.value)}`;
+    });
+  };
+
   const showToast = (message, options = {}) => {
     const toast = $("#toast-wrapper");
     const toastText = $("#toast-text");
@@ -588,6 +599,9 @@ import { log } from "./logger.js";
         }
         const isNewClass = counter.isNew ? " animate-entry" : "";
         delete counter.isNew;
+        // Name the counter in every control so screen readers can tell cards apart
+        const name = escapeHtml(counter.label);
+        const step = formatNumber(counter.increment || 1);
         return `
         <div class="counter-card ${swatchClass}${isNewClass}" data-counter-id="${
           counter.id
@@ -613,15 +627,15 @@ import { log } from "./logger.js";
           
           <div class="card-body-wrapper">
             <!-- Card Direct Click decrement zone -->
-            <div class="card-direct-zone card-direct-zone-minus" data-action="decrement" aria-label="Subtract direct increment" tabindex="0" role="button">−</div>
+            <div class="card-direct-zone card-direct-zone-minus" data-action="decrement" aria-label="Subtract ${step} from ${name}" tabindex="0" role="button">−</div>
             
             <!-- Middle Display -->
-            <div class="card-value-body data-action-calc" tabindex="0" role="button" aria-label="Open calculator">
+            <div class="card-value-body data-action-calc" tabindex="0" role="button" aria-label="${name}: ${formatNumber(counter.value)}. Open calculator">
               <span class="value-display">${formatNumber(counter.value)}</span>
             </div>
             
             <!-- Card Direct Click increment zone -->
-            <div class="card-direct-zone card-direct-zone-plus" data-action="increment" aria-label="Add direct increment" tabindex="0" role="button">+</div>
+            <div class="card-direct-zone card-direct-zone-plus" data-action="increment" aria-label="Add ${step} to ${name}" tabindex="0" role="button">+</div>
           </div>
         </div>
       `;
@@ -1323,6 +1337,7 @@ import { log } from "./logger.js";
           ? `+${formatNumber(deltaValue)}`
           : `−${formatNumber(deltaValue)}`;
       addHistoryLog(counter, label, oldValue, counter.value);
+      announceValue(counter);
 
       dialog.close();
       renderCountersList();
@@ -1359,6 +1374,7 @@ import { log } from "./logger.js";
           ? `+${formatNumber(deltaValue)}`
           : `−${formatNumber(deltaValue)}`;
       addHistoryLog(counter, label, oldValue, counter.value);
+      announceValue(counter);
 
       dialog.close();
       renderCountersList();
@@ -2046,6 +2062,7 @@ import { log } from "./logger.js";
         counter.value = newValue;
         saveCounters();
         addHistoryLog(counter, "Edited value", oldValue, counter.value);
+        announceValue(counter);
         showToast("Value updated");
       }
 
@@ -2688,6 +2705,7 @@ import { log } from "./logger.js";
 
         const oldValue = counter.value;
         counter.value -= counter.increment || 1;
+        announceValue(counter);
         saveCounters();
         addHistoryLog(
           counter,
@@ -2711,6 +2729,7 @@ import { log } from "./logger.js";
 
         const oldValue = counter.value;
         counter.value += counter.increment || 1;
+        announceValue(counter);
         saveCounters();
         addHistoryLog(
           counter,
@@ -2766,6 +2785,7 @@ import { log } from "./logger.js";
           counter.value = resetTarget;
           saveCounters();
           addHistoryLog(counter, "Reset value", oldValue, counter.value);
+          announceValue(counter);
 
           renderCountersList();
           triggerAutoSortWithDebounce();
