@@ -100,7 +100,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icon-512.png'],
-      manifest: manifestData
+      manifest: manifestData,
+      workbox: {
+        // Precache the bundled Latin font files so text renders offline
+        globPatterns: ['**/*.{js,css,html}', '**/*latin*-wght-normal-*.woff2'],
+      },
     })
   ]
 });

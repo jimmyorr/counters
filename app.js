@@ -3285,7 +3285,10 @@ import { log } from "./logger.js";
       versionEl.textContent = `Counters v${appVersion}`;
     }
 
+    // Register right away instead of waiting for window load, which a stalled
+    // third-party request (e.g. analytics) can delay indefinitely
     registerSW({
+      immediate: true,
       onOfflineReady() {
         log.info("App ready to work offline");
       },
