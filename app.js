@@ -3130,6 +3130,9 @@ import { log } from "./logger.js";
           timerMode = "countdown";
           countdownRemainingMs = currentDisplayMs + addMs;
           stopwatchElapsedMs = 0;
+          // Elapsed time is now folded into countdownRemainingMs; restart the
+          // clock so it isn't subtracted a second time while running
+          if (timerRunning) timerStartTime = Date.now();
         } else {
           countdownRemainingMs += addMs;
         }
