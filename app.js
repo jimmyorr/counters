@@ -702,6 +702,7 @@ import { log } from "./logger.js";
     let headerHoldPointerId = null;
     let headerHoldStartX = 0;
     let headerHoldStartY = 0;
+    let suppressUntilRelease = false;
 
     // Cancel holds that haven't turned into an auto-sort warning or a drag yet
     const cancelHeaderHold = () => {
@@ -799,10 +800,10 @@ import { log } from "./logger.js";
         headerHoldTimer = setTimeout(() => {
           if (!headerHoldActive) return;
           headerHoldActive = false;
+          // Swallow the click that the eventual release generates, however long
+          // the press lasts (cleared shortly after release below)
           headerHoldSuppressedClick = true;
-          setTimeout(() => {
-            headerHoldSuppressedClick = false;
-          }, 400);
+          suppressUntilRelease = true;
 
           const card = header.closest(".counter-card");
           if (card) {
@@ -1007,6 +1008,19 @@ import { log } from "./logger.js";
       if (tabsSlider) tabsSlider.style.overflowX = "";
       renderCountersList();
     });
+
+    // After a denied long press, stop suppressing once the release's own click
+    // has had its chance to fire, so the next real tap works. Listen on window
+    // so a release outside the list still counts.
+    const endSuppressionAfterRelease = () => {
+      if (!suppressUntilRelease) return;
+      suppressUntilRelease = false;
+      setTimeout(() => {
+        headerHoldSuppressedClick = false;
+      }, 100);
+    };
+    window.addEventListener("pointerup", endSuppressionAfterRelease, true);
+    window.addEventListener("pointercancel", endSuppressionAfterRelease, true);
 
     // Capture-phase click listener to suppress accidental click/edit-dialog after long press
     listWrapper.addEventListener(
