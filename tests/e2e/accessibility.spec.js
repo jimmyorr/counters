@@ -81,26 +81,43 @@ test.describe('color contrast', () => {
       return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
     });
 
-  test('card labels meet 4.5:1 on every preset and a pale custom color', async ({ page }) => {
-    const presets = Array.from({ length: 8 }, (_, i) => counter(`p${i}`, `Preset ${i}`, 0, { color: i }));
-    await seed(page, { counters: [...presets, counter('pale', 'Pale', 0, { color: '#f5f0c8' })] });
-    await page.goto('/');
+  // Every palette in app.js. The last test below fails if this list drifts.
+  const PALETTES = ['classic', 'pastel'];
+  const presets = () => Array.from({ length: 8 }, (_, i) => counter(`p${i}`, `Preset ${i}`, 0, { color: i }));
 
-    for (const id of [...presets.map((c) => c.id), 'pale']) {
-      const ratio = await contrast(page, card(page, id).locator('.counter-label'));
-      expect(ratio, `card ${id}`).toBeGreaterThanOrEqual(4.5);
+  for (const palette of PALETTES) {
+    test(`${palette}: every card uses one text color at 4.5:1 or better`, async ({ page }) => {
+      await seed(page, { counters: presets(), settings: { palette } });
+      await page.goto('/');
+
+      const textColors = new Set();
+      for (let i = 0; i < 8; i++) {
+        const label = card(page, `p${i}`).locator('.counter-label');
+        textColors.add(await label.evaluate((el) => getComputedStyle(el).color));
+        expect(await contrast(page, label), `${palette} slot ${i}`).toBeGreaterThanOrEqual(4.5);
+      }
+      expect([...textColors], `${palette} mixes text colors`).toHaveLength(1);
+    });
+  }
+
+  test('custom colors pick black or white text for contrast', async ({ page }) => {
+    await seed(page, {
+      counters: [counter('pale', 'Pale', 0, { color: '#f5f0c8' }), counter('dark', 'Dark', 0, { color: '#202040' })],
+    });
+    await page.goto('/');
+    await expect(card(page, 'pale').locator('.counter-label')).toHaveCSS('color', 'rgb(0, 0, 0)');
+    await expect(card(page, 'dark').locator('.counter-label')).toHaveCSS('color', 'rgb(255, 255, 255)');
+    for (const id of ['pale', 'dark']) {
+      expect(await contrast(page, card(page, id).locator('.counter-label'))).toBeGreaterThanOrEqual(4.5);
     }
   });
 
-  test('every preset uses white text so cards never mix text colors', async ({ page }) => {
-    const presets = Array.from({ length: 8 }, (_, i) => counter(`p${i}`, `Preset ${i}`, 0, { color: i }));
-    await seed(page, { counters: [...presets, counter('pale', 'Pale', 0, { color: '#f5f0c8' })] });
+  test('contrast tests cover every palette in the app', async ({ page }) => {
     await page.goto('/');
-    for (const { id } of presets) {
-      await expect(card(page, id).locator('.counter-label'), `card ${id}`).toHaveCSS('color', 'rgb(255, 255, 255)');
-    }
-    // Custom colors still switch to black when they're too light for white
-    await expect(card(page, 'pale').locator('.counter-label')).toHaveCSS('color', 'rgb(0, 0, 0)');
+    await page.locator('#btn-open-options').click();
+    await page.locator('#menu-btn-open-settings').click();
+    const options = await page.locator('#setting-palette option').evaluateAll((els) => els.map((o) => o.value));
+    expect(options).toEqual(PALETTES);
   });
 
   test('calculator submit button is readable on a light counter color', async ({ page }) => {

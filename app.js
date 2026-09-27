@@ -66,6 +66,7 @@ import { log } from "./logger.js";
       quickAddValues: [5, 10, 15, 20, 50, 100],
       themeHue: 205,
       keepAwake: false,
+      palette: "classic",
     },
     history: [],
     currentTab: "counters",
@@ -79,17 +80,44 @@ import { log } from "./logger.js";
   };
 
   // Pre-configured counter palette color swatches
-  // All presets are dark enough for white text at 4.5:1, so cards never mix text colors
-  const colorSwatches = [
-    { id: 0, class: "card-color-0", hex: "#162e8a" }, // Deep blue
-    { id: 1, class: "card-color-1", hex: "#c15713" }, // Burnt orange
-    { id: 2, class: "card-color-2", hex: "#ca265a" }, // Crimson pink
-    { id: 3, class: "card-color-3", hex: "#5b6973" }, // Slate grey
-    { id: 4, class: "card-color-4", hex: "#167648" }, // Forest green
-    { id: 5, class: "card-color-5", hex: "#8a4b12" }, // Brown
-    { id: 6, class: "card-color-6", hex: "#0e818f" }, // Teal
-    { id: 7, class: "card-color-7", hex: "#622ea1" }, // Purple
-  ];
+  // Preset counter palettes. Counters store a slot index (0-7), so switching
+  // palettes recolors existing counters. Every color in a palette must take the
+  // same text color at 4.5:1 so cards never mix black and white text (enforced
+  // in tests/e2e/accessibility.spec.js).
+  const palettes = {
+    classic: {
+      label: "Classic",
+      colors: [
+        "#162e8a", // Deep blue
+        "#c15713", // Burnt orange
+        "#ca265a", // Crimson pink
+        "#5b6973", // Slate grey
+        "#167648", // Forest green
+        "#8a4b12", // Brown
+        "#0e818f", // Teal
+        "#622ea1", // Purple
+      ],
+    },
+    pastel: {
+      label: "Pastel",
+      colors: [
+        "#9fb3f5", // Periwinkle
+        "#f8c29c", // Peach
+        "#f7a8c4", // Pink
+        "#cbcfd4", // Mist
+        "#a6e3c2", // Mint
+        "#f3dc8a", // Butter
+        "#9ee0e6", // Aqua
+        "#e0b4f0", // Lavender
+      ],
+    },
+  };
+
+  // Swatches ({ id, class, hex }) for the active palette
+  const getSwatches = () =>
+    (palettes[state.settings.palette] || palettes.classic).colors.map(
+      (hex, id) => ({ id, class: `card-color-${id}`, hex }),
+    );
 
   // Apply "light", "dark", or "system" theme classes to the root element
   const applyTheme = (theme) => {
@@ -225,7 +253,8 @@ import { log } from "./logger.js";
     if (isCustomColor(counter.color)) {
       return counter.color;
     }
-    const presetSwatch = colorSwatches[counter.color] || colorSwatches[0];
+    const swatches = getSwatches();
+    const presetSwatch = swatches[counter.color] || swatches[0];
     return presetSwatch.hex;
   };
 
@@ -598,7 +627,7 @@ import { log } from "./logger.js";
         const cardThemeHex = getCounterHex(counter);
         const swatchClass = isCustomColor(counter.color)
           ? ""
-          : (colorSwatches[counter.color] || colorSwatches[0]).class;
+          : `card-color-${getSwatches()[counter.color] ? counter.color : 0}`;
         const isNewClass = counter.isNew ? " animate-entry" : "";
         delete counter.isNew;
         // Name the counter in every control so screen readers can tell cards apart
@@ -1760,7 +1789,7 @@ import { log } from "./logger.js";
     const paletteContainer = $("#edit-palette-container");
     if (paletteContainer) {
       paletteContainer.innerHTML =
-        colorSwatches
+        getSwatches()
           .map((swatch) => {
             return `
           <div class="palette-swatch ${swatch.class}" data-color-id="${swatch.id}" style="background-color: ${swatch.hex}"></div>
@@ -1791,8 +1820,8 @@ import { log } from "./logger.js";
           if (customInput)
             setSheetTheme(dialog, customInput.value);
         } else {
-          const swatchData =
-            colorSwatches[parseInt(colorId)] || colorSwatches[0];
+          const swatches = getSwatches();
+          const swatchData = swatches[parseInt(colorId)] || swatches[0];
           setSheetTheme(dialog, swatchData.hex);
         }
 
@@ -2005,13 +2034,14 @@ import { log } from "./logger.js";
   const addNewCounterStreamlined = () => {
     // Pick an unused color swatch
     const usedColors = state.counters.map((c) => c.color);
-    const unusedSwatches = colorSwatches.filter(
+    const swatches = getSwatches();
+    const unusedSwatches = swatches.filter(
       (s) => !usedColors.includes(s.id),
     );
     const selectedSwatch =
       unusedSwatches.length > 0
         ? unusedSwatches[Math.floor(Math.random() * unusedSwatches.length)]
-        : colorSwatches[Math.floor(Math.random() * colorSwatches.length)];
+        : swatches[Math.floor(Math.random() * swatches.length)];
     const colorId = selectedSwatch.id;
 
     // Pick an unused placeholder label if possible
@@ -2090,12 +2120,15 @@ import { log } from "./logger.js";
     // Set palette swatch selected
     const isCustom = isCustomColor(counter.color);
     const sheetThemeHex = getCounterHex(counter);
+    const swatches = getSwatches();
     $$(".palette-swatch").forEach((swatch) => {
       const colorId = swatch.getAttribute("data-color-id");
       swatch.classList.toggle(
         "active",
         isCustom ? colorId === "custom" : parseInt(colorId) === counter.color,
       );
+      // Preset swatches follow the active palette
+      if (swatches[colorId]) swatch.style.backgroundColor = swatches[colorId].hex;
       if (colorId === "custom") {
         // Show the counter's custom color, or start the picker at the app theme color
         const customHex = isCustom ? counter.color : getThemeHex();
@@ -2120,6 +2153,22 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   // 14. Settings Dialog Data Binder
   // ------------------------------------------------------------------------
+  // Fill the palette select from the palettes map and preview the chosen palette
+  const renderPaletteSetting = () => {
+    const select = $("#setting-palette");
+    const preview = $("#setting-palette-preview");
+    if (!select || !preview) return;
+    if (!select.options.length) {
+      select.innerHTML = Object.entries(palettes)
+        .map(([key, { label }]) => `<option value="${key}">${label}</option>`)
+        .join("");
+    }
+    select.value = palettes[state.settings.palette] ? state.settings.palette : "classic";
+    preview.innerHTML = getSwatches()
+      .map(({ hex }) => `<span style="background-color: ${hex}"></span>`)
+      .join("");
+  };
+
   const loadSettingsIntoDOM = () => {
     $("#setting-sound").checked = state.settings.soundEnabled;
     const hapticSetting = $("#setting-haptic");
@@ -2133,6 +2182,7 @@ import { log } from "./logger.js";
     const keepAwakeEl = $("#setting-keep-awake");
     if (keepAwakeEl) keepAwakeEl.checked = state.settings.keepAwake;
     $("#setting-theme").value = state.settings.theme || "system";
+    renderPaletteSetting();
     const quickAddInput = $("#setting-quick-add-values");
     if (quickAddInput) {
       quickAddInput.value = state.settings.quickAddValues.join(", ");
@@ -2200,6 +2250,15 @@ import { log } from "./logger.js";
         playClickSound();
       });
     }
+
+    // Palette selector
+    $("#setting-palette").addEventListener("change", (e) => {
+      state.settings.palette = e.target.value;
+      saveSettings();
+      renderPaletteSetting();
+      renderCountersList();
+      playClickSound();
+    });
 
     // Theme selector
     $("#setting-theme").addEventListener("change", (e) => {

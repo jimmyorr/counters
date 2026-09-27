@@ -1205,6 +1205,20 @@ html[data-layout="grid"] .card-direct-zone-plus {
   line-height: 1.4;
 }
 
+/* Palette setting: a row of dots previewing the chosen palette */
+.palette-preview {
+  display: flex;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.palette-preview span {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(128, 128, 128, 0.25);
+}
+
 /* Form switch toggle */
 .switch-toggle {
   position: relative;
