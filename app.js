@@ -1730,7 +1730,8 @@ import { log } from "./logger.js";
     form.querySelectorAll("input").forEach((input) => {
       input.addEventListener("focus", () => {
         setTimeout(() => {
-          input.select();
+          // select() also focuses; skip it if focus already moved to another field
+          if (document.activeElement === input) input.select();
         }, 50);
       });
     });
