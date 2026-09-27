@@ -1,9 +1,66 @@
 import { defineConfig } from 'vite';
 import fs from 'fs';
 import { VitePWA } from 'vite-plugin-pwa';
+import { execSync } from 'child_process';
 
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
 const manifestData = JSON.parse(fs.readFileSync('./public/manifest.json', 'utf-8'));
+
+function getGitInfo(isBuild = false) {
+  let commitHash = 'unknown';
+  try {
+    commitHash = execSync('git rev-parse --short HEAD').toString().trim();
+  } catch {
+    // fallback if git is unavailable
+  }
+
+  let isDirty = false;
+  try {
+    const status = execSync('git status --porcelain', {
+      encoding: 'utf-8',
+    });
+    if (status.trim()) {
+      const lines = status.split('\n').filter((l) => l.length > 0);
+      const dirtyFiles = lines
+        .map((line) => {
+          const match = line.match(/^.. (.+)$/);
+          if (!match) return line.trim();
+          const filePath = match[1].trim();
+          if (filePath.includes(' -> ')) {
+            return filePath.split(' -> ')[1].trim();
+          }
+          return filePath;
+        })
+        .filter((file) => {
+          // Always ignore build output directory
+          if (file.startsWith('docs/')) return false;
+          // During production builds, ignore files modified as part of the release workflow
+          if (isBuild) {
+            const releaseFiles = [
+              'package.json',
+              'package-lock.json',
+              'RELEASE_NOTES.md',
+            ];
+            if (
+              releaseFiles.includes(file) ||
+              file.startsWith('ios/') ||
+              file.startsWith('android/')
+            ) {
+              return false;
+            }
+          }
+          return true;
+        });
+      isDirty = dirtyFiles.length > 0;
+    }
+  } catch {
+    // fallback if git is unavailable
+  }
+
+  const version = pkg.version || '0.0.0';
+
+  return { commitHash, isDirty, version };
+}
 
 export default defineConfig({
   base: './',
@@ -18,6 +75,23 @@ export default defineConfig({
     },
   },
   plugins: [
+    {
+      name: 'dynamic-git-info',
+      transformIndexHtml: {
+        order: 'pre',
+        handler(html, ctx) {
+          const isBuild = !ctx.server;
+          const { commitHash, isDirty, version } = getGitInfo(isBuild);
+          return [
+            {
+              tag: 'script',
+              children: `window.__APP_VERSION__ = ${JSON.stringify(version)};\nwindow.__COMMIT_HASH__ = ${JSON.stringify(commitHash)};\nwindow.__IS_DIRTY__ = ${JSON.stringify(isDirty)};`,
+              injectTo: 'head-prepend',
+            },
+          ];
+        },
+      },
+    },
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icon-512.png'],

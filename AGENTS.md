@@ -28,6 +28,21 @@ Guidelines and rules for AI coding assistants working in the Counters repository
 
 * **Do not touch the docs directory**: The `docs/` directory is strictly for compiled production builds generated automatically by Vite. Never edit, search, or read files inside the `docs/` directory. All development, changes, and queries must be executed against the root source files (like `app.js`, `index.css`, root `index.html`, etc.).
 
+## Code hygiene & lint rules
+
+* **Zero lint warnings standard**: The codebase maintains a strict zero-warning policy enforced by `npm run lint` (`eslint . --max-warnings=0`). Never propose or stage commits that introduce ESLint warnings or errors. Always run `npm run lint` or `npm test` as part of your verification pass before asking for commit approval.
+* **Code hygiene best practices**:
+  * Use optional catch binding (`try { ... } catch { /* ignore */ }`) when the error object is unused, rather than `catch (e)` or empty blocks without comments.
+  * Remove dead or leftover variables immediately during refactoring rather than leaving unused declarations.
+  * Do not leave unused function arguments or destructured variables from imports or constants.
+
+## Logging & console rules
+
+* **Use the log utility**: Avoid raw `console.log` calls in runtime application code. Use the `log` utility methods (`log.info`, `log.warn`, `log.error`) provided by `logger.js`.
+* **Gate diagnostic output**: Use `log.info` for operational milestones and debug events. These logs are automatically suppressed by default and only print when debug mode is active (`?debug=1`, `?debug=true`, `localStorage.getItem('debug') === 'true'`, or `window.DEBUG = true`).
+* **Preserve warnings and errors**: Use `log.warn` and `log.error` for genuine warnings, recoverable failures, or unexpected conditions.
+* **Single startup banner**: Only the main entry file (`app.js`) prints a single, unguarded startup banner displaying the app title, version, and commit hash. Do not add other unguarded console outputs on startup.
+
 ## Release notes generation
 
 * **Release notes command**: When the user requests you to generate release notes (e.g., by saying "generate release notes" or after running `npm run release`), review the git commit history since the last version bump.

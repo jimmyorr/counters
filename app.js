@@ -15,6 +15,7 @@ import {
 import { Capacitor } from "@capacitor/core";
 import confetti from "canvas-confetti";
 import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
+import { log } from "./logger.js";
 
 (function () {
   "use strict";
@@ -419,7 +420,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           }
           return a.index - b.index;
         })[0]?.counter;
-      let themeHex = "";
+      let themeHex;
       if (typeof leader.color === "string" && leader.color.startsWith("#")) {
         themeHex = leader.color;
       } else {
@@ -444,7 +445,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           }
           return a.index - b.index;
         })[0]?.counter;
-      let themeHex = "";
+      let themeHex;
       if (
         typeof lowLeader.color === "string" &&
         lowLeader.color.startsWith("#")
@@ -530,7 +531,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     // Inject rendered HTML for each array item
     listWrapper.innerHTML = state.counters
       .map((counter) => {
-        let cardThemeHex = "";
+        let cardThemeHex;
         let swatchClass = "";
         if (
           typeof counter.color === "string" &&
@@ -786,7 +787,9 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         // Capture pointer first BEFORE hiding the original card to prevent browser pointer cancel!
         try {
           listWrapper.setPointerCapture(p.pointerId);
-        } catch (_) {}
+        } catch {
+          /* ignore */
+        }
 
         p.card.classList.add("dragging");
         playHaptic(ImpactStyle.Medium);
@@ -912,7 +915,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       if (fromIdx === -1) return;
 
       // Count how many real cards are before the placeholder position to get target index
-      let toIdx = 0;
       let seen = 0;
       for (let i = 0; i < allChildren.length; i++) {
         if (i === placeholderIdx) break;
@@ -925,9 +927,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           seen++;
         }
       }
-      toIdx = seen;
-      // Clamp
-      toIdx = Math.max(0, Math.min(toIdx, state.counters.length - 1));
+      const toIdx = Math.max(0, Math.min(seen, state.counters.length - 1));
 
       if (fromIdx === toIdx) {
         renderCountersList();
@@ -1001,14 +1001,14 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
     emptyView.classList.add("hidden");
     listWrapper.innerHTML = state.history
-      .map((log) => {
-        let themeHex = "";
-        if (log.color === "system") {
+      .map((logItem) => {
+        let themeHex;
+        if (logItem.color === "system") {
           themeHex = "var(--accent-color)";
-        } else if (typeof log.color === "string" && log.color.startsWith("#")) {
-          themeHex = log.color;
+        } else if (typeof logItem.color === "string" && logItem.color.startsWith("#")) {
+          themeHex = logItem.color;
         } else {
-          const swatch = colorSwatches[log.color] || colorSwatches[0];
+          const swatch = colorSwatches[logItem.color] || colorSwatches[0];
           themeHex = swatch.hex;
         }
 
@@ -1017,12 +1017,12 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
           <div class="history-badge"></div>
           <div class="history-details">
             <div class="history-row-top">
-              <span class="history-counter">${escapeHtml(log.counterLabel)}</span>
-              <span class="history-time">${log.timestamp}</span>
+              <span class="history-counter">${escapeHtml(logItem.counterLabel)}</span>
+              <span class="history-time">${logItem.timestamp}</span>
             </div>
             <div class="history-row-bottom">
-              <span class="history-event">${log.actionLabel}</span>
-              <span class="history-progression">${log.progression}</span>
+              <span class="history-event">${logItem.actionLabel}</span>
+              <span class="history-progression">${logItem.progression}</span>
             </div>
           </div>
         </div>
@@ -2003,7 +2003,6 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
       dialog.style.setProperty("--sheet-theme", sheetThemeHex);
       openDialog(dialog);
 
-      const labelInput = $("#edit-label");
       // Intentionally NOT focusing the input to prevent mobile keyboard from popping up
       // and squeezing the UI. User can tap the field if they want to edit it.
 
@@ -2179,7 +2178,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
   // Helper: History Log Writer
   const addHistoryLog = (counter, actionLabel, oldValue, newValue) => {
-    let progressionVal = "";
+    let progressionVal;
     if (typeof oldValue === "string" && newValue === undefined) {
       progressionVal = oldValue;
     } else if (
@@ -2812,7 +2811,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     let timerLastBeepSecond = 0;
 
     const updateTimerDisplay = () => {
-      let totalMs = 0;
+      let totalMs;
       if (timerMode === "stopwatch") {
         totalMs =
           stopwatchElapsedMs + (timerRunning ? Date.now() - timerStartTime : 0);
@@ -2879,7 +2878,7 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 
     if (swStart && swReset) {
       swStart.addEventListener("click", () => {
-        let currentDisplayMs = 0;
+        let currentDisplayMs;
         if (timerMode === "stopwatch") {
           currentDisplayMs =
             stopwatchElapsedMs +
@@ -2951,9 +2950,8 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         const secs = parseInt(btn.getAttribute("data-secs")) || 10;
         const addMs = secs * 1000;
 
-        let currentDisplayMs = 0;
         if (timerMode === "stopwatch") {
-          currentDisplayMs =
+          const currentDisplayMs =
             stopwatchElapsedMs +
             (timerRunning ? Date.now() - timerStartTime : 0);
           timerMode = "countdown";
@@ -3003,7 +3001,9 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         dialog.classList.add("dragging");
         try {
           header.setPointerCapture(e.pointerId);
-        } catch (err) {}
+        } catch {
+          /* ignore */
+        }
       });
 
       header.addEventListener("pointermove", (e) => {
@@ -3028,7 +3028,9 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
         if (e && e.pointerId) {
           try {
             header.releasePointerCapture(e.pointerId);
-          } catch (err) {}
+          } catch {
+            /* ignore */
+          }
         }
 
         // If dragged down past threshold (100px), close with a premium native slide transition
@@ -3094,16 +3096,25 @@ import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
     });
 
     // Set dynamic version from package.json via Vite define injection
-    if (typeof __APP_VERSION__ !== "undefined") {
-      const versionEl = document.getElementById("about-app-version");
-      if (versionEl) {
-        versionEl.textContent = `Counters v${__APP_VERSION__}`;
-      }
+    const appVersion =
+      (typeof window !== "undefined" && window.__APP_VERSION__) ||
+      (typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "0.0.0");
+    const commitHash =
+      (typeof window !== "undefined" && window.__COMMIT_HASH__) || "unknown";
+    const isDirty =
+      typeof window !== "undefined" && window.__IS_DIRTY__ ? "+" : "";
+
+    // Startup banner
+    console.log(`🔢 Counters v${appVersion} (${commitHash}${isDirty})`);
+
+    const versionEl = document.getElementById("about-app-version");
+    if (versionEl) {
+      versionEl.textContent = `Counters v${appVersion}`;
     }
 
-    const updateSW = registerSW({
+    registerSW({
       onOfflineReady() {
-        console.log("App ready to work offline");
+        log.info("App ready to work offline");
       },
     });
   };

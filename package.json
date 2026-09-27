@@ -8,6 +8,8 @@
     "prebuild": "node scripts/sync-metadata.js",
     "dev": "vite",
     "build": "vite build",
+    "lint": "eslint . --max-warnings=0",
+    "test": "npm run lint",
     "release": "npm version patch --no-git-tag-version && node scripts/sync-version.js && npm run build",
     "preview": "vite preview",
     "ios": "npm run build && npx cap sync ios && npx cap open ios",
@@ -37,6 +39,9 @@
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.4.0",
     "@capacitor/ios": "^8.4.0",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0",
     "vite": "^8.0.14",
     "vite-plugin-pwa": "^1.3.0"
   },
