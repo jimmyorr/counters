@@ -2164,8 +2164,19 @@ import { log } from "./logger.js";
     if (keepAwakeEl) keepAwakeEl.checked = state.settings.keepAwake;
     $("#setting-theme").value =
       localStorage.getItem("counters-theme") || "system";
-    $("#setting-quick-add-values").value =
-      state.settings.quickAddValues.join(", ");
+    const quickAddInput = $("#setting-quick-add-values");
+    if (quickAddInput) {
+      quickAddInput.value = state.settings.quickAddValues.join(", ");
+      // Clear any stale validation state from the previous visit
+      quickAddInput.classList.remove("input-error");
+      quickAddInput.removeAttribute("aria-invalid");
+      const feedback = $("#quick-add-feedback");
+      if (feedback) {
+        feedback.textContent = "";
+        feedback.classList.remove("settings-feedback-error");
+        feedback.hidden = true;
+      }
+    }
     $("#setting-theme-hue").value = state.settings.themeHue;
   };
 
@@ -2246,14 +2257,39 @@ import { log } from "./logger.js";
 
     // Quick Add Calculator custom items
     $("#setting-quick-add-values").addEventListener("input", (e) => {
-      const val = e.target.value;
-      const parsed = val
-        .split(",")
-        .map((n) => parseInt(n.trim()))
-        .filter((n) => !isNaN(n) && n > 0);
+      const input = e.target;
+      const feedback = $("#quick-add-feedback");
+      const tokens = input.value.split(",").map((t) => t.trim());
+      const nonEmpty = tokens.filter((t) => t !== "");
+      // Strict positive integers: parseInt would silently mangle "2.5" -> 2
+      // or accept "7abc" -> 7, so require digits only.
+      const invalid = nonEmpty.filter(
+        (t) => !/^\d+$/.test(t) || parseInt(t, 10) <= 0,
+      );
 
-      if (parsed.length > 0) {
-        state.settings.quickAddValues = parsed;
+      if (invalid.length > 0) {
+        // Don't apply partially-invalid input; say what's wrong instead.
+        input.classList.add("input-error");
+        input.setAttribute("aria-invalid", "true");
+        if (feedback) {
+          feedback.textContent = `Invalid values: ${invalid.join(", ")}`;
+          feedback.classList.add("settings-feedback-error");
+          feedback.hidden = false;
+        }
+        return;
+      }
+
+      input.classList.remove("input-error");
+      input.removeAttribute("aria-invalid");
+      if (feedback) {
+        feedback.textContent = "";
+        feedback.classList.remove("settings-feedback-error");
+        feedback.hidden = true;
+      }
+
+      const valid = nonEmpty.map((t) => parseInt(t, 10));
+      if (valid.length > 0) {
+        state.settings.quickAddValues = valid;
         saveSettings();
         populateCalculatorQuickAdds();
       }

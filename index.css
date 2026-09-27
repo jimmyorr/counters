@@ -1362,6 +1362,20 @@ input:checked + .slider-round:before {
   border-color: var(--accent-color);
 }
 
+.settings-input.input-error {
+  border-color: var(--text-danger);
+}
+
+.settings-feedback {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.settings-feedback-error {
+  color: var(--text-danger);
+}
+
 /* Danger actions */
 .danger-heading {
   color: var(--text-danger) !important;
