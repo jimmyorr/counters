@@ -133,3 +133,37 @@ test.describe('zoom', () => {
     await expectAll16();
   });
 });
+
+test.describe('reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' });
+  const T0 = new Date('2026-01-01T00:00:00');
+
+  test('deleting skips the fly-away animation', async ({ page }) => {
+    await seed(page, { counters: [counter('a', 'Alpha'), counter('b', 'Bravo')] });
+    await page.clock.install({ time: T0 });
+    await page.goto('/');
+    await page.clock.pauseAt(new Date(T0.getTime() + 60_000));
+
+    await card(page, 'a').locator('.btn-counter-edit').click();
+    await page.locator('#edit-btn-delete').click();
+    await page.locator('#confirm-btn-ok').click();
+    // Gone without advancing the clock through the 700ms animation
+    await expect(card(page, 'a')).toHaveCount(0);
+
+    await page.locator('#btn-open-options').click();
+    await page.locator('#menu-btn-delete-all').click();
+    await page.locator('#confirm-btn-ok').click();
+    await expect(page.locator('#empty-state-view')).toBeVisible();
+  });
+
+  test('shuffle does not animate cards', async ({ page }) => {
+    await seed(page, { counters: [counter('a', 'Alpha'), counter('b', 'Bravo'), counter('c', 'Charlie')] });
+    await page.goto('/');
+    await page.locator('#btn-open-options').click();
+    await page.locator('#menu-btn-shuffle-counters').click();
+    const transforms = await page
+      .locator('.counter-card')
+      .evaluateAll((cards) => cards.map((c) => c.style.transform));
+    expect(transforms.every((t) => t === '')).toBe(true);
+  });
+});

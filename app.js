@@ -41,6 +41,10 @@ import { log } from "./logger.js";
     });
   }
 
+  // Whether the user asked the OS to minimize non-essential motion
+  const prefersReducedMotion = () =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   // Central helper to track when dialogs are opened.
   // This is used to prevent synthetic 'click' events from instantly closing them.
   const openDialog = (dialog) => {
@@ -1591,10 +1595,11 @@ import { log } from "./logger.js";
       renderCountersList(); // Renders new DOM elements
 
       // LAST, INVERT, PLAY
+      const animateShuffle = !prefersReducedMotion();
       $$(".counter-card").forEach((card) => {
         const id = card.getAttribute("data-counter-id");
         const first = firstPositions[id];
-        if (first) {
+        if (first && animateShuffle) {
           const last = card.getBoundingClientRect();
           const deltaX = first.left - last.left;
           const deltaY = first.top - last.top;
@@ -1627,6 +1632,7 @@ import { log } from "./logger.js";
         if (typeof confetti === "function") {
           confetti({
             particleCount: 150,
+            disableForReducedMotion: true,
             spread: 80,
             origin: { y: 0.6 },
           });
@@ -1729,7 +1735,7 @@ import { log } from "./logger.js";
         };
 
         const cards = $$(".counter-card");
-        if (cards.length > 0) {
+        if (cards.length > 0 && !prefersReducedMotion()) {
           cards.forEach((cardEl, index) => {
             const h = cardEl.offsetHeight;
             cardEl.classList.remove("animate-entry", "animate-reset");
@@ -2009,7 +2015,7 @@ import { log } from "./logger.js";
 
           dialog.close();
 
-          if (cardEl) {
+          if (cardEl && !prefersReducedMotion()) {
             const h = cardEl.offsetHeight;
             cardEl.classList.remove("animate-entry", "animate-reset");
             cardEl.style.overflow = "hidden";

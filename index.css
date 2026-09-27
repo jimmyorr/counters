@@ -2532,7 +2532,8 @@ dialog[open].options-menu-dialog {
   }
   .counter-card.shake-denied,
   .animate-reset .counter-card,
-  .counter-card.animate-reset {
+  .counter-card.animate-reset,
+  .shake-animation.active {
     animation: none;
   }
 
