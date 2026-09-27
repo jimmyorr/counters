@@ -77,40 +77,6 @@
   --glass-bg: rgba(13, 14, 17, 0.75);
 }
 
-/* HSL Counter Swatch Presets (Vibrant, high-contrast, premium) */
-.card-color-0 {
-  --card-theme: hsl(224, 76%, 36%);
-  --card-text: #ffffff;
-} /* Deep Blue */
-.card-color-1 {
-  --card-theme: hsl(26, 91%, 52%);
-  --card-text: #ffffff;
-} /* Bright Orange */
-.card-color-2 {
-  --card-theme: hsl(336, 70%, 50%);
-  --card-text: #ffffff;
-} /* Crimson Pink */
-.card-color-3 {
-  --card-theme: hsl(200, 16%, 42%);
-  --card-text: #ffffff;
-} /* Slate Grey */
-.card-color-4 {
-  --card-theme: hsl(156, 75%, 34%);
-  --card-text: #ffffff;
-} /* Forest Green */
-.card-color-5 {
-  --card-theme: hsl(45, 95%, 45%);
-  --card-text: #ffffff;
-} /* Golden Yellow */
-.card-color-6 {
-  --card-theme: hsl(190, 85%, 38%);
-  --card-text: #ffffff;
-} /* Teal Cyan */
-.card-color-7 {
-  --card-theme: hsl(272, 60%, 46%);
-  --card-text: #ffffff;
-} /* Royal Purple */
-
 /* --------------------------------------------------------------------------
    2. Reset & Global Layout Styles
    -------------------------------------------------------------------------- */
@@ -375,17 +341,6 @@ body > .app-nav {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   padding: 16px calc(16px + env(safe-area-inset-right, 0px)) 16px calc(16px + env(safe-area-inset-left, 0px));
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* --------------------------------------------------------------------------
@@ -765,22 +720,6 @@ html[data-layout="grid"] .card-direct-zone-plus {
 
 .empty-state-card:hover .placeholder-icon {
   transform: scale(1.08);
-}
-
-.empty-illustration {
-  color: var(--text-tertiary);
-  margin-bottom: 20px;
-  animation: floatIllustration 3s ease-in-out infinite;
-}
-
-@keyframes floatIllustration {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
 }
 
 .empty-state h2 {
@@ -1183,16 +1122,6 @@ html[data-layout="grid"] .card-direct-zone-plus {
   }
 }
 
-.animate-shuffle {
-  animation: shufflePop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-@keyframes shufflePop {
-  0% { transform: scale(1); }
-  50% { transform: scale(0.96); opacity: 0.85; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
 .animate-reset .counter-card,
 .counter-card.animate-reset {
   animation: resetCardFlip 0.85s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -1383,44 +1312,6 @@ input:checked + .slider-round:before {
 
 .settings-feedback-error {
   color: var(--text-danger);
-}
-
-/* Danger actions */
-.danger-heading {
-  color: var(--text-danger) !important;
-}
-
-.danger-column p {
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.danger-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.danger-btn {
-  background-color: #f85c5c;
-  color: #ffffff;
-  border: none;
-  font-family: var(--font-primary);
-  font-weight: 600;
-  font-size: 14px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all var(--trans-fast);
-  flex: 1;
-}
-
-.danger-btn:hover {
-  background-color: #e54b4b;
-}
-
-.danger-btn:active {
-  transform: scale(0.97);
 }
 
 .danger-btn-outline {
@@ -1787,21 +1678,6 @@ dialog[open].bottom-sheet-dialog {
   transform: scale(0.94);
 }
 
-.tweak-caption {
-  font-size: 11px;
-  color: var(--text-secondary);
-  opacity: 0.65;
-  margin-bottom: 16px;
-}
-
-.dialog-divider {
-  width: 100%;
-  height: 1px;
-  background-color: var(--border-light);
-  margin: 16px 0 20px;
-  border: none;
-}
-
 /* Calculator Active Row */
 .math-entry-row {
   display: grid;
@@ -1887,70 +1763,6 @@ input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
-}
-
-
-/* Custom Numeric Pad styling */
-.calc-numpad {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  width: 100%;
-}
-
-.num-btn {
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-light);
-  color: var(--text-primary);
-  font-family: var(--font-primary);
-  font-size: 20px;
-  font-weight: 500;
-  padding: 14px 0;
-  border-radius: 12px;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  transition: all var(--trans-fast);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.num-btn:hover {
-  background-color: var(--border-light);
-}
-
-.num-btn:active {
-  transform: scale(0.92);
-}
-
-/* Double key zero span */
-.double-key {
-  font-size: 18px;
-}
-
-/* Operator Keys (Backspace, Clear) */
-.op-key {
-  color: var(--text-secondary);
-  font-size: 18px;
-}
-
-.op-key:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-/* Submit Action Key */
-.submit-key {
-  background-color: var(--accent-color);
-  color: #000000;
-  border-color: transparent;
-  font-weight: 600;
-  grid-row: span 2;
-  height: 100%;
-}
-
-.submit-key:hover {
-  background-color: var(--accent-color);
-  opacity: 0.9;
 }
 
 /* --------------------------------------------------------------------------
@@ -2527,9 +2339,6 @@ dialog[open].options-menu-dialog {
   .counter-card.animate-entry {
     animation: card-fade-in-reduced 0.15s ease-out forwards;
   }
-  .counter-card.animate-exit {
-    animation: card-fade-out-reduced 0.15s ease-out forwards;
-  }
   .counter-card.shake-denied,
   .animate-reset .counter-card,
   .counter-card.animate-reset,
@@ -2543,14 +2352,6 @@ dialog[open].options-menu-dialog {
     }
     100% {
       opacity: 1;
-    }
-  }
-  @keyframes card-fade-out-reduced {
-    0% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0;
     }
   }
 }
