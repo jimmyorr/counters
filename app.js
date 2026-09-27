@@ -142,7 +142,10 @@ import { log } from "./logger.js";
   const saveCounters = () => {
     Preferences.set({
       key: "counters-list",
-      value: JSON.stringify(state.counters),
+      // isNew is a transient render flag; persisting it replays the entry animation on next launch
+      value: JSON.stringify(state.counters, (key, val) =>
+        key === "isNew" ? undefined : val,
+      ),
     });
   };
 
