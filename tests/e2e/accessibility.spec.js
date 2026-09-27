@@ -99,3 +99,37 @@ test.describe('color contrast', () => {
     expect(await contrast(page, page.locator('#calc-btn-submit'))).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+test.describe('zoom', () => {
+  test('pinch zoom is not disabled', async ({ page }) => {
+    await page.goto('/');
+    const viewport = await page.locator('meta[name="viewport"]').getAttribute('content');
+    expect(viewport).not.toMatch(/user-scalable\s*=\s*(no|0)/);
+    expect(viewport).not.toMatch(/maximum-scale/);
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).touchAction)).toBe('manipulation');
+  });
+
+  test('text fields are at least 16px so iOS does not zoom on focus', async ({ page }) => {
+    await seed(page, { counters: [counter('a', 'Alpha')] });
+    await page.goto('/');
+    const fieldSizes = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('dialog[open] input, dialog[open] select, dialog[open] textarea')]
+          .filter((el) => !['checkbox', 'radio', 'range', 'color'].includes(el.type))
+          .map((el) => `${el.id}:${parseFloat(getComputedStyle(el).fontSize)}`),
+      );
+    const expectAll16 = async () => {
+      const sizes = await fieldSizes();
+      expect(sizes.length).toBeGreaterThan(0);
+      for (const entry of sizes) expect(Number(entry.split(':')[1]), entry).toBeGreaterThanOrEqual(16);
+    };
+
+    await card(page, 'a').locator('.btn-counter-edit').click();
+    await expectAll16();
+    await page.keyboard.press('Escape');
+
+    await page.locator('#btn-open-options').click();
+    await page.locator('#menu-btn-open-settings').click();
+    await expectAll16();
+  });
+});

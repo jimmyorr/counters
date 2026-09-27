@@ -171,6 +171,11 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Block double-tap zoom (so rapid taps on +/- don't zoom) while still allowing pinch zoom */
+html {
+  touch-action: manipulation;
+}
+
 body {
   font-family: var(--font-primary);
   background-color: var(--bg-primary);
@@ -1337,7 +1342,7 @@ input:checked + .slider-round:before {
   padding: 8px 12px;
   border-radius: 8px;
   font-family: var(--font-primary);
-  font-size: 14px;
+  font-size: 16px; /* 16px minimum stops iOS zooming in on focus */
   font-weight: 500;
   outline: none;
   cursor: pointer;
@@ -1357,7 +1362,7 @@ input:checked + .slider-round:before {
   padding: 10px 14px;
   border-radius: 10px;
   font-family: var(--font-primary);
-  font-size: 14px;
+  font-size: 16px; /* 16px minimum stops iOS zooming in on focus */
   outline: none;
   width: 100%;
 }
@@ -2054,7 +2059,7 @@ input[type="number"]::-webkit-inner-spin-button {
   padding: 12px 14px;
   border-radius: 12px;
   font-family: var(--font-primary);
-  font-size: 15px;
+  font-size: 16px; /* 16px minimum stops iOS zooming in on focus */
   outline: none;
   width: 100%;
   transition: border var(--trans-fast);
