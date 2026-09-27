@@ -3283,6 +3283,19 @@ import { log } from "./logger.js";
       }
     });
 
+    // Web: another tab changed saved state. Reload it, otherwise our stale copy
+    // overwrites theirs on the next save. (Never fires on native.)
+    window.addEventListener("storage", async (e) => {
+      if (e.key !== null && !/counters-(list|settings|history)$/.test(e.key)) {
+        return;
+      }
+      await loadStateFromStorage();
+      document.documentElement.setAttribute("data-layout", state.settings.layout);
+      populateCalculatorQuickAdds();
+      renderCountersList();
+      renderHistory();
+    });
+
     // Set dynamic version from package.json via Vite define injection
     const appVersion =
       (typeof window !== "undefined" && window.__APP_VERSION__) ||

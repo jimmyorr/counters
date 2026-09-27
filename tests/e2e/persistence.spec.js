@@ -48,3 +48,19 @@ test('adopts a theme saved by older versions', async ({ page }) => {
   await page.locator('#menu-btn-open-settings').click();
   await expect(page.locator('#setting-theme')).toHaveValue('light');
 });
+
+test('two tabs do not overwrite each other', async ({ page, context }) => {
+  await page.goto('/');
+  const page2 = await context.newPage();
+  await page2.goto('/');
+
+  await page.locator('#btn-add-counter').click();
+  await expect(cards(page)).toHaveCount(1);
+  // The other tab picks up the change instead of keeping a stale copy
+  await expect(cards(page2)).toHaveCount(1);
+
+  await page2.locator('#btn-add-counter').click();
+  await expect(cards(page2)).toHaveCount(2);
+  await expect(cards(page)).toHaveCount(2);
+  expect(JSON.parse(await stored(page, 'counters-list'))).toHaveLength(2);
+});
