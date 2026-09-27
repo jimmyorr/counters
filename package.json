@@ -11,7 +11,7 @@
     "lint": "eslint . --max-warnings=0",
     "test": "npm run lint",
     "test:e2e": "playwright test",
-    "release": "node scripts/check-clean-source.js --mode=all && npm version patch --no-git-tag-version && node scripts/sync-version.js && npm run build",
+    "release": "node scripts/check-clean-source.js --mode=all && npm run lint && npm run test:e2e && npm version patch --no-git-tag-version && node scripts/sync-version.js && npm run build",
     "preview": "vite preview",
     "ios": "npm run build && npx cap sync ios && npx cap open ios",
     "android": "npm run build && npx cap sync android && npx cap open android"
