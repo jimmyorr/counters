@@ -87,6 +87,16 @@ import { log } from "./logger.js";
     { id: 7, class: "card-color-7", hex: "#622ea1" }, // Purple
   ];
 
+  // Apply "light", "dark", or "system" theme classes to the root element
+  const applyTheme = (theme) => {
+    const isDark =
+      theme === "dark" ||
+      (theme !== "light" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.classList.toggle("dark-mode", isDark);
+    document.documentElement.classList.toggle("light-mode", !isDark);
+  };
+
   // ------------------------------------------------------------------------
   // 2. Local Storage Synchronizer
   // ------------------------------------------------------------------------
@@ -113,6 +123,14 @@ import { log } from "./logger.js";
       if (savedSettings) {
         state.settings = { ...state.settings, ...JSON.parse(savedSettings) };
       }
+      // Theme used to live only in localStorage; adopt it once, then Preferences is the source of truth
+      if (!state.settings.theme) {
+        state.settings.theme =
+          localStorage.getItem("counters-theme") || "system";
+        saveSettings();
+      }
+      applyTheme(state.settings.theme);
+      localStorage.setItem("counters-theme", state.settings.theme);
       if (state.settings.themeHue !== undefined) {
         document.documentElement.style.setProperty(
           "--theme-hue",
@@ -154,7 +172,9 @@ import { log } from "./logger.js";
       key: "counters-settings",
       value: JSON.stringify(state.settings),
     });
+    // Mirrors read synchronously by the pre-load script in index.html to avoid a flash
     localStorage.setItem("counters-layout", state.settings.layout);
+    localStorage.setItem("counters-theme", state.settings.theme);
   };
 
   const saveHistory = () => {
@@ -2178,8 +2198,7 @@ import { log } from "./logger.js";
     }
     const keepAwakeEl = $("#setting-keep-awake");
     if (keepAwakeEl) keepAwakeEl.checked = state.settings.keepAwake;
-    $("#setting-theme").value =
-      localStorage.getItem("counters-theme") || "system";
+    $("#setting-theme").value = state.settings.theme || "system";
     const quickAddInput = $("#setting-quick-add-values");
     if (quickAddInput) {
       quickAddInput.value = state.settings.quickAddValues.join(", ");
@@ -2250,24 +2269,9 @@ import { log } from "./logger.js";
 
     // Theme selector
     $("#setting-theme").addEventListener("change", (e) => {
-      const val = e.target.value;
-      localStorage.setItem("counters-theme", val);
-
-      const root = document.documentElement;
-      if (val === "dark") {
-        root.classList.add("dark-mode");
-        root.classList.remove("light-mode");
-      } else if (val === "light") {
-        root.classList.add("light-mode");
-        root.classList.remove("dark-mode");
-      } else {
-        // System preference
-        const systemIsDark = window.matchMedia(
-          "(prefers-color-scheme: dark)",
-        ).matches;
-        root.classList.toggle("dark-mode", systemIsDark);
-        root.classList.toggle("light-mode", !systemIsDark);
-      }
+      state.settings.theme = e.target.value;
+      saveSettings();
+      applyTheme(state.settings.theme);
       playClickSound();
     });
 
@@ -2845,16 +2849,8 @@ import { log } from "./logger.js";
     // Listen to OS Dark Theme adjustments live
     window
       .matchMedia("(prefers-color-scheme: dark)")
-      .addEventListener("change", (e) => {
-        const themeSelect = $("#setting-theme");
-        if (themeSelect) {
-          const savedTheme = localStorage.getItem("counters-theme") || "system";
-          if (savedTheme === "system") {
-            const root = document.documentElement;
-            root.classList.toggle("dark-mode", e.matches);
-            root.classList.toggle("light-mode", !e.matches);
-          }
-        }
+      .addEventListener("change", () => {
+        if (state.settings.theme === "system") applyTheme("system");
       });
   };
 
