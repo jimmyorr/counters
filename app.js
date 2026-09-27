@@ -74,7 +74,6 @@ import { log } from "./logger.js";
     activeCounterIdForCalc: null,
     activeCounterIdForEdit: null,
     calcPendingOperation: "plus", // 'plus' or 'minus'
-    calcPendingValue: "",
     calcOpenedByKeyboard: false,
     autoSortTimeout: null,
   };
@@ -135,12 +134,10 @@ import { log } from "./logger.js";
       }
       applyTheme(state.settings.theme);
       localStorage.setItem("counters-theme", state.settings.theme);
-      if (state.settings.themeHue !== undefined) {
-        document.documentElement.style.setProperty(
-          "--theme-hue",
-          state.settings.themeHue,
-        );
-      }
+      document.documentElement.style.setProperty(
+        "--theme-hue",
+        state.settings.themeHue,
+      );
 
       if (state.settings.keepAwake) {
         KeepAwake.keepAwake().catch((err) =>
@@ -321,16 +318,16 @@ import { log } from "./logger.js";
   // Timer countdown beep (3, 2, 1)
   const playTimerBeep = () => {
     if (!state.settings.soundEnabled) return;
-    playClickSound(800, 800, 0.06, 0.06, "sine");
+    playClickSound(800, 800, 0.06, 0.06);
   };
 
   // Timer finish: a deep "boop-boop" to follow the "beeps"
   const playTimerFinish = () => {
     if (!state.settings.soundEnabled) return;
-    playClickSound(400, 400, 0.15, 0.06, "sine");
+    playClickSound(400, 400, 0.15, 0.06);
     setTimeout(() => {
       if (!state.settings.soundEnabled) return;
-      playClickSound(400, 400, 0.15, 0.06, "sine");
+      playClickSound(400, 400, 0.15, 0.06);
     }, 200);
   };
 
@@ -671,15 +668,15 @@ import { log } from "./logger.js";
           
           <div class="card-body-wrapper">
             <!-- Card Direct Click decrement zone -->
-            <div class="card-direct-zone card-direct-zone-minus" data-action="decrement" aria-label="Subtract ${step} from ${name}" tabindex="0" role="button">−</div>
+            <div class="card-direct-zone card-direct-zone-minus" aria-label="Subtract ${step} from ${name}" tabindex="0" role="button">−</div>
             
             <!-- Middle Display -->
-            <div class="card-value-body data-action-calc" tabindex="0" role="button" aria-label="${name}: ${formatNumber(counter.value)}. Open calculator">
+            <div class="card-value-body" tabindex="0" role="button" aria-label="${name}: ${formatNumber(counter.value)}. Open calculator">
               <span class="value-display">${formatNumber(counter.value)}</span>
             </div>
             
             <!-- Card Direct Click increment zone -->
-            <div class="card-direct-zone card-direct-zone-plus" data-action="increment" aria-label="Add ${step} to ${name}" tabindex="0" role="button">+</div>
+            <div class="card-direct-zone card-direct-zone-plus" aria-label="Add ${step} to ${name}" tabindex="0" role="button">+</div>
           </div>
         </div>
       `;
@@ -1629,14 +1626,12 @@ import { log } from "./logger.js";
 
       if (state.counters.length >= 2 && originalOrder === newOrder) {
         showToast("Perfect shuffle!\nExact same order!");
-        if (typeof confetti === "function") {
-          confetti({
-            particleCount: 150,
-            disableForReducedMotion: true,
-            spread: 80,
-            origin: { y: 0.6 },
-          });
-        }
+        confetti({
+          particleCount: 150,
+          disableForReducedMotion: true,
+          spread: 80,
+          origin: { y: 0.6 },
+        });
       } else {
         showToast("Counters shuffled");
       }
@@ -1658,10 +1653,7 @@ import { log } from "./logger.js";
       const text = lines.join("\n");
 
       // Prefer the native share sheet (includes Copy on iOS/Android)
-      if (
-        typeof navigator !== "undefined" &&
-        typeof navigator.share === "function"
-      ) {
+      if (typeof navigator.share === "function") {
         try {
           // Note: no title param — it renders as a duplicate header above
           // the text in the share sheet, which already starts with one.
@@ -1899,42 +1891,25 @@ import { log } from "./logger.js";
       const increment = parseFloat($("#edit-increment").value || "1");
       const resetValue = parseFloat($("#edit-reset-val").value || "0");
 
-      if (state.activeCounterIdForEdit === "new") {
-        // Create new counter
-        const newCounter = {
-          id: Date.now().toString(),
-          label,
-          value,
-          color: colorId,
-          increment,
-          resetValue,
-          isNew: true,
-        };
-        state.counters.push(newCounter);
+      // Edit existing counter
+      const counter = state.counters.find(
+        (c) => c.id === state.activeCounterIdForEdit,
+      );
+      if (counter) {
+        const oldValue = counter.value;
+        counter.label = label;
+        counter.value = value;
+        counter.color = colorId;
+        counter.increment = increment;
+        counter.resetValue = resetValue;
         saveCounters();
-        addHistoryLog(newCounter, "Added counter", 0, value);
-        showToast(`Counter "${label}" added`);
-      } else {
-        // Edit existing counter
-        const counter = state.counters.find(
-          (c) => c.id === state.activeCounterIdForEdit,
-        );
-        if (counter) {
-          const oldValue = counter.value;
-          counter.label = label;
-          counter.value = value;
-          counter.color = colorId;
-          counter.increment = increment;
-          counter.resetValue = resetValue;
-          saveCounters();
 
-          if (oldValue !== value) {
-            addHistoryLog(counter, "Edited value", oldValue, value);
-          } else {
-            addHistoryLog(counter, "Edited details", oldValue, value);
-          }
-          showToast(`Counter saved`);
+        if (oldValue !== value) {
+          addHistoryLog(counter, "Edited value", oldValue, value);
+        } else {
+          addHistoryLog(counter, "Edited details", oldValue, value);
         }
+        showToast(`Counter saved`);
       }
 
       dialog.close();
@@ -1946,10 +1921,7 @@ import { log } from "./logger.js";
     // Delete counter trash bin button
     $("#edit-btn-delete").addEventListener("click", () => {
       playHaptic(ImpactStyle.Medium);
-      if (
-        state.activeCounterIdForEdit === "new" ||
-        state.activeCounterIdForEdit === null
-      ) {
+      if (state.activeCounterIdForEdit === null) {
         dialog.close();
         return;
       }
@@ -2693,7 +2665,6 @@ import { log } from "./logger.js";
           );
           if (counter) {
             state.activeCounterIdForCalc = valuePressCounterId;
-            state.calcPendingValue = "";
             state.calcPendingOperation = "plus";
             state.calcOpenedByKeyboard = false;
 
@@ -2863,7 +2834,6 @@ import { log } from "./logger.js";
           const counter = state.counters.find((c) => c.id === counterId);
           if (counter) {
             state.activeCounterIdForCalc = counterId;
-            state.calcPendingValue = "";
             state.calcPendingOperation = "plus";
             state.calcOpenedByKeyboard = true;
             const titleEl = $("#calc-dialog-title");
@@ -3365,12 +3335,10 @@ import { log } from "./logger.js";
 
     // Set dynamic version from package.json via Vite define injection
     const appVersion =
-      (typeof window !== "undefined" && window.__APP_VERSION__) ||
+      window.__APP_VERSION__ ||
       (typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "0.0.0");
-    const commitHash =
-      (typeof window !== "undefined" && window.__COMMIT_HASH__) || "unknown";
-    const isDirty =
-      typeof window !== "undefined" && window.__IS_DIRTY__ ? "+" : "";
+    const commitHash = window.__COMMIT_HASH__ || "unknown";
+    const isDirty = window.__IS_DIRTY__ ? "+" : "";
 
     // Startup banner
     console.log(`🔢 Counters v${appVersion} (${commitHash}${isDirty})`);
