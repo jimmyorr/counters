@@ -223,6 +223,25 @@ import { log } from "./logger.js";
     return presetSwatch.hex;
   };
 
+  // Helper: Black or white text, whichever contrasts more with a #rrggbb background
+  const getReadableTextColor = (hex) => {
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) return "#ffffff";
+    const channel = (i) => {
+      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
+    const lum = 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+    // WCAG contrast against white vs. black. Pure black (not near-black) keeps
+    // mid-tones like teal above 4.5:1 even under the card header's dark overlay.
+    return 1.05 / (lum + 0.05) >= (lum + 0.05) / 0.05 ? "#ffffff" : "#000000";
+  };
+
+  // Helper: Theme a bottom sheet with a counter color and readable text on it
+  const setSheetTheme = (dialog, hex) => {
+    dialog.style.setProperty("--sheet-theme", hex);
+    dialog.style.setProperty("--sheet-text", getReadableTextColor(hex));
+  };
+
   // ------------------------------------------------------------------------
   // 3. Web Audio Tonal Synthesizer
   // ------------------------------------------------------------------------
@@ -626,7 +645,7 @@ import { log } from "./logger.js";
         return `
         <div class="counter-card ${swatchClass}${isNewClass}" data-counter-id="${
           counter.id
-        }" style="--card-theme: ${cardThemeHex}; --card-text: #ffffff; view-transition-name: counter-${counter.id};">
+        }" style="--card-theme: ${cardThemeHex}; --card-text: ${getReadableTextColor(cardThemeHex)}; view-transition-name: counter-${counter.id};">
           <!-- Card Top Info Bar -->
           <div class="card-header">
             <button class="card-btn btn-counter-reset" title="Reset value" aria-label="Reset value for ${
@@ -1829,11 +1848,11 @@ import { log } from "./logger.js";
         if (colorId === "custom") {
           const customInput = $("#edit-custom-color");
           if (customInput)
-            dialog.style.setProperty("--sheet-theme", customInput.value);
+            setSheetTheme(dialog, customInput.value);
         } else {
           const swatchData =
             colorSwatches[parseInt(colorId)] || colorSwatches[0];
-          dialog.style.setProperty("--sheet-theme", swatchData.hex);
+          setSheetTheme(dialog, swatchData.hex);
         }
 
         playClickSound();
@@ -1847,7 +1866,7 @@ import { log } from "./logger.js";
             swatch.style.backgroundColor = e.target.value;
             $$(".palette-swatch").forEach((s) => s.classList.remove("active"));
             swatch.classList.add("active");
-            dialog.style.setProperty("--sheet-theme", e.target.value);
+            setSheetTheme(dialog, e.target.value);
           }
         });
       }
@@ -2211,7 +2230,7 @@ import { log } from "./logger.js";
 
     const dialog = $("#edit-counter-dialog");
     if (dialog) {
-      dialog.style.setProperty("--sheet-theme", sheetThemeHex);
+      setSheetTheme(dialog, sheetThemeHex);
       openDialog(dialog);
 
       // Intentionally NOT focusing the input to prevent mobile keyboard from popping up
@@ -2620,7 +2639,7 @@ import { log } from "./logger.js";
               const dialog = $("#edit-value-dialog");
               if (dialog) {
                 const hexColor = getCounterHex(counter);
-                dialog.style.setProperty("--sheet-theme", hexColor);
+                setSheetTheme(dialog, hexColor);
                 setTimeout(() => {
                   openDialog(dialog);
                 }, 50);
@@ -2683,7 +2702,7 @@ import { log } from "./logger.js";
             const dialog = $("#calculator-dialog");
             if (dialog) {
               const hexColor = getCounterHex(counter);
-              dialog.style.setProperty("--sheet-theme", hexColor);
+              setSheetTheme(dialog, hexColor);
 
               const titleEl = $("#calc-dialog-title");
               if (titleEl) {
@@ -2781,7 +2800,7 @@ import { log } from "./logger.js";
         const dialog = $("#edit-label-dialog");
         if (dialog) {
           const hexColor = getCounterHex(counter);
-          dialog.style.setProperty("--sheet-theme", hexColor);
+          setSheetTheme(dialog, hexColor);
           openDialog(dialog);
           if (labelInput) {
             labelInput.focus();
@@ -2853,7 +2872,7 @@ import { log } from "./logger.js";
             const dialog = $("#calculator-dialog");
             if (dialog) {
               const hexColor = getCounterHex(counter);
-              dialog.style.setProperty("--sheet-theme", hexColor);
+              setSheetTheme(dialog, hexColor);
               if (titleEl) {
                 titleEl.style.setProperty("--pill-bg", `${hexColor}15`);
                 titleEl.style.setProperty("--pill-border", `${hexColor}40`);

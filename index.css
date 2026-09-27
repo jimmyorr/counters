@@ -1580,7 +1580,7 @@ dialog[open]::backdrop {
 /* Dynamic Sheet Theme Overrides */
 .bottom-sheet-dialog .primary-btn {
   background-color: var(--sheet-theme, var(--accent-color));
-  color: #ffffff;
+  color: var(--sheet-text, #ffffff);
 }
 
 .bottom-sheet-dialog .primary-btn:hover {
@@ -1591,7 +1591,7 @@ dialog[open]::backdrop {
 .bottom-sheet-dialog .op-btn.active {
   background-color: var(--sheet-theme, var(--accent-color));
   border-color: transparent;
-  color: #ffffff;
+  color: var(--sheet-text, #ffffff);
 }
 
 .bottom-sheet-dialog .form-input:focus,

@@ -53,3 +53,49 @@ test.describe('toast', () => {
     await expect(undo).toBeHidden();
   });
 });
+
+test.describe('color contrast', () => {
+  const contrast = (page, locator) =>
+    locator.evaluate((el) => {
+      const rgba = (css) => {
+        const [r, g, b, a = 1] = css.match(/[\d.]+/g).map(Number);
+        return { rgb: [r, g, b], a };
+      };
+      const lum = ([r, g, b]) => {
+        const f = (c) => ((c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+        return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+      };
+      // Composite translucent backgrounds (e.g. the card header's dark overlay)
+      // down to the first opaque ancestor
+      const layers = [];
+      for (let node = el; node; node = node.parentElement) {
+        const bg = rgba(getComputedStyle(node).backgroundColor);
+        if (bg.a > 0) layers.push(bg);
+        if (bg.a === 1) break;
+      }
+      const bg = layers.reverse().reduce(
+        (under, { rgb, a }) => under.map((c, i) => rgb[i] * a + c * (1 - a)),
+        [255, 255, 255],
+      );
+      const [a, b] = [lum(rgba(getComputedStyle(el).color).rgb), lum(bg)];
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    });
+
+  test('card labels meet 4.5:1 on every preset and a pale custom color', async ({ page }) => {
+    const presets = Array.from({ length: 8 }, (_, i) => counter(`p${i}`, `Preset ${i}`, 0, { color: i }));
+    await seed(page, { counters: [...presets, counter('pale', 'Pale', 0, { color: '#f5f0c8' })] });
+    await page.goto('/');
+
+    for (const id of [...presets.map((c) => c.id), 'pale']) {
+      const ratio = await contrast(page, card(page, id).locator('.counter-label'));
+      expect(ratio, `card ${id}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  test('calculator submit button is readable on a light counter color', async ({ page }) => {
+    await seed(page, { counters: [counter('y', 'Yellow', 0, { color: 5 })] });
+    await page.goto('/');
+    await card(page, 'y').locator('.card-value-body').click();
+    expect(await contrast(page, page.locator('#calc-btn-submit'))).toBeGreaterThanOrEqual(4.5);
+  });
+});
