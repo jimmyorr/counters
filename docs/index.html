@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <script>window.__APP_VERSION__ = "0.1.9";
-window.__COMMIT_HASH__ = "92c619c";
+    <script>window.__APP_VERSION__ = "0.1.10";
+window.__COMMIT_HASH__ = "58edfb4";
 window.__IS_DIRTY__ = false;</script>
 
 
@@ -84,8 +84,8 @@ window.__IS_DIRTY__ = false;</script>
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-Ex0zdyxU.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CJuvESZz.css">
+    <script type="module" crossorigin src="./assets/index-CRdrImYr.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DtzDIwOJ.css">
   <link rel="manifest" href="./manifest.webmanifest"></head>
   <body>
     <!-- App Header -->
@@ -471,6 +471,7 @@ window.__IS_DIRTY__ = false;</script>
               <input
                 type="number"
                 inputmode="decimal"
+                step="any"
                 class="math-number-input"
                 id="calc-number-input"
                 placeholder="0"
@@ -581,6 +582,7 @@ window.__IS_DIRTY__ = false;</script>
               <input
                 type="number"
                 inputmode="decimal"
+                step="any"
                 id="edit-value-input-details"
                 class="form-input"
                 required
@@ -595,6 +597,7 @@ window.__IS_DIRTY__ = false;</script>
               <input
                 type="number"
                 inputmode="decimal"
+                step="any"
                 id="edit-increment"
                 class="form-input"
                 required
@@ -610,6 +613,7 @@ window.__IS_DIRTY__ = false;</script>
               <input
                 type="number"
                 inputmode="decimal"
+                step="any"
                 id="edit-reset-val"
                 class="form-input"
                 required
@@ -729,6 +733,22 @@ window.__IS_DIRTY__ = false;</script>
               />
             </svg>
             <span>Reset all counters</span>
+          </button>
+
+          <button class="select-row-btn" id="menu-btn-share-counters">
+            <svg
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="18"
+              height="18"
+              fill="currentColor"
+            >
+              <path
+                d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"
+              />
+            </svg>
+            <span>Share counters</span>
           </button>
 
           <button
@@ -904,8 +924,15 @@ window.__IS_DIRTY__ = false;</script>
                 class="settings-input"
                 id="setting-quick-add-values"
                 aria-label="Quick-add calculator values"
+                aria-describedby="quick-add-feedback"
                 value="5, 10, 15, 20, 50, 100"
               />
+              <span
+                class="settings-feedback"
+                id="quick-add-feedback"
+                role="status"
+                hidden
+              ></span>
             </div>
           </div>
 
@@ -1239,6 +1266,7 @@ window.__IS_DIRTY__ = false;</script>
             <input
               type="number"
               inputmode="decimal"
+              step="any"
               id="edit-value-input"
               class="form-input"
               required
@@ -1270,6 +1298,9 @@ window.__IS_DIRTY__ = false;</script>
     <!-- Subtle feedback toast -->
     <div class="toast-notification hidden" id="toast-wrapper">
       <span class="toast-message" id="toast-text">Counter deleted</span>
+      <button class="toast-action" id="toast-action" type="button" hidden>
+        Undo
+      </button>
     </div>
 
     <!-- Main Application Logic Script -->

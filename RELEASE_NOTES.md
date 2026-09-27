@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.1.10
+
+- **Sharing:** Added sharing all counters from the main menu.
+- **Undo:** Added undo to the counter deleted toast, plus reset all and delete all.
+- **Bug fixes:** Allowed decimals consistently in edit dialogs and validated quick-add input instead of silently dropping bad values.
+
 ## 0.1.9
 
 - **Bug fixes:** Fixed card resets to honor configured values, sanitized counter labels in HTML, synced bottom navigation accessibility states, and cleared stale leader pill text.
