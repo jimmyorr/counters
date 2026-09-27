@@ -72,6 +72,11 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
+  optimizeDeps: {
+    // Only scan the app entry; otherwise Vite crawls the built copies under
+    // ios/ and android/ and fails on their externalized imports
+    entries: ['index.html'],
+  },
   build: {
     outDir: 'docs',
     emptyOutDir: true,
