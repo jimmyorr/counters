@@ -23,3 +23,33 @@ test.describe('counter cards', () => {
     await expect(page.locator('#sr-announcer')).toHaveAttribute('aria-live', 'polite');
   });
 });
+
+test.describe('toast', () => {
+  test('is announced as a status message', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#toast-wrapper')).toHaveAttribute('role', 'status');
+  });
+
+  test('keeps Undo available while it has focus', async ({ page }) => {
+    const T0 = new Date('2026-01-01T00:00:00');
+    await seed(page, { counters: [counter('a', 'Alpha')] });
+    await page.clock.install({ time: T0 });
+    await page.goto('/');
+    await page.clock.pauseAt(new Date(T0.getTime() + 60_000));
+
+    await card(page, 'a').locator('.btn-counter-edit').click();
+    await page.locator('#edit-btn-delete').click();
+    await page.locator('#confirm-btn-ok').click();
+    await page.clock.runFor(1000); // delete animation
+    const undo = page.locator('#toast-action');
+    await expect(undo).toBeVisible();
+
+    await undo.focus();
+    await page.clock.runFor(10_000); // well past the 5s timeout
+    await expect(undo).toBeVisible();
+
+    await undo.blur();
+    await page.clock.runFor(5100);
+    await expect(undo).toBeHidden();
+  });
+});

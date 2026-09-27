@@ -377,6 +377,19 @@ import { log } from "./logger.js";
     });
   };
 
+  let toastDuration = 2500;
+
+  const hideToast = () => {
+    $("#toast-wrapper")?.classList.add("hidden");
+    const toastAction = $("#toast-action");
+    if (toastAction) toastAction.hidden = true;
+  };
+
+  const scheduleToastHide = () => {
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(hideToast, toastDuration);
+  };
+
   const showToast = (message, options = {}) => {
     const toast = $("#toast-wrapper");
     const toastText = $("#toast-text");
@@ -393,8 +406,7 @@ import { log } from "./logger.js";
         toastAction.hidden = false;
         toastAction.onclick = () => {
           if (toastTimeout) clearTimeout(toastTimeout);
-          toast.classList.add("hidden");
-          toastAction.hidden = true;
+          hideToast();
           onAction();
         };
       } else {
@@ -404,13 +416,22 @@ import { log } from "./logger.js";
     }
 
     toast.classList.remove("hidden");
+    toastDuration = duration;
+    scheduleToastHide();
+  };
 
-    if (toastTimeout) clearTimeout(toastTimeout);
-
-    toastTimeout = setTimeout(() => {
-      toast.classList.add("hidden");
-      if (toastAction) toastAction.hidden = true;
-    }, duration);
+  // Keep an actionable toast (e.g. Undo) up while it's hovered or focused, so
+  // keyboard and screen reader users have time to reach it
+  const setupToast = () => {
+    const toastAction = $("#toast-action");
+    if (!toastAction) return;
+    const pause = () => {
+      if (toastTimeout) clearTimeout(toastTimeout);
+    };
+    toastAction.addEventListener("pointerenter", pause);
+    toastAction.addEventListener("focusin", pause);
+    toastAction.addEventListener("pointerleave", scheduleToastHide);
+    toastAction.addEventListener("focusout", scheduleToastHide);
   };
 
   // ------------------------------------------------------------------------
@@ -3280,6 +3301,7 @@ import { log } from "./logger.js";
     setupEditValueDialog();
     setupHistoryDialog();
     setupConfirmDialog();
+    setupToast();
 
     // Dynamic lists compile
     populateCalculatorQuickAdds();
