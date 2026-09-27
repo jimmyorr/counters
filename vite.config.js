@@ -6,10 +6,21 @@ import { execSync } from 'child_process';
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
 const manifestData = JSON.parse(fs.readFileSync('./public/manifest.json', 'utf-8'));
 
+// Files the release workflow modifies; they don't affect the web source
+const releaseFiles = ['package.json', 'package-lock.json', 'RELEASE_NOTES.md'];
+const releaseDirs = ['docs/', 'ios/', 'android/'];
+
 function getGitInfo(isBuild = false) {
   let commitHash = 'unknown';
   try {
-    commitHash = execSync('git rev-parse --short HEAD').toString().trim();
+    // Use the latest source commit rather than HEAD so the release commit
+    // (build output + version bump) doesn't change the hash on rebuild
+    const excludes = [...releaseFiles, ...releaseDirs]
+      .map((p) => `':(exclude)${p}'`)
+      .join(' ');
+    commitHash =
+      execSync(`git log -1 --format=%h -- . ${excludes}`).toString().trim() ||
+      'unknown';
   } catch {
     // fallback if git is unavailable
   }
@@ -36,15 +47,9 @@ function getGitInfo(isBuild = false) {
           if (file.startsWith('docs/')) return false;
           // During production builds, ignore files modified as part of the release workflow
           if (isBuild) {
-            const releaseFiles = [
-              'package.json',
-              'package-lock.json',
-              'RELEASE_NOTES.md',
-            ];
             if (
               releaseFiles.includes(file) ||
-              file.startsWith('ios/') ||
-              file.startsWith('android/')
+              releaseDirs.some((dir) => file.startsWith(dir))
             ) {
               return false;
             }
