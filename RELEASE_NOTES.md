@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.1.16
+
+- **Palettes:** Added a color-blind friendly palette.
+- **UX:** Simplified the card header — tap the title to edit; reset moved into the editor.
+- **Bug fixes:** Fixed a typing race condition when renaming a new counter. Settings help text kept clear of controls.
+
 ## 0.1.15
 
 - **Palettes:** Added Vintage, Nautical, and Vaporwave; redesigned Bold and Pastel palettes with hue-ordered swatches and improved narrow-screen layout.
