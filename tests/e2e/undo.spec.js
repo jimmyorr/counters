@@ -10,7 +10,7 @@ test('undo restores a deleted counter at its original position', async ({ page }
   await seed(page, { counters: [counter('a', 'Alpha'), counter('b', 'Bravo'), counter('c', 'Charlie')] });
   await page.goto('/');
 
-  await card(page, 'b').locator('.btn-counter-edit').click();
+  await card(page, 'b').locator('.card-header').click();
   await page.locator('#edit-btn-delete').click();
   await confirm(page);
   await expect(labels(page)).toHaveText(['Alpha', 'Charlie']);

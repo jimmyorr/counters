@@ -54,7 +54,7 @@ test('updates when values change and switching modes', async ({ page }) => {
 test('clears when the last counter is deleted', async ({ page }) => {
   await seed(page, { counters: [counter('a', 'Alpha', 4)] });
   await page.goto('/');
-  await card(page, 'a').locator('.btn-counter-edit').click();
+  await card(page, 'a').locator('.card-header').click();
   await page.locator('#edit-btn-delete').click();
   await confirm(page);
   await expect(page.locator('#empty-state-view')).toBeVisible();

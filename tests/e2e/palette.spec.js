@@ -50,7 +50,7 @@ test('the palette persists across reloads', async ({ page }) => {
 test('the edit dialog offers the active palette', async ({ page }) => {
   await seed(page, { counters: [counter('a', 'Alpha', 0, { color: 2 })], settings: { palette: 'pastel' } });
   await page.goto('/');
-  await card(page, 'a').locator('.btn-counter-edit').click();
+  await card(page, 'a').locator('.card-header').click();
   const swatch = page.locator('#edit-palette-container .palette-swatch[data-color-id="2"]');
   await expect(swatch).toHaveClass(/active/);
   await expect(swatch).toHaveCSS('background-color', 'rgb(253, 178, 200)'); // pastel pink

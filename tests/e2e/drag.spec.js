@@ -51,7 +51,7 @@ test('holding a header with auto-sort on explains why dragging is off', async ({
   await expect(page.locator('.drag-ghost')).toHaveCount(0);
 });
 
-test('a long press with auto-sort on does not also open the label editor', async ({ page }) => {
+test('a long press with auto-sort on does not also open the editor', async ({ page }) => {
   await seed(page, { counters: three(), settings: { autoSort: true } });
   await page.goto('/');
 
@@ -60,9 +60,9 @@ test('a long press with auto-sort on does not also open the label editor', async
   await page.mouse.up();
   await expect(page.locator('#toast-text')).toHaveText('🚫 Auto-sorting enabled');
   await page.waitForTimeout(300);
-  await expect(page.locator('#edit-label-dialog')).toBeHidden();
+  await expect(page.locator('#edit-counter-dialog')).toBeHidden();
 
-  // The next ordinary tap on the label still opens it
-  await card(page, 'a').locator('.counter-label').click();
-  await expect(page.locator('#edit-label-dialog')).toBeVisible();
+  // The next ordinary tap on the header still opens the editor
+  await card(page, 'a').locator('.card-header').click();
+  await expect(page.locator('#edit-counter-dialog')).toBeVisible();
 });

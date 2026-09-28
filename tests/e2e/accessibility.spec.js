@@ -37,7 +37,7 @@ test.describe('toast', () => {
     await page.goto('/');
     await page.clock.pauseAt(new Date(T0.getTime() + 60_000));
 
-    await card(page, 'a').locator('.btn-counter-edit').click();
+    await card(page, 'a').locator('.card-header').click();
     await page.locator('#edit-btn-delete').click();
     await page.locator('#confirm-btn-ok').click();
     await page.clock.runFor(1000); // delete animation
@@ -170,7 +170,7 @@ test.describe('zoom', () => {
       for (const entry of sizes) expect(Number(entry.split(':')[1]), entry).toBeGreaterThanOrEqual(16);
     };
 
-    await card(page, 'a').locator('.btn-counter-edit').click();
+    await card(page, 'a').locator('.card-header').click();
     await expectAll16();
     await page.keyboard.press('Escape');
 
@@ -190,7 +190,7 @@ test.describe('reduced motion', () => {
     await page.goto('/');
     await page.clock.pauseAt(new Date(T0.getTime() + 60_000));
 
-    await card(page, 'a').locator('.btn-counter-edit').click();
+    await card(page, 'a').locator('.card-header').click();
     await page.locator('#edit-btn-delete').click();
     await page.locator('#confirm-btn-ok').click();
     // Gone without advancing the clock through the 700ms animation

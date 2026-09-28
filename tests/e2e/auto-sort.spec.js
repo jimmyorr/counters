@@ -67,7 +67,7 @@ test('deleting while a sort is pending removes the right counter', async ({ page
   const bravo = card(page, 'b');
   await bravo.locator('.card-direct-zone-plus').click(); // schedules the sort at +3s
   await page.clock.runFor(2500);
-  await bravo.locator('.btn-counter-edit').click();
+  await bravo.locator('.card-header').click();
   await page.locator('#edit-btn-delete').click();
   await confirm(page); // deletion completes 700ms later, after the sort fires
   await page.clock.runFor(1500);

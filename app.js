@@ -716,10 +716,8 @@ import { log } from "./logger.js";
           document.activeElement.classList.contains("card-direct-zone-plus")
         )
           focusedSelector = ".card-direct-zone-plus";
-        else if (document.activeElement.classList.contains("btn-counter-reset"))
-          focusedSelector = ".btn-counter-reset";
-        else if (document.activeElement.classList.contains("btn-counter-edit"))
-          focusedSelector = ".btn-counter-edit";
+        else if (document.activeElement.classList.contains("card-header"))
+          focusedSelector = ".card-header";
       }
     }
 
@@ -740,22 +738,8 @@ import { log } from "./logger.js";
           counter.id
         }" style="--card-theme: ${cardThemeHex}; --card-text: ${getReadableTextColor(cardThemeHex)}; view-transition-name: counter-${counter.id};">
           <!-- Card Top Info Bar -->
-          <div class="card-header">
-            <button class="card-btn btn-counter-reset" title="Reset value" aria-label="Reset value for ${
-              escapeHtml(counter.label)
-            }">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                <path d="M5.828 7l2.536 2.536L6.95 10.95 2 6l4.95-4.95 1.414 1.414L5.828 5H13a8 8 0 1 1 0 16H4v-2h9a6 6 0 1 0 0-12H5.828z"/>
-              </svg>
-            </button>
-            <span class="counter-label">${escapeHtml(counter.label)}</span>
-            <button class="card-btn btn-counter-edit" title="Edit details" aria-label="Edit details for ${
-              escapeHtml(counter.label)
-            }">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                <path d="M5 18.084V22h3.916L21.416 9.497l-3.916-3.916L5 18.084zm3.084 1.916H7v-1.084l11.5-11.5 1.084 1.084L8.084 20zM19.416 3.584L21.416 5.584a2 2 0 0 1 0 2.828L20.416 9.412l-3.916-3.916L17.5 4.5a2 2 0 0 1 2.828 0z"/>
-              </svg>
-            </button>
+          <div class="card-header" role="button" tabindex="0" aria-label="Edit ${name}">
+            <span class="counter-label">${name}</span>
           </div>
           
           <div class="card-body-wrapper">
@@ -1086,9 +1070,13 @@ import { log } from "./logger.js";
       if (!moved) {
         // Treat no-movement as a cancelled drag — just remove placeholder
         placeholder.remove();
+        const counterId = card.getAttribute("data-counter-id");
         
-        if (target && target.closest(".counter-label")) {
-          target.closest(".counter-label").click();
+        // A hold that never moved is a tap. With pointer capture the native
+        // click lands on the list rather than the card, so open the editor
+        // here and swallow that click.
+        if (target && target.closest(".card-header")) {
+          openEditCounterDetails(counterId);
         }
         
         return;
@@ -1944,6 +1932,9 @@ import { log } from "./logger.js";
       }
     }
 
+    // Set by the "Reset to N" button just before it submits the form
+    let resetRequested = false;
+
     // Form submission (Save counter adjustments or Add counter)
     form.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -1961,9 +1952,14 @@ import { log } from "./logger.js";
       }
 
       const label = $("#edit-label").value.trim();
-      const value = parseFloat($("#edit-value-input-details").value || "0");
       const increment = parseFloat($("#edit-increment").value || "1");
       const resetValue = parseFloat($("#edit-reset-val").value || "0");
+      // "Reset to N" saves the other edits too, with the value set to N
+      const isReset = resetRequested;
+      resetRequested = false;
+      const value = isReset
+        ? resetValue
+        : parseFloat($("#edit-value-input-details").value || "0");
 
       // Edit existing counter
       const counter = state.counters.find(
@@ -1971,6 +1967,7 @@ import { log } from "./logger.js";
       );
       if (counter) {
         const oldValue = counter.value;
+        if (label !== counter.label) delete counter.autoNamed;
         counter.label = label;
         counter.value = value;
         counter.color = colorId;
@@ -1978,18 +1975,58 @@ import { log } from "./logger.js";
         counter.resetValue = resetValue;
         saveCounters();
 
-        if (oldValue !== value) {
+        if (isReset) {
+          addHistoryLog(counter, "Reset value", oldValue, value);
+          const resetLogId = state.history[0]?.id;
+          announceValue(counter);
+          showToast(`${counter.label} reset to ${formatNumber(value)}`, {
+            actionLabel: "Undo",
+            duration: 5000,
+            onAction: () => {
+              counter.value = oldValue;
+              // The reset never happened, so drop its history entry
+              state.history = state.history.filter((h) => h.id !== resetLogId);
+              saveCounters();
+              saveHistory();
+              renderCountersList();
+              triggerAutoSortWithDebounce();
+              announceValue(counter);
+              showToast(`${counter.label} restored`);
+            },
+          });
+        } else if (oldValue !== value) {
           addHistoryLog(counter, "Edited value", oldValue, value);
+          showToast(`Counter saved`);
         } else {
           addHistoryLog(counter, "Edited details", oldValue, value);
+          showToast(`Counter saved`);
         }
-        showToast(`Counter saved`);
       }
 
       dialog.close();
       renderCountersList();
       triggerAutoSortWithDebounce();
-      playSuccessSound();
+      if (isReset) {
+        playResetSound();
+        const card = $(`.counter-card[data-counter-id="${counter?.id}"]`);
+        if (card && !prefersReducedMotion()) {
+          card.classList.add("animate-reset");
+          setTimeout(() => card.classList.remove("animate-reset"), 950);
+        }
+      } else {
+        playSuccessSound();
+      }
+    });
+
+    $("#edit-reset-val").addEventListener("input", updateResetButtonLabel);
+
+    // Reset isn't a submit button (Enter must mean Save), so submit in reset
+    // mode explicitly. requestSubmit() still runs the form's validation.
+    $("#edit-btn-reset").addEventListener("click", () => {
+      resetRequested = true;
+      form.requestSubmit();
+      // If validation blocked the submit, don't leave reset mode armed
+      resetRequested = false;
     });
 
     // Delete counter trash bin button
@@ -2069,34 +2106,6 @@ import { log } from "./logger.js";
           }
         }
       });
-    });
-  };
-
-  const setupEditLabelDialog = () => {
-    const dialog = $("#edit-label-dialog");
-    const form = $("#edit-label-form");
-
-    if (!dialog || !form) return;
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      const newLabel = $("#edit-label-input").value.trim();
-      if (!newLabel) return;
-
-      const counter = state.counters.find(
-        (c) => c.id === state.activeCounterIdForEdit,
-      );
-      if (counter) {
-        counter.label = newLabel;
-        saveCounters();
-        addHistoryLog(counter, "Edited label", counter.value, counter.value);
-        showToast("Label updated");
-      }
-
-      dialog.close();
-      renderCountersList();
-      playSuccessSound();
     });
   };
 
@@ -2187,6 +2196,7 @@ import { log } from "./logger.js";
     const newCounter = {
       id: Date.now().toString(),
       label,
+      autoNamed: true, // still on its automatic name; the edit dialog selects it for renaming
       value: 0,
       color: colorId,
       increment: 1,
@@ -2204,6 +2214,14 @@ import { log } from "./logger.js";
   };
 
   // Open Edit Dialog wrapper for editing counter details
+  // The edit dialog's reset button names the value it resets to
+  const updateResetButtonLabel = () => {
+    const resetBtn = $("#edit-btn-reset");
+    if (!resetBtn) return;
+    const resetValue = parseFloat($("#edit-reset-val").value || "0");
+    resetBtn.textContent = `Reset to ${formatNumber(Number.isFinite(resetValue) ? resetValue : 0)}`;
+  };
+
   const openEditCounterDetails = (counterId) => {
     const counter = state.counters.find((c) => c.id === counterId);
     if (!counter) return;
@@ -2218,6 +2236,7 @@ import { log } from "./logger.js";
     $("#edit-value-input-details").value = counter.value;
     $("#edit-increment").value = counter.increment;
     $("#edit-reset-val").value = counter.resetValue;
+    updateResetButtonLabel();
 
     // Set palette swatch selected
     const isCustom = isCustomColor(counter.color);
@@ -2245,8 +2264,10 @@ import { log } from "./logger.js";
       setSheetTheme(dialog, sheetThemeHex);
       openDialog(dialog);
 
-      // Intentionally NOT focusing the input to prevent mobile keyboard from popping up
-      // and squeezing the UI. User can tap the field if they want to edit it.
+      // Usually don't focus a field: on phones that opens the keyboard and
+      // squeezes the sheet. Exception: a counter still on its automatic name is
+      // almost always being renamed, so select the name and let typing replace it.
+      if (counter.autoNamed) $("#edit-label").focus();
 
       playClickSound();
     }
@@ -2769,62 +2790,13 @@ import { log } from "./logger.js";
         return;
       }
 
-      // 3.5. Click on the counter label text (opens minimal edit label dialog)
-      const counterLabel = e.target.closest(".counter-label");
-      if (counterLabel) {
+      // 3. Tapping the header opens the edit dialog (rename, reset, color, ...)
+      if (e.target.closest(".card-header")) {
         if (headerHoldSuppressedClick) {
           headerHoldSuppressedClick = false;
           return;
         }
-        state.activeCounterIdForEdit = counterId;
-        const labelInput = $("#edit-label-input");
-        if (labelInput) {
-          labelInput.value = counter.label;
-        }
-        const dialog = $("#edit-label-dialog");
-        if (dialog) {
-          const hexColor = getCounterHex(counter);
-          setSheetTheme(dialog, hexColor);
-          openDialog(dialog);
-          if (labelInput) {
-            labelInput.focus();
-            labelInput.select();
-          }
-          playClickSound();
-        }
-        return;
-      }
-
-      // 4. Edit details button click target
-      if (e.target.closest(".btn-counter-edit")) {
         openEditCounterDetails(counterId);
-        return;
-      }
-
-      // 5. Quick Reset value target
-      if (e.target.closest(".btn-counter-reset")) {
-        const resetTarget = counter.resetValue || 0;
-        showConfirmDialog(`Reset value for ${counter.label} to ${resetTarget}?`, () => {
-          const oldValue = counter.value;
-          counter.value = resetTarget;
-          saveCounters();
-          addHistoryLog(counter, "Reset value", oldValue, counter.value);
-          announceValue(counter);
-
-          renderCountersList();
-          triggerAutoSortWithDebounce();
-          playResetSound();
-          playHaptic(ImpactStyle.Medium);
-
-          const card = $(`.counter-card[data-counter-id="${counter.id}"]`);
-          if (card) {
-            card.classList.remove("animate-reset");
-            void card.offsetWidth; // Trigger reflow
-            card.classList.add("animate-reset");
-            setTimeout(() => card.classList.remove("animate-reset"), 950);
-          }
-        });
-        return;
       }
     });
 
@@ -2840,6 +2812,12 @@ import { log } from "./logger.js";
           openCalculator(card.getAttribute("data-counter-id"), {
             byKeyboard: true,
           });
+          return;
+        }
+
+        if (e.target.closest(".card-header")) {
+          e.preventDefault();
+          openEditCounterDetails(card.getAttribute("data-counter-id"));
           return;
         }
 
@@ -3273,7 +3251,6 @@ import { log } from "./logger.js";
     setupMainMenuDialog();
     setupCalculatorDialog();
     setupEditCounterDialog();
-    setupEditLabelDialog();
     setupEditValueDialog();
     setupHistoryDialog();
     setupConfirmDialog();

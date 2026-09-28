@@ -611,6 +611,10 @@
           </div>
 
           <div class="sheet-action-row">
+            <!-- type="button" so Enter in a field submits via Save, not Reset -->
+            <button type="button" class="secondary-btn" id="edit-btn-reset">
+              Reset to 0
+            </button>
             <button
               type="submit"
               class="primary-btn full-width"
@@ -1206,51 +1210,6 @@
           </svg>
           <p>Nothing logged yet.</p>
         </div>
-      </div>
-    </dialog>
-
-    <!-- 7. Minimal Edit label Dialog -->
-    <dialog id="edit-label-dialog" class="bottom-sheet-dialog" aria-labelledby="edit-label-title" autofocus>
-      <div class="bottom-sheet-header">
-        <div class="drag-handle"></div>
-        <h2 class="sheet-title" id="edit-label-title">Edit label</h2>
-      </div>
-      <div class="bottom-sheet-body" style="padding-top: 10px">
-        <form
-          id="edit-label-form"
-          method="dialog"
-          autocomplete="off"
-          style="width: 100%"
-        >
-          <div class="form-group" style="margin-bottom: 20px">
-            <input
-              type="text"
-              id="edit-label-input"
-              class="form-input"
-              required
-              autocomplete="new-password"
-              placeholder="Label"
-              style="width: 100%; box-sizing: border-box"
-            />
-          </div>
-          <div style="display: flex; gap: 12px; width: 100%">
-            <button
-              type="button"
-              class="secondary-btn full-width"
-              commandfor="edit-label-dialog"
-              command="close"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="primary-btn full-width"
-              id="edit-label-save-btn"
-            >
-              Save
-            </button>
-          </div>
-        </form>
       </div>
     </dialog>
 

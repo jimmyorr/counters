@@ -403,11 +403,17 @@ html[data-layout="grid"] .counter-card {
   height: 44px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center; /* just the title; the whole bar opens the editor */
   padding: 0 12px;
+  cursor: pointer;
   background-color: rgba(0, 0, 0, 0.12);
   z-index: 5;
   touch-action: none;
+}
+
+.card-header:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--card-text, var(--focus-ring));
 }
 
 /* Drag handle affordance — only shown when auto-sort is off */
@@ -491,42 +497,12 @@ html[data-layout="grid"] .counter-card {
   outline-offset: 3px;
 }
 
-.card-btn {
-  background: none;
-  border: none;
-  color: inherit;
-  opacity: 0.65;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all var(--trans-fast);
-}
-
-.card-btn:hover {
-  opacity: 1;
-  background-color: rgba(255, 255, 255, 0.15);
-}
-
-.card-btn:active {
-  transform: scale(0.88);
-}
-
-.card-btn:focus-visible {
-  outline: none;
-  background-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6);
-}
-
 .counter-label {
   font-family: var(--font-secondary);
   font-size: 18px;
   font-weight: 600;
   letter-spacing: 0.1px;
-  max-width: 60%;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1920,6 +1896,13 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .sheet-action-row {
   margin-top: 8px;
+  display: flex;
+  gap: 12px;
+}
+
+.sheet-action-row .secondary-btn {
+  flex: none;
+  white-space: nowrap;
 }
 
 /* --------------------------------------------------------------------------
@@ -2419,7 +2402,6 @@ input.math-number-input:focus-visible {
 
 /* Ensure 48x48 tap targets via pseudo-elements without changing visual layout */
 .header-btn,
-.card-btn,
 .header-icon-btn,
 .op-btn,
 .timer-inc-btn,
@@ -2441,7 +2423,6 @@ dialog:focus-visible,
 
 
 .header-btn::after,
-.card-btn::after,
 .header-icon-btn::after,
 .op-btn::after,
 .timer-inc-btn::after,

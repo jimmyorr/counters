@@ -1,8 +1,8 @@
 import { test, expect } from './fixtures.js';
-import { seed, stored, counter, card, valueOf, confirm } from './helpers.js';
+import { seed, stored, counter, card, valueOf } from './helpers.js';
 
 const openEdit = async (page, id) => {
-  await card(page, id).locator('.btn-counter-edit').click();
+  await card(page, id).locator('.card-header').click();
   await expect(page.locator('#edit-counter-dialog')).toBeVisible();
 };
 
@@ -18,7 +18,7 @@ test('saves label, value, increment, and reset value', async ({ page }) => {
   await page.locator('#edit-value-input-details').fill('2.5'); // decimals allowed (#15)
   await page.locator('#edit-increment').fill('3');
   await page.locator('#edit-reset-val').fill('7');
-  await page.locator('#edit-counter-form button[type="submit"]').click();
+  await page.locator('#edit-btn-save').click();
   await expect(page.locator('#edit-counter-dialog')).toBeHidden();
 
   const alpha = card(page, 'a');
@@ -32,16 +32,17 @@ test('saves label, value, increment, and reset value', async ({ page }) => {
   await alpha.locator('.card-direct-zone-plus').click();
   await expect(valueOf(alpha)).toHaveText('5.5');
 
-  // Card reset honors the configured reset value (#13)
-  await alpha.locator('.btn-counter-reset').click();
-  await confirm(page);
+  // Reset (now in the edit dialog) honors the configured reset value (#13)
+  await openEdit(page, 'a');
+  await expect(page.locator('#edit-btn-reset')).toHaveText('Reset to 7');
+  await page.locator('#edit-btn-reset').click();
   await expect(valueOf(alpha)).toHaveText('7');
 });
 
 test('changing the color updates the card', async ({ page }) => {
   await openEdit(page, 'a');
   await page.locator('#edit-palette-container .palette-swatch[data-color-id="4"]').click();
-  await page.locator('#edit-counter-form button[type="submit"]').click();
+  await page.locator('#edit-btn-save').click();
   await expect(card(page, 'a')).toHaveClass(/card-color-4/);
   expect((await stored(page, 'counters-list'))[0].color).toBe(4);
 });
@@ -49,10 +50,10 @@ test('changing the color updates the card', async ({ page }) => {
 test('logs value edits separately from detail edits', async ({ page }) => {
   await openEdit(page, 'a');
   await page.locator('#edit-label').fill('Ace');
-  await page.locator('#edit-counter-form button[type="submit"]').click();
+  await page.locator('#edit-btn-save').click();
   await openEdit(page, 'a');
   await page.locator('#edit-value-input-details').fill('11');
-  await page.locator('#edit-counter-form button[type="submit"]').click();
+  await page.locator('#edit-btn-save').click();
 
   await expect
     .poll(async () => (await stored(page, 'counters-history')).map((h) => h.actionLabel))
