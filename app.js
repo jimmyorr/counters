@@ -111,11 +111,62 @@ import { log } from "./logger.js";
         "#d4b3fc", // Lilac
       ],
     },
+    vintage: {
+      label: "Vintage",
+      colors: [
+        "#7da2c9", // Denim
+        "#d48871", // Terracotta
+        "#d99fa7", // Dusty rose
+        "#b1a1d1", // Mauve
+        "#9bb48e", // Sage
+        "#d8b260", // Mustard
+        "#77b1b0", // Dusty teal
+        "#a475af", // Plum
+      ],
+    },
+    nautical: {
+      label: "Nautical",
+      colors: [
+        "#0f2a5f", // Navy
+        "#8b320b", // Red lead
+        "#730533", // Signal red
+        "#5c6b76", // Storm grey
+        "#294c2a", // Kelp
+        "#72511e", // Brass
+        "#115e5e", // Deep sea
+        "#453065", // Twilight
+      ],
+    },
+    vaporwave: {
+      label: "Vaporwave",
+      colors: [
+        "#01cdfe", // Cyan
+        "#fd7f82", // Coral
+        "#ff71ce", // Hot pink
+        "#8c9cfb", // Periwinkle
+        "#fffb96", // Lemon
+        "#fda573", // Sunset orange
+        "#05ffa1", // Mint
+        "#b967ff", // Purple
+      ],
+    },
   };
 
-  // Slots are kept for existing counters (0 was blue, 1 orange, ...), so show
-  // swatches in rainbow order instead: warm to cool, ending on pink.
-  const SWATCH_DISPLAY_ORDER = [1, 5, 4, 6, 0, 3, 7, 2];
+  // Slots keep a counter's color family across palettes (slot 0 is bluish in
+  // every palette, and so on), so slot order isn't rainbow order. Pickers show
+  // swatches sorted by hue instead, with near-greys last.
+  const getSwatchesInDisplayOrder = () => {
+    const hueOf = (hex) => {
+      const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      if (max - min < 0.08) return 999; // near-grey: sort last
+      const d = max - min;
+      const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      return (h * 60 + 360) % 360;
+    };
+    return [...getSwatches()].sort((a, b) => hueOf(a.hex) - hueOf(b.hex));
+  };
 
   // Swatches ({ id, class, hex }) for the active palette
   const getSwatches = () =>
@@ -1824,9 +1875,8 @@ import { log } from "./logger.js";
     // Compile Palette Grid circular swatches
     const paletteContainer = $("#edit-palette-container");
     if (paletteContainer) {
-      const swatches = getSwatches();
       paletteContainer.innerHTML =
-        SWATCH_DISPLAY_ORDER.map((id) => swatches[id])
+        getSwatchesInDisplayOrder()
           .map((swatch) => {
             return `
           <div class="palette-swatch ${swatch.class}" data-color-id="${swatch.id}" style="background-color: ${swatch.hex}"></div>
@@ -2201,8 +2251,7 @@ import { log } from "./logger.js";
         .join("");
     }
     select.value = palettes[state.settings.palette] ? state.settings.palette : "bold";
-    const swatches = getSwatches();
-    preview.innerHTML = SWATCH_DISPLAY_ORDER.map((id) => swatches[id])
+    preview.innerHTML = getSwatchesInDisplayOrder()
       .map(({ hex }) => `<span style="background-color: ${hex}"></span>`)
       .join("");
   };
