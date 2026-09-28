@@ -84,7 +84,7 @@ test.describe('color contrast', () => {
     });
 
   // Every palette in app.js. The last test below fails if this list drifts.
-  const PALETTES = ['classic', 'pastel'];
+  const PALETTES = ['bold', 'pastel'];
   const presets = () => Array.from({ length: 8 }, (_, i) => counter(`p${i}`, `Preset ${i}`, 0, { color: i }));
 
   for (const palette of PALETTES) {

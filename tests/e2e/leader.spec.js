@@ -14,8 +14,8 @@ test('shows the highest counter in its color', async ({ page }) => {
   await seed(page, { counters: three() });
   await page.goto('/');
   await expect(pillText(page)).toHaveText('Bravo');
-  // Forest green swatch
-  await expect(pill(page)).toHaveCSS('--leader-color', '#167648');
+  // Bold grass green swatch
+  await expect(pill(page)).toHaveCSS('--leader-color', '#5a8012');
 });
 
 test('shows the lowest counter, including custom colors', async ({ page }) => {

@@ -2445,10 +2445,17 @@ dialog:focus-visible,
   transform: translate(-50%, -50%);
 }
 
-/* Hide gray color on viewports under 400px to prevent wrapping single swatches */
+/* On narrow phones, shrink swatches so all 8 colors + custom fit on one row */
 @media (max-width: 400px) {
-  .palette-grid .card-color-3 {
-    display: none !important;
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .palette-grid .palette-swatch {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
   }
 }
 

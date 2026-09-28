@@ -66,7 +66,7 @@ import { log } from "./logger.js";
       quickAddValues: [5, 10, 15, 20, 50, 100],
       themeHue: 205,
       keepAwake: false,
-      palette: "classic",
+      palette: "bold",
     },
     history: [],
     currentTab: "counters",
@@ -85,37 +85,41 @@ import { log } from "./logger.js";
   // same text color at 4.5:1 so cards never mix black and white text (enforced
   // in tests/e2e/accessibility.spec.js).
   const palettes = {
-    classic: {
-      label: "Classic",
+    bold: {
+      label: "Bold",
       colors: [
-        "#162e8a", // Deep blue
-        "#c15713", // Burnt orange
-        "#ca265a", // Crimson pink
-        "#5b6973", // Slate grey
-        "#167648", // Forest green
-        "#8a4b12", // Brown
-        "#0e818f", // Teal
-        "#622ea1", // Purple
+        "#0a54dd", // Royal blue
+        "#c73511", // Red-orange
+        "#c81876", // Magenta
+        "#7e37f8", // Violet
+        "#5a8012", // Grass green
+        "#a25f11", // Amber
+        "#158186", // Teal
+        "#aa19ce", // Purple
       ],
     },
     pastel: {
       label: "Pastel",
       colors: [
-        "#9fb3f5", // Periwinkle
-        "#f8c29c", // Peach
-        "#f7a8c4", // Pink
-        "#cbcfd4", // Mist
-        "#a6e3c2", // Mint
-        "#f3dc8a", // Butter
-        "#9ee0e6", // Aqua
-        "#e0b4f0", // Lavender
+        "#93ddfa", // Sky
+        "#fdc399", // Apricot
+        "#fdb2c8", // Pink
+        "#c1d0fb", // Periwinkle
+        "#b6dfa0", // Leaf green
+        "#e9cf87", // Butter
+        "#86e6d3", // Mint
+        "#d4b3fc", // Lilac
       ],
     },
   };
 
+  // Slots are kept for existing counters (0 was blue, 1 orange, ...), so show
+  // swatches in rainbow order instead: warm to cool, ending on pink.
+  const SWATCH_DISPLAY_ORDER = [1, 5, 4, 6, 0, 3, 7, 2];
+
   // Swatches ({ id, class, hex }) for the active palette
   const getSwatches = () =>
-    (palettes[state.settings.palette] || palettes.classic).colors.map(
+    (palettes[state.settings.palette] || palettes.bold).colors.map(
       (hex, id) => ({ id, class: `card-color-${id}`, hex }),
     );
 
@@ -1820,8 +1824,9 @@ import { log } from "./logger.js";
     // Compile Palette Grid circular swatches
     const paletteContainer = $("#edit-palette-container");
     if (paletteContainer) {
+      const swatches = getSwatches();
       paletteContainer.innerHTML =
-        getSwatches()
+        SWATCH_DISPLAY_ORDER.map((id) => swatches[id])
           .map((swatch) => {
             return `
           <div class="palette-swatch ${swatch.class}" data-color-id="${swatch.id}" style="background-color: ${swatch.hex}"></div>
@@ -2195,8 +2200,9 @@ import { log } from "./logger.js";
         .map(([key, { label }]) => `<option value="${key}">${label}</option>`)
         .join("");
     }
-    select.value = palettes[state.settings.palette] ? state.settings.palette : "classic";
-    preview.innerHTML = getSwatches()
+    select.value = palettes[state.settings.palette] ? state.settings.palette : "bold";
+    const swatches = getSwatches();
+    preview.innerHTML = SWATCH_DISPLAY_ORDER.map((id) => swatches[id])
       .map(({ hex }) => `<span style="background-color: ${hex}"></span>`)
       .join("");
   };
