@@ -1865,12 +1865,18 @@ import { log } from "./logger.js";
 
     if (!dialog || !form) return;
 
-    // Auto-select text on focus/tap for input fields
+    // Auto-select text on focus/tap for input fields. Deferred so it lands
+    // after a tap places the cursor, which would otherwise undo the selection.
     form.querySelectorAll("input").forEach((input) => {
       input.addEventListener("focus", () => {
+        const valueAtFocus = input.value;
         setTimeout(() => {
-          // select() also focuses; skip it if focus already moved to another field
-          if (document.activeElement === input) input.select();
+          // select() also focuses, so skip it if focus moved to another field.
+          // Also skip it if typing already started, or it would select (and the
+          // next key would replace) what was just typed.
+          if (document.activeElement === input && input.value === valueAtFocus) {
+            input.select();
+          }
         }, 50);
       });
     });
@@ -2267,7 +2273,13 @@ import { log } from "./logger.js";
       // Usually don't focus a field: on phones that opens the keyboard and
       // squeezes the sheet. Exception: a counter still on its automatic name is
       // almost always being renamed, so select the name and let typing replace it.
-      if (counter.autoNamed) $("#edit-label").focus();
+      // Select right away (not just via the deferred focus handler) so typing
+      // replaces the name even if it starts immediately.
+      if (counter.autoNamed) {
+        const nameInput = $("#edit-label");
+        nameInput.focus();
+        nameInput.select();
+      }
 
       playClickSound();
     }
@@ -2790,12 +2802,10 @@ import { log } from "./logger.js";
         return;
       }
 
-      // 3. Tapping the header opens the edit dialog (rename, reset, color, ...)
+      // 3. Tapping the header opens the edit dialog (rename, reset, color, ...).
+      // Clicks right after a long press are swallowed by the capture-phase
+      // listener in setupCardDragDrop before they get here.
       if (e.target.closest(".card-header")) {
-        if (headerHoldSuppressedClick) {
-          headerHoldSuppressedClick = false;
-          return;
-        }
         openEditCounterDetails(counterId);
       }
     });
