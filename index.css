@@ -1173,8 +1173,16 @@ html[data-layout="grid"] .card-direct-zone-plus {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
   padding: 12px 0;
   border-bottom: 1px solid var(--border-light);
+}
+
+/* Controls keep their natural size; the text column wraps in whatever space
+   is left, so help text can never run under a dropdown or switch */
+.settings-row > select,
+.settings-row > .switch-toggle {
+  flex: 0 0 auto;
 }
 
 .settings-row:last-child {
@@ -1190,7 +1198,8 @@ html[data-layout="grid"] .card-direct-zone-plus {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-width: 75%;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .setting-title {
@@ -1208,11 +1217,13 @@ html[data-layout="grid"] .card-direct-zone-plus {
 /* Palette setting: a row of dots previewing the chosen palette */
 .palette-preview {
   display: flex;
+  flex-wrap: wrap;
   gap: 5px;
   margin-top: 4px;
 }
 
 .palette-preview span {
+  flex: none; /* stay round on narrow screens; wrap instead of squeezing */
   width: 14px;
   height: 14px;
   border-radius: 50%;
