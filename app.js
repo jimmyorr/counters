@@ -153,7 +153,7 @@ import { log } from "./logger.js";
     colorblind: {
       // Designed to stay distinguishable with deuteranopia, protanopia, and
       // tritanopia: black text lets lightness vary, which survives color blindness
-      label: "Accessible",
+      label: "Color-blind friendly",
       colors: [
         "#85e1f8", // Sky
         "#c37d31", // Caramel
@@ -1081,6 +1081,12 @@ import { log } from "./logger.js";
         
         return;
       }
+
+      // A real drag just ended: swallow the click the release generates so it
+      // doesn't fall through to the header-tap handler and open the editor.
+      // Same suppression flags as the long-press path (cleared after release).
+      headerHoldSuppressedClick = true;
+      suppressUntilRelease = true;
 
       // Compute new order from DOM (placeholder position = drop slot)
       const allChildren = [...listWrapper.children];
