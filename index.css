@@ -1190,16 +1190,16 @@ html[data-layout="grid"] .card-direct-zone-plus {
   line-height: 1.4;
 }
 
-/* Palette setting: a row of dots previewing the chosen palette */
+/* Palette setting: dots previewing the chosen palette, 4 per row */
 .palette-preview {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 14px);
   gap: 5px;
   margin-top: 4px;
+  justify-content: start;
 }
 
 .palette-preview span {
-  flex: none; /* stay round on narrow screens; wrap instead of squeezing */
   width: 14px;
   height: 14px;
   border-radius: 50%;
