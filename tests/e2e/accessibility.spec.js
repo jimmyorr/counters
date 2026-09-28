@@ -84,7 +84,7 @@ test.describe('color contrast', () => {
     });
 
   // Every palette in app.js. The last test below fails if this list drifts.
-  const PALETTES = ['bold', 'pastel', 'vintage', 'nautical', 'vaporwave'];
+  const PALETTES = ['bold', 'pastel', 'vintage', 'nautical', 'vaporwave', 'colorblind'];
   const presets = () => Array.from({ length: 8 }, (_, i) => counter(`p${i}`, `Preset ${i}`, 0, { color: i }));
 
   for (const palette of PALETTES) {
@@ -225,4 +225,51 @@ test('every dialog has an accessible name', async ({ page }) => {
       .map((d) => d.id),
   );
   expect(unnamed).toEqual([]);
+});
+
+// #27: the color-blind palette only earns its name if every pair of colors stays
+// distinct under the common color vision deficiencies
+test('color-blind friendly palette stays distinct under color blindness', async ({ page }) => {
+  const counters = Array.from({ length: 8 }, (_, i) => counter(`p${i}`, `Preset ${i}`, 0, { color: i }));
+  await seed(page, { counters, settings: { palette: 'colorblind' } });
+  await page.goto('/');
+  const colors = await page.locator('#counters-list-wrapper .counter-card').evaluateAll((cards) =>
+    cards.map((c) => getComputedStyle(c).backgroundColor.match(/\d+/g).slice(0, 3).map((v) => v / 255)),
+  );
+  expect(colors).toHaveLength(8);
+
+  const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  const unlin = (c) => (c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055);
+  // Machado et al. (2009) simulation matrices, full severity, in linear RGB
+  const CVD = {
+    deuteranopia: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]],
+    protanopia: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-0.003882, -0.048116, 1.051998]],
+    tritanopia: [[1.255528, -0.076749, -0.178779], [-0.078411, 0.930809, 0.147602], [0.004733, 0.691367, 0.3039]],
+  };
+  const simulate = (rgb, m) => {
+    const l = rgb.map(lin);
+    return m.map((row) => unlin(Math.min(1, Math.max(0, row[0] * l[0] + row[1] * l[1] + row[2] * l[2]))));
+  };
+  const oklab = (rgb) => {
+    const [r, g, b] = rgb.map(lin);
+    const [l, m, s] = [
+      0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b,
+      0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b,
+      0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b,
+    ].map(Math.cbrt);
+    return [
+      0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+      1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+      0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+    ];
+  };
+  const distance = (a, b) => Math.hypot(...oklab(a).map((v, i) => v - oklab(b)[i])) * 100;
+
+  for (const [kind, matrix] of [['normal vision', null], ...Object.entries(CVD)]) {
+    const seen = matrix ? colors.map((c) => simulate(c, matrix)) : colors;
+    let worst = Infinity;
+    for (let i = 0; i < 8; i++) for (let j = i + 1; j < 8; j++) worst = Math.min(worst, distance(seen[i], seen[j]));
+    // Other palettes drop to roughly 2-7 under color blindness; this one must stay well clear
+    expect(worst, kind).toBeGreaterThanOrEqual(9);
+  }
 });

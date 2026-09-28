@@ -150,6 +150,21 @@ import { log } from "./logger.js";
         "#b967ff", // Purple
       ],
     },
+    colorblind: {
+      // Designed to stay distinguishable with deuteranopia, protanopia, and
+      // tritanopia: black text lets lightness vary, which survives color blindness
+      label: "Color-blind friendly",
+      colors: [
+        "#85e1f8", // Sky
+        "#c37d31", // Caramel
+        "#f6a696", // Salmon
+        "#94b4f4", // Periwinkle
+        "#bcfbbb", // Mint
+        "#d4db4c", // Citron
+        "#349984", // Teal
+        "#9b72ef", // Violet
+      ],
+    },
   };
 
   // Slots keep a counter's color family across palettes (slot 0 is bluish in
