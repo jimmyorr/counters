@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.1.15
+
+- **Palettes:** Added Vintage, Nautical, and Vaporwave; redesigned Bold and Pastel palettes with hue-ordered swatches and improved narrow-screen layout.
+- **Typography:** Lightened the app and settings titles for improved readability.
+
 ## 0.1.13
 
 - **Accessibility:** Screen readers now announce counter names, values, and toasts. Card text switches to black or white for contrast, pinch zoom works, and reduced motion is respected.
