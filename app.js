@@ -45,51 +45,11 @@ import { log } from "./logger.js";
   const prefersReducedMotion = () =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Keep bottom sheets inside the visible area when the software keyboard
-  // opens. iOS doesn't shrink vh units for the keyboard, so without this a
-  // sheet keeps its full height, extends behind the keyboard, and its header
-  // (e.g. the edit dialog's delete button) gets pushed off-screen.
-  const syncBottomSheetsToVisualViewport = () => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const keyboardOpen = window.innerHeight - vv.height > 100;
-    document
-      .querySelectorAll("dialog.bottom-sheet-dialog[open]")
-      .forEach((dialog) => {
-        // Fit the sheet to the visible viewport, minus the top safe-area
-        // inset so the header clears the status bar (see .keyboard-open).
-        dialog.classList.toggle("keyboard-open", keyboardOpen);
-        if (keyboardOpen) {
-          dialog.style.setProperty("--vv-height", `${vv.height}px`);
-        } else {
-          dialog.style.removeProperty("--vv-height");
-        }
-      });
-    // Keep the focused field visible above the keyboard.
-    const active = document.activeElement;
-    if (
-      keyboardOpen &&
-      active &&
-      active.matches("input, textarea") &&
-      active.closest("dialog.bottom-sheet-dialog[open]")
-    ) {
-      active.scrollIntoView({ block: "nearest" });
-    }
-  };
-
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener(
-      "resize",
-      syncBottomSheetsToVisualViewport,
-    );
-  }
-
   // Central helper to track when dialogs are opened.
   // This is used to prevent synthetic 'click' events from instantly closing them.
   const openDialog = (dialog) => {
     dialog.dataset.openedAt = Date.now().toString();
     dialog.showModal();
-    syncBottomSheetsToVisualViewport();
   };
 
   // ------------------------------------------------------------------------

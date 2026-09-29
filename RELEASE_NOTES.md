@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.1.21
+
+* **Edit dialog:** Reverted the keyboard-open sheet resizing shipped in 0.1.19 and 0.1.20 — it caused more layout problems than it solved.
+
 ## 0.1.20
 
 * **Edit dialog:** With the keyboard open, bottom sheets now leave clearance below the status bar instead of running to the top of the screen.
