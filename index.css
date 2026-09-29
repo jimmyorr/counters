@@ -264,6 +264,15 @@ body > .app-nav {
   color: var(--leader-color, var(--accent-color));
 }
 
+/* Truncate the leader name inside the pill with an ellipsis instead of
+   letting the flex item overflow the pill edge. */
+.leader-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .header-center {
   text-align: center;
 }
