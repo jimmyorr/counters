@@ -153,7 +153,7 @@ import { log } from "./logger.js";
     colorblind: {
       // Designed to stay distinguishable with deuteranopia, protanopia, and
       // tritanopia: black text lets lightness vary, which survives color blindness
-      label: "Color-blind friendly",
+      label: "Accessible",
       colors: [
         "#85e1f8", // Sky
         "#c37d31", // Caramel
