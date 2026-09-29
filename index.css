@@ -1909,6 +1909,16 @@ input[type="number"]::-webkit-inner-spin-button {
   gap: 12px;
 }
 
+/* Keep the edit dialog's actions reachable when the sheet body scrolls,
+   e.g. with the keyboard open on a phone. */
+#edit-counter-dialog .sheet-action-row {
+  position: sticky;
+  bottom: -16px;
+  margin: 16px -16px -16px;
+  padding: 12px 16px 16px;
+  background-color: var(--overlay-bg);
+}
+
 .sheet-action-row .secondary-btn {
   flex: none;
   white-space: nowrap;

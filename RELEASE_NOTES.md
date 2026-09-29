@@ -1,5 +1,13 @@
 # Release notes
 
+## 0.1.19
+
+* **Edit dialog:** Bottom sheets now shrink to the visible area when the keyboard opens, so the dialog header stays on-screen; the edit dialog's save and reset buttons stay pinned while the fields scroll, and the focused field scrolls into view.
+
+## 0.1.18
+
+* **Internal:** HTML formatting cleanup.
+
 ## 0.1.17
 
 * **Palettes:** Fixed palette preview in settings — swatches now stay on one row on tablet/desktop and only wrap on small screens.
