@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.1.17
+
+* **Palettes:** Fixed palette preview in settings — swatches now stay on one row on tablet/desktop and only wrap on small screens.
+* **Dev:** `npm run release` accepts `--skip-tests` to bypass the e2e suite when needed.
+
 ## 0.1.16
 
 - **Palettes:** Added a color-blind friendly palette.
