@@ -65,8 +65,23 @@ To bundle the application and output a production release to the `docs` director
 npm run build
 ```
 
-Alternatively, you can run the release pipeline which increments the patch version in `package.json` and builds the production bundle in one step:
+Alternatively, you can run the release pipeline which runs the full check, lint, and test suite, then increments the patch version in `package.json` and builds the production bundle in one step:
 
 ```bash
 npm run release
+```
+
+The pipeline runs these steps in order:
+
+1. Checks that the working tree is clean (no uncommitted changes)
+2. Runs ESLint
+3. Runs the Playwright e2e test suite
+4. Bumps the patch version in `package.json`
+5. Syncs the version into the app via `scripts/sync-version.js`
+6. Builds the production bundle into `docs/`
+
+To skip the e2e tests (e.g. when tests are known to be failing for unrelated reasons), pass `--skip-tests`:
+
+```bash
+npm run release -- --skip-tests
 ```
