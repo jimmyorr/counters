@@ -56,7 +56,14 @@ import { log } from "./logger.js";
     document
       .querySelectorAll("dialog.bottom-sheet-dialog[open]")
       .forEach((dialog) => {
-        dialog.style.maxHeight = keyboardOpen ? `${vv.height}px` : "";
+        // Fit the sheet to the visible viewport, minus the top safe-area
+        // inset so the header clears the status bar (see .keyboard-open).
+        dialog.classList.toggle("keyboard-open", keyboardOpen);
+        if (keyboardOpen) {
+          dialog.style.setProperty("--vv-height", `${vv.height}px`);
+        } else {
+          dialog.style.removeProperty("--vv-height");
+        }
       });
     // Keep the focused field visible above the keyboard.
     const active = document.activeElement;

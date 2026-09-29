@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.1.20
+
+* **Edit dialog:** With the keyboard open, bottom sheets now leave clearance below the status bar instead of running to the top of the screen.
+
 ## 0.1.19
 
 * **Edit dialog:** Bottom sheets now shrink to the visible area when the keyboard opens, so the dialog header stays on-screen; the edit dialog's save and reset buttons stay pinned while the fields scroll, and the focused field scrolls into view.

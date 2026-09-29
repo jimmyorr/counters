@@ -1643,6 +1643,13 @@ dialog[open].bottom-sheet-dialog {
   background-color: rgba(var(--bg-primary), 0.3);
 }
 
+/* When the keyboard is open, fit the sheet to the visible viewport instead
+   of 92vh (which iOS doesn't shrink for the keyboard). Leave room for the
+   status bar via the top safe-area inset. */
+dialog.bottom-sheet-dialog.keyboard-open {
+  max-height: calc(var(--vv-height) - env(safe-area-inset-top, 0px) - 12px);
+}
+
 /* --------------------------------------------------------------------------
    10. Calculator Drawer Styles
    -------------------------------------------------------------------------- */
