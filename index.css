@@ -1199,13 +1199,13 @@ html[data-layout="grid"] .card-direct-zone-plus {
   line-height: 1.4;
 }
 
-/* Palette setting: dots previewing the chosen palette, 4 per row */
+/* Palette setting: dots previewing the chosen palette.
+   All 8 fit on one row when space allows; wraps only when needed. */
 .palette-preview {
-  display: grid;
-  grid-template-columns: repeat(4, 14px);
+  display: flex;
+  flex-wrap: wrap;
   gap: 5px;
   margin-top: 4px;
-  justify-content: start;
 }
 
 .palette-preview span {
