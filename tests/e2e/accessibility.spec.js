@@ -130,6 +130,23 @@ test.describe('color contrast', () => {
     });
   }
 
+  for (const palette of PALETTES) {
+    test(`${palette}: leader pill arrow is visible in light mode for every color`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: 'light' });
+      await seed(page, { counters: presets(), settings: { palette } });
+      await page.goto('/');
+      // Each preset slot takes the lead in turn
+      for (let i = 0; i < 8; i++) {
+        const counters = presets().map((c, j) => ({ ...c, value: j === i ? 1 : 0 }));
+        await page.evaluate((list) => localStorage.setItem('CapacitorStorage.counters-list', JSON.stringify(list)), counters);
+        await page.reload();
+        await expect(page.locator('#header-leader-text')).toHaveText(`Preset ${i}`);
+        // WCAG 1.4.11 asks 3:1 for icons
+        expect(await contrast(page, page.locator('.leader-icon')), `${palette} slot ${i}`).toBeGreaterThanOrEqual(3);
+      }
+    });
+  }
+
   test('contrast tests cover every palette in the app', async ({ page }) => {
     await page.goto('/');
     await page.locator('#btn-open-options').click();
