@@ -264,6 +264,11 @@ body > .app-nav {
   color: var(--leader-color, var(--accent-color));
 }
 
+.light-mode .header-left {
+  /* The raw color at 25% fades out on the light header; match the arrow ink */
+  border-color: var(--leader-ink-border, var(--border-light));
+}
+
 .light-mode .leader-icon {
   /* Pale counter colors vanish on the pill's light tint, so darken them */
   color: var(--leader-ink-light, var(--leader-color, var(--accent-color)));
