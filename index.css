@@ -522,6 +522,7 @@ html[data-layout="grid"] .counter-card {
 }
 
 .counter-label {
+  color: var(--card-label-text, inherit); /* differs only on mid-tone custom colors */
   font-family: var(--font-secondary);
   font-size: 18px;
   font-weight: 600;

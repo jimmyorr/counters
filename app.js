@@ -364,6 +364,19 @@ import { log } from "./logger.js";
     return whiteContrast >= contrastRatio(hex, "#000000") ? "#ffffff" : "#000000";
   };
 
+  // Helper: Text color for the card label, which sits on the card header's 12%
+  // black overlay. Keeps the card's text color unless that falls below 4.5:1
+  // there, as black can on mid-tones (e.g. #777777); the value below is large
+  // text that only needs 3:1, so it keeps the card color.
+  const getHeaderTextColor = (hex, text) => {
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) return text;
+    const header = mixHex(hex, "#000000", 0.12);
+    if (contrastRatio(header, text) >= 4.5) return text;
+    return contrastRatio(header, "#ffffff") >= contrastRatio(header, "#000000")
+      ? "#ffffff"
+      : "#000000";
+  };
+
   // Helper: Mix a #rrggbb color toward `toward`, starting at `start`, only as
   // far as needed to reach 4.5:1 on `surface`
   const getReadableInk = (hex, surface, toward, start) => {
@@ -746,6 +759,7 @@ import { log } from "./logger.js";
     listWrapper.innerHTML = state.counters
       .map((counter) => {
         const cardThemeHex = getCounterHex(counter);
+        const cardText = getReadableTextColor(cardThemeHex);
         const swatchClass = isCustomColor(counter.color)
           ? ""
           : `card-color-${getSwatches()[counter.color] ? counter.color : 0}`;
@@ -757,7 +771,7 @@ import { log } from "./logger.js";
         return `
         <div class="counter-card ${swatchClass}${isNewClass}" data-counter-id="${
           counter.id
-        }" style="--card-theme: ${cardThemeHex}; --card-text: ${getReadableTextColor(cardThemeHex)}; view-transition-name: counter-${counter.id};">
+        }" style="--card-theme: ${cardThemeHex}; --card-text: ${cardText}; --card-label-text: ${getHeaderTextColor(cardThemeHex, cardText)}; view-transition-name: counter-${counter.id};">
           <!-- Card Top Info Bar -->
           <div class="card-header" role="button" tabindex="0" aria-label="Edit ${name}">
             <span class="counter-label">${name}</span>
