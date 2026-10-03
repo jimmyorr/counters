@@ -264,6 +264,11 @@ body > .app-nav {
   color: var(--leader-color, var(--accent-color));
 }
 
+.dark-mode .header-left {
+  /* Dark colors at 25% fade into the dark header; match the arrow ink */
+  border-color: var(--leader-ink-dark-border, var(--border-light));
+}
+
 .dark-mode .leader-icon {
   /* Dark counter colors vanish on the dark header, so lighten them */
   color: var(--leader-ink-dark, var(--leader-color, var(--accent-color)));
