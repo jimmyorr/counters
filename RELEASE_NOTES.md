@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.1.22
+
+* **Contrast:** Leader pill arrow and outline stay visible for pale colors in light theme and dark colors in dark theme. Calculator title readable for very dark colors. Card −/+ buttons more visible. Card names readable on mid-tone custom colors.
+* **Dev:** New e2e contrast check across themes, palettes and counter surfaces.
+
 ## 0.1.21
 
 * **Edit dialog:** Reverted the keyboard-open sheet resizing shipped in 0.1.19 and 0.1.20 — it caused more layout problems than it solved.
