@@ -1826,6 +1826,37 @@ input[type="number"]::-webkit-inner-spin-button {
   top: 12px;
 }
 
+/* With the software keyboard up (see syncKeyboardState in app.js), fill the
+   visible space above it: from just below the status bar down to the top of
+   the keyboard, with the buttons pinned to the bottom and any spare room
+   above them. The body still scrolls if a keyboard leaves less room than
+   the form needs. */
+:root.keyboard-open #edit-counter-dialog {
+  bottom: var(--vv-bottom, 0px);
+  height: calc(var(--vv-height, 100dvh) - env(safe-area-inset-top, 0px) - 8px);
+  max-height: none;
+  padding-bottom: 0; /* the keyboard covers the home indicator */
+}
+
+:root.keyboard-open #edit-counter-dialog .bottom-sheet-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+:root.keyboard-open #edit-counter-dialog .edit-form {
+  flex: 1;
+}
+
+:root.keyboard-open #edit-counter-dialog .edit-form > .form-group {
+  flex: none;
+}
+
+:root.keyboard-open #edit-counter-dialog .sheet-action-row {
+  margin-top: auto;
+}
+
 /* Swatches palette */
 .color-palette-wrapper {
   display: flex;

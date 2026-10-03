@@ -1,5 +1,11 @@
 {
   "appId": "com.cowneck.counters",
   "appName": "Counters",
-  "webDir": "docs"
+  "webDir": "docs",
+  "plugins": {
+    "Keyboard": {
+      "resize": "native",
+      "resizeOnFullScreen": true
+    }
+  }
 }

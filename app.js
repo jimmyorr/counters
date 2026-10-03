@@ -13,6 +13,7 @@ import {
   NotificationType,
 } from "@capacitor/haptics";
 import { Capacitor } from "@capacitor/core";
+import { Keyboard } from "@capacitor/keyboard";
 import confetti from "canvas-confetti";
 import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
 import { log } from "./logger.js";
@@ -44,6 +45,60 @@ import { log } from "./logger.js";
   // Whether the user asked the OS to minimize non-essential motion
   const prefersReducedMotion = () =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Track the software keyboard so the edit sheet can fill the space above it
+  // (issue #37). Sets .keyboard-open on <html> plus --vv-height (visible
+  // height) and --vv-bottom (how far the visible area's bottom sits above the
+  // layout viewport's). Each platform shows the keyboard differently:
+  //  - Native apps: the Keyboard plugin shrinks the whole web view, so the
+  //    window itself gets shorter and --vv-bottom stays 0.
+  //  - iOS Safari: only the visual viewport shrinks (and may scroll), so the
+  //    sheet is lifted by --vv-bottom.
+  //  - Chrome on Android: interactive-widget=resizes-content in the viewport
+  //    meta makes it behave like the native apps.
+  // Best effort on the web; desktop never matches (no coarse pointer).
+  let fullViewportHeight = 0;
+  let viewportWidth = 0;
+  const syncKeyboardState = () => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    // Rotation or a window resize starts a new baseline
+    if (window.innerWidth !== viewportWidth) {
+      viewportWidth = window.innerWidth;
+      fullViewportHeight = 0;
+    }
+    fullViewportHeight = Math.max(fullViewportHeight, window.innerHeight);
+    const typing = document.activeElement?.matches("input, textarea") ?? false;
+    const keyboardOpen =
+      typing &&
+      window.matchMedia("(pointer: coarse)").matches &&
+      fullViewportHeight - vv.height > 150;
+    const root = document.documentElement;
+    root.classList.toggle("keyboard-open", keyboardOpen);
+    if (keyboardOpen) {
+      root.style.setProperty("--vv-height", `${vv.height}px`);
+      root.style.setProperty(
+        "--vv-bottom",
+        `${Math.max(0, window.innerHeight - vv.offsetTop - vv.height)}px`,
+      );
+    } else {
+      root.style.removeProperty("--vv-height");
+      root.style.removeProperty("--vv-bottom");
+    }
+  };
+  window.visualViewport?.addEventListener("resize", syncKeyboardState);
+  window.visualViewport?.addEventListener("scroll", syncKeyboardState);
+  window.addEventListener("resize", syncKeyboardState);
+  // The keyboard can close without a resize reaching us first (e.g. blur)
+  document.addEventListener("focusin", syncKeyboardState);
+  document.addEventListener("focusout", () => setTimeout(syncKeyboardState, 0));
+  if (Capacitor.getPlatform() === "ios") {
+    // The prev/next/done bar costs 44pt above the keyboard; the sheet's Save
+    // button and Enter cover what it offers
+    Keyboard.setAccessoryBarVisible({ isVisible: false }).catch((err) => {
+      log.warn("Failed to hide keyboard accessory bar:", err);
+    });
+  }
 
   // Central helper to track when dialogs are opened.
   // This is used to prevent synthetic 'click' events from instantly closing them.
