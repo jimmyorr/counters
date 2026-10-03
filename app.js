@@ -364,17 +364,29 @@ import { log } from "./logger.js";
     return whiteContrast >= contrastRatio(hex, "#000000") ? "#ffffff" : "#000000";
   };
 
+  // Helper: Mix a #rrggbb color toward `toward`, starting at `start`, only as
+  // far as needed to reach 4.5:1 on `surface`
+  const getReadableInk = (hex, surface, toward, start) => {
+    for (let t = start; t < 1; t += 0.05) {
+      const ink = mixHex(hex, toward, t);
+      if (contrastRatio(ink, surface) >= 4.5) return ink;
+    }
+    return toward;
+  };
+
   // Helper: The counter color as text on a light surface tinted 10% with it
   // (e.g. the calculator's title pill). Starts at the usual 85% shade and
   // darkens only as far as needed for 4.5:1, so pale colors stay readable.
   const getInkOnLightTint = (hex) => {
     if (!/^#[0-9a-f]{6}$/i.test(hex)) return "#000000";
-    const surface = mixHex("#ffffff", hex, 0.1);
-    for (let t = 0.15; t < 1; t += 0.05) {
-      const ink = mixHex(hex, "#000000", t);
-      if (contrastRatio(ink, surface) >= 4.5) return ink;
-    }
-    return "#000000";
+    return getReadableInk(hex, mixHex("#ffffff", hex, 0.1), "#000000", 0.15);
+  };
+
+  // Helper: The dark mode counterpart, on the dark sheet surface tinted 15%.
+  // Lightens from `start` (0 keeps the color as is) so dark colors stay readable.
+  const getInkOnDarkTint = (hex, start = 0) => {
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) return "#ffffff";
+    return getReadableInk(hex, mixHex("#16171d", hex, 0.15), "#ffffff", start);
   };
 
   // Helper: Theme a bottom sheet with a counter color and readable text on it
@@ -382,6 +394,8 @@ import { log } from "./logger.js";
     dialog.style.setProperty("--sheet-theme", hex);
     dialog.style.setProperty("--sheet-text", getReadableTextColor(hex));
     dialog.style.setProperty("--sheet-ink-light", getInkOnLightTint(hex));
+    // Matches the old 60% color, 40% white mix unless that's too dark
+    dialog.style.setProperty("--sheet-ink-dark", getInkOnDarkTint(hex, 0.4));
   };
 
   // ------------------------------------------------------------------------
@@ -657,6 +671,7 @@ import { log } from "./logger.js";
       leaderContainer.style.removeProperty("--leader-border");
       leaderContainer.style.removeProperty("--leader-ink-light");
       leaderContainer.style.removeProperty("--leader-ink-border");
+      leaderContainer.style.removeProperty("--leader-ink-dark");
       icon.innerHTML = `<path d="M19 18v2H5v-2l6-6-6-6V4h14v2h-9.35L14 12l-4.35 6H19z"/>`;
       leaderText.textContent = `Total: ${formatNumber(totalValue)}`;
       return;
@@ -674,6 +689,7 @@ import { log } from "./logger.js";
     const inkLight = getInkOnLightTint(themeHex);
     leaderContainer.style.setProperty("--leader-ink-light", inkLight);
     leaderContainer.style.setProperty("--leader-ink-border", `${inkLight}4d`);
+    leaderContainer.style.setProperty("--leader-ink-dark", getInkOnDarkTint(themeHex));
     icon.innerHTML = isLowest
       ? `<path d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"/>`
       : `<path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/>`;

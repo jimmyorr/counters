@@ -264,6 +264,11 @@ body > .app-nav {
   color: var(--leader-color, var(--accent-color));
 }
 
+.dark-mode .leader-icon {
+  /* Dark counter colors vanish on the dark header, so lighten them */
+  color: var(--leader-ink-dark, var(--leader-color, var(--accent-color)));
+}
+
 .light-mode .header-left {
   /* The raw color at 25% fades out on the light header; match the arrow ink */
   border-color: var(--leader-ink-border, var(--border-light));
@@ -1574,7 +1579,8 @@ dialog[open].bottom-sheet-dialog {
 }
 
 .dark-mode .sheet-title-pill {
-  color: color-mix(in srgb, var(--sheet-theme, var(--text-primary)) 60%, white);
+  /* Set per counter in JS so dark colors still reach 4.5:1 */
+  color: var(--sheet-ink-dark, var(--text-primary));
   background-color: color-mix(in srgb, var(--sheet-theme, var(--bg-tertiary)) 15%, transparent);
   border-color: color-mix(in srgb, var(--sheet-theme, var(--border-light)) 30%, transparent);
 }
