@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures.js';
-import { seed, counter, card } from './helpers.js';
+import { seed, counter, card, contrast, PALETTES, presets } from './helpers.js';
 
 test.describe('counter cards', () => {
   test.beforeEach(async ({ page }) => {
@@ -55,38 +55,6 @@ test.describe('toast', () => {
 });
 
 test.describe('color contrast', () => {
-  const contrast = (page, locator) =>
-    locator.evaluate((el) => {
-      const rgba = (css) => {
-        const [r, g, b, a = 1] = css.match(/[\d.]+/g).map(Number);
-        // color-mix() results compute as color(srgb r g b / a) with 0-1 channels
-        const scale = css.startsWith('color(srgb') ? 255 : 1;
-        return { rgb: [r * scale, g * scale, b * scale], a };
-      };
-      const lum = ([r, g, b]) => {
-        const f = (c) => ((c /= 255) <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-        return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
-      };
-      // Composite translucent backgrounds (e.g. the card header's dark overlay)
-      // down to the first opaque ancestor
-      const layers = [];
-      for (let node = el; node; node = node.parentElement) {
-        const bg = rgba(getComputedStyle(node).backgroundColor);
-        if (bg.a > 0) layers.push(bg);
-        if (bg.a === 1) break;
-      }
-      const bg = layers.reverse().reduce(
-        (under, { rgb, a }) => under.map((c, i) => rgb[i] * a + c * (1 - a)),
-        [255, 255, 255],
-      );
-      const [a, b] = [lum(rgba(getComputedStyle(el).color).rgb), lum(bg)];
-      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
-    });
-
-  // Every palette in app.js. The last test below fails if this list drifts.
-  const PALETTES = ['bold', 'pastel', 'vintage', 'nautical', 'vaporwave', 'colorblind'];
-  const presets = () => Array.from({ length: 8 }, (_, i) => counter(`p${i}`, `Preset ${i}`, 0, { color: i }));
-
   for (const palette of PALETTES) {
     test(`${palette}: every card uses one text color at 4.5:1 or better`, async ({ page }) => {
       await seed(page, { counters: presets(), settings: { palette } });
@@ -96,7 +64,7 @@ test.describe('color contrast', () => {
       for (let i = 0; i < 8; i++) {
         const label = card(page, `p${i}`).locator('.counter-label');
         textColors.add(await label.evaluate((el) => getComputedStyle(el).color));
-        expect(await contrast(page, label), `${palette} slot ${i}`).toBeGreaterThanOrEqual(4.5);
+        expect(await contrast(label), `${palette} slot ${i}`).toBeGreaterThanOrEqual(4.5);
       }
       expect([...textColors], `${palette} mixes text colors`).toHaveLength(1);
     });
@@ -110,42 +78,9 @@ test.describe('color contrast', () => {
     await expect(card(page, 'pale').locator('.counter-label')).toHaveCSS('color', 'rgb(0, 0, 0)');
     await expect(card(page, 'dark').locator('.counter-label')).toHaveCSS('color', 'rgb(255, 255, 255)');
     for (const id of ['pale', 'dark']) {
-      expect(await contrast(page, card(page, id).locator('.counter-label'))).toBeGreaterThanOrEqual(4.5);
+      expect(await contrast(card(page, id).locator('.counter-label'))).toBeGreaterThanOrEqual(4.5);
     }
   });
-
-  for (const palette of PALETTES) {
-    test(`${palette}: calculator title is readable in light mode for every color`, async ({ page }) => {
-      await page.emulateMedia({ colorScheme: 'light' });
-      await seed(page, { counters: presets(), settings: { palette } });
-      await page.goto('/');
-      for (let i = 0; i < 8; i++) {
-        await card(page, `p${i}`).locator('.card-value-body').click();
-        const title = page.locator('#calc-dialog-title');
-        await expect(title).toBeVisible();
-        expect(await contrast(page, title), `${palette} slot ${i}`).toBeGreaterThanOrEqual(4.5);
-        await page.keyboard.press('Escape');
-        await expect(page.locator('#calculator-dialog')).toBeHidden();
-      }
-    });
-  }
-
-  for (const palette of PALETTES) {
-    test(`${palette}: leader pill arrow is visible in light mode for every color`, async ({ page }) => {
-      await page.emulateMedia({ colorScheme: 'light' });
-      await seed(page, { counters: presets(), settings: { palette } });
-      await page.goto('/');
-      // Each preset slot takes the lead in turn
-      for (let i = 0; i < 8; i++) {
-        const counters = presets().map((c, j) => ({ ...c, value: j === i ? 1 : 0 }));
-        await page.evaluate((list) => localStorage.setItem('CapacitorStorage.counters-list', JSON.stringify(list)), counters);
-        await page.reload();
-        await expect(page.locator('#header-leader-text')).toHaveText(`Preset ${i}`);
-        // WCAG 1.4.11 asks 3:1 for icons
-        expect(await contrast(page, page.locator('.leader-icon')), `${palette} slot ${i}`).toBeGreaterThanOrEqual(3);
-      }
-    });
-  }
 
   test('contrast tests cover every palette in the app', async ({ page }) => {
     await page.goto('/');
@@ -159,7 +94,7 @@ test.describe('color contrast', () => {
     await seed(page, { counters: [counter('y', 'Yellow', 0, { color: '#f5d547' })] });
     await page.goto('/');
     await card(page, 'y').locator('.card-value-body').click();
-    expect(await contrast(page, page.locator('#calc-btn-submit'))).toBeGreaterThanOrEqual(4.5);
+    expect(await contrast(page.locator('#calc-btn-submit'))).toBeGreaterThanOrEqual(4.5);
   });
 });
 
