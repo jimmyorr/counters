@@ -1020,8 +1020,9 @@ html[data-layout="grid"] .card-direct-zone-plus {
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+/* A result for the selected dice gets the accent border; changing the dice
+   clears it (same language as the stopwatch display) */
 .dice-result-card.rolled {
-  transform: scale(1.02);
   border-color: var(--accent-color);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
@@ -1067,7 +1068,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 
 .placeholder-timer-visual {
   background-color: var(--bg-secondary);
-  border: 1px solid var(--border-strong);
+  border: 1.5px solid var(--border-strong);
   padding: 16px 36px;
   border-radius: 20px;
   margin-bottom: 20px;
@@ -1405,9 +1406,16 @@ input:checked + .slider-round:before {
   }
 }
 
+/* Holding a time (paused or running) gets the accent border, like a fresh
+   dice result; running also breathes */
+.placeholder-timer-visual.has-time,
 #tab-timer:has(#btn-timer-placeholder-start.danger-btn-outline)
   .placeholder-timer-visual {
-  border-color: color-mix(in srgb, var(--accent-color) 50%, transparent);
+  border-color: var(--accent-color);
+}
+
+#tab-timer:has(#btn-timer-placeholder-start.danger-btn-outline)
+  .placeholder-timer-visual {
   animation: display-glow 4s ease-in-out infinite;
 }
 

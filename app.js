@@ -2991,11 +2991,16 @@ import { log } from "./logger.js";
     // Tracks dice configuration
     let currentDiceType = 6;
     let currentDiceCount = 1;
+    // The dice behind the result on screen, e.g. "2d6" (null before a roll)
+    let rolledDice = null;
 
     const updateRollButtonLabel = () => {
+      const dice = `${currentDiceCount}d${currentDiceType}`;
       if (btnRollAction) {
-        btnRollAction.textContent = `Roll ${currentDiceCount}d${currentDiceType}`;
+        btnRollAction.textContent = `Roll ${dice}`;
       }
+      // Highlight the result only while it matches the selected dice
+      diceResultCard?.classList.toggle("rolled", rolledDice === dice);
     };
 
     if (diceTypeSelector) {
@@ -3073,6 +3078,7 @@ import { log } from "./logger.js";
           // State 2: Roll Result
           diceResultTotal.textContent = total;
           diceResultTotal.classList.add("animate-pop");
+          rolledDice = `${currentDiceCount}d${currentDiceType}`;
           diceResultCard.classList.add("rolled");
 
           if (currentDiceCount > 1) {
@@ -3167,6 +3173,10 @@ import { log } from "./logger.js";
 
       if (swDisplay) {
         swDisplay.textContent = `${mm}:${ss}.${ms}`;
+        // Blue border while it holds a time, like a fresh dice result
+        swDisplay
+          .closest(".placeholder-timer-visual")
+          ?.classList.toggle("has-time", totalMs > 0);
       }
 
       // Disabled / visually dimmed if timer is at 0

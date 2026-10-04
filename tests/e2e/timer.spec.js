@@ -107,3 +107,15 @@ test.describe('with reduced motion', () => {
     await expect(visual).toHaveCSS('box-shadow', /18px/);
   });
 });
+
+test('the display keeps its accent border while it holds a time', async ({ page }) => {
+  const visual = page.locator('.placeholder-timer-visual');
+  await expect(visual).not.toHaveClass(/has-time/);
+  await press(page, 'Pause');
+  await page.clock.runFor(2000);
+  await expect(visual).toHaveClass(/has-time/);
+  await press(page, 'Start'); // paused with a time
+  await expect(visual).toHaveClass(/has-time/);
+  await reset(page).click();
+  await expect(visual).not.toHaveClass(/has-time/);
+});
