@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.1.24
+
+* **Edit dialog:** Save now works on the first tap with the keyboard up.
+* **Timer:** The stopwatch display glows and slowly pulses while running.
+* **Touch screens:** Buttons no longer keep a hover highlight after being tapped.
+
 ## 0.1.23
 
 * **Edit dialog:** With the keyboard up, the edit dialog now fills the space above it with Save pinned right on the keyboard, and nothing scrolls. Tighter spacing so it fits on small phones. Hid the iOS keyboard's prev/next/done bar.
