@@ -253,8 +253,10 @@ body > .app-nav {
   transition: all var(--trans-fast);
 }
 
-.header-left:hover {
-  background-color: var(--leader-border, var(--border-light));
+@media (hover: hover) {
+  .header-left:hover {
+    background-color: var(--leader-border, var(--border-light));
+  }
 }
 
 .leader-icon {
@@ -324,9 +326,11 @@ body > .app-nav {
   transition: all var(--trans-fast);
 }
 
-.header-btn:hover {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
+@media (hover: hover) {
+  .header-btn:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
 }
 
 .header-btn:active {
@@ -517,8 +521,10 @@ html[data-layout="grid"] .counter-card {
   transition: transform var(--trans-fast);
 }
 
-.hue-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
+@media (hover: hover) {
+  .hue-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
 }
 
 .hue-slider:focus-visible::-webkit-slider-thumb {
@@ -703,10 +709,12 @@ html[data-layout="grid"] .card-direct-zone-plus {
   outline: none;
 }
 
-.empty-state-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent-color);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+@media (hover: hover) {
+  .empty-state-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-color);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .empty-state-card:active {
@@ -724,8 +732,10 @@ html[data-layout="grid"] .card-direct-zone-plus {
   transition: transform var(--trans-fast) var(--ease-spring);
 }
 
-.empty-state-card:hover .placeholder-icon {
-  transform: scale(1.08);
+@media (hover: hover) {
+  .empty-state-card:hover .placeholder-icon {
+    transform: scale(1.08);
+  }
 }
 
 .empty-state h2 {
@@ -750,8 +760,10 @@ html[data-layout="grid"] .card-direct-zone-plus {
   transition: color var(--trans-fast);
 }
 
-.empty-state-card:hover .empty-state-text-btn {
-  color: var(--text-primary);
+@media (hover: hover) {
+  .empty-state-card:hover .empty-state-text-btn {
+    color: var(--text-primary);
+  }
 }
 
 /* Buttons */
@@ -768,9 +780,11 @@ html[data-layout="grid"] .card-direct-zone-plus {
   transition: all var(--trans-fast);
 }
 
-.primary-btn:hover {
-  opacity: 0.92;
-  box-shadow: 0 4px 12px var(--accent-light);
+@media (hover: hover) {
+  .primary-btn:hover {
+    opacity: 0.92;
+    box-shadow: 0 4px 12px var(--accent-light);
+  }
 }
 
 .primary-btn:active {
@@ -911,10 +925,12 @@ html[data-layout="grid"] .card-direct-zone-plus {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.dice-type-btn:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent-color);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+@media (hover: hover) {
+  .dice-type-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
 }
 
 .dice-type-btn:active {
@@ -957,10 +973,12 @@ html[data-layout="grid"] .card-direct-zone-plus {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.stepper-btn:hover {
-  background-color: var(--bg-tertiary);
-  border-color: var(--accent-color);
-  color: var(--accent-color);
+@media (hover: hover) {
+  .stepper-btn:hover {
+    background-color: var(--bg-tertiary);
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+  }
 }
 
 .stepper-btn:active {
@@ -1085,9 +1103,11 @@ html[data-layout="grid"] .card-direct-zone-plus {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-.timer-inc-btn:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .timer-inc-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
 }
 
 .timer-inc-btn:active {
@@ -1351,8 +1371,10 @@ input:checked + .slider-round:before {
   color: var(--text-danger);
 }
 
-.danger-btn-outline:hover {
-  background-color: rgba(248, 92, 92, 0.08);
+@media (hover: hover) {
+  .danger-btn-outline:hover {
+    background-color: rgba(248, 92, 92, 0.08);
+  }
 }
 
 .danger-btn-outline:active {
@@ -1510,9 +1532,11 @@ dialog[open]::backdrop {
   color: var(--sheet-text, #ffffff);
 }
 
-.bottom-sheet-dialog .primary-btn:hover {
-  opacity: 0.9;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--sheet-theme, var(--accent-color)) 25%, transparent);
+@media (hover: hover) {
+  .bottom-sheet-dialog .primary-btn:hover {
+    opacity: 0.9;
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--sheet-theme, var(--accent-color)) 25%, transparent);
+  }
 }
 
 .bottom-sheet-dialog .op-btn.active {
@@ -1612,9 +1636,11 @@ dialog[open].bottom-sheet-dialog {
   transition: all var(--trans-fast);
 }
 
-.sheet-close-btn:hover {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
+@media (hover: hover) {
+  .sheet-close-btn:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
 }
 
 .sheet-close-btn:active {
@@ -1655,8 +1681,10 @@ dialog[open].bottom-sheet-dialog {
   color: var(--text-danger);
 }
 
-.header-icon-btn:hover {
-  background-color: var(--bg-tertiary);
+@media (hover: hover) {
+  .header-icon-btn:hover {
+    background-color: var(--bg-tertiary);
+  }
 }
 
 .bottom-sheet-body {
@@ -1702,9 +1730,11 @@ dialog[open].bottom-sheet-dialog {
   transition: all var(--trans-fast);
 }
 
-.quick-add-grid > button:hover {
-  background-color: var(--accent-light);
-  border-color: var(--accent-color);
+@media (hover: hover) {
+  .quick-add-grid > button:hover {
+    background-color: var(--accent-light);
+    border-color: var(--accent-color);
+  }
 }
 
 .quick-add-grid > button:active {
@@ -1911,8 +1941,10 @@ input[type="number"]::-webkit-inner-spin-button {
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
 }
 
-.palette-swatch:hover {
-  transform: scale(1.1);
+@media (hover: hover) {
+  .palette-swatch:hover {
+    transform: scale(1.1);
+  }
 }
 
 .palette-swatch.active {
@@ -2051,9 +2083,11 @@ dialog[open].options-menu-dialog {
   transition: all var(--trans-fast);
 }
 
-.options-close-btn:hover {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
+@media (hover: hover) {
+  .options-close-btn:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
 }
 
 .options-close-btn:active {
