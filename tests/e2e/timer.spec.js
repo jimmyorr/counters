@@ -84,3 +84,26 @@ test('reset stops and clears the timer', async ({ page }) => {
   await page.clock.runFor(2000);
   await expect(display(page)).toHaveText('00:00.0');
 });
+
+test('the display breathes while the stopwatch runs', async ({ page }) => {
+  const visual = page.locator('.placeholder-timer-visual');
+  await expect(visual).toHaveCSS('animation-name', 'none');
+  await press(page, 'Pause');
+  await expect(visual).toHaveCSS('animation-name', 'display-glow');
+  // The Pause button glows but holds still, so the time draws the eye
+  await expect(start(page)).toHaveCSS('animation-name', 'none');
+  await expect(start(page)).toHaveCSS('box-shadow', /12px/);
+  await press(page, 'Start');
+  await expect(visual).toHaveCSS('animation-name', 'none');
+});
+
+test.describe('with reduced motion', () => {
+  test.use({ reducedMotion: 'reduce' });
+
+  test('the running glow holds still', async ({ page }) => {
+    const visual = page.locator('.placeholder-timer-visual');
+    await press(page, 'Pause');
+    await expect(visual).toHaveCSS('animation-name', 'none');
+    await expect(visual).toHaveCSS('box-shadow', /18px/);
+  });
+});

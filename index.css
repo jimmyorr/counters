@@ -1382,6 +1382,45 @@ input:checked + .slider-round:before {
   background-color: rgba(248, 92, 92, 0.15);
 }
 
+/* While the stopwatch runs, its display slowly breathes in the accent color
+   and the Pause button glows (still, so the running time draws the eye) */
+#btn-timer-placeholder-start.danger-btn-outline {
+  background-color: color-mix(in srgb, var(--text-danger) 8%, transparent);
+  box-shadow:
+    inset 0 0 0 1.5px var(--text-danger),
+    0 0 12px 1px color-mix(in srgb, var(--text-danger) 30%, transparent);
+}
+
+@keyframes display-glow {
+  0%,
+  100% {
+    box-shadow:
+      var(--card-shadow),
+      0 0 8px 0 color-mix(in srgb, var(--accent-color) 15%, transparent);
+  }
+  50% {
+    box-shadow:
+      var(--card-shadow),
+      0 0 28px 4px color-mix(in srgb, var(--accent-color) 45%, transparent);
+  }
+}
+
+#tab-timer:has(#btn-timer-placeholder-start.danger-btn-outline)
+  .placeholder-timer-visual {
+  border-color: color-mix(in srgb, var(--accent-color) 50%, transparent);
+  animation: display-glow 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #tab-timer:has(#btn-timer-placeholder-start.danger-btn-outline)
+    .placeholder-timer-visual {
+    animation: none;
+    box-shadow:
+      var(--card-shadow),
+      0 0 18px 2px color-mix(in srgb, var(--accent-color) 30%, transparent);
+  }
+}
+
 .about-version {
   text-align: center;
   display: flex;
