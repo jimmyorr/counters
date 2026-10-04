@@ -1408,7 +1408,7 @@ input:checked + .slider-round:before {
 #tab-timer:has(#btn-timer-placeholder-start.danger-btn-outline)
   .placeholder-timer-visual {
   border-color: color-mix(in srgb, var(--accent-color) 50%, transparent);
-  animation: display-glow 3s ease-in-out infinite;
+  animation: display-glow 4s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
