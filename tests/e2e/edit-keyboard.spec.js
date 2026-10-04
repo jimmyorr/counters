@@ -49,6 +49,28 @@ test.describe('on a phone', () => {
     await expect(page.locator('#edit-btn-save')).toBeInViewport();
   });
 
+  test('one tap on Save saves, without the keyboard closing first', async ({ page }) => {
+    await page.goto('/');
+    await openEdit(page);
+    await page.locator('#edit-label').fill('Ace');
+    await page.setViewportSize({ width: 375, height: 667 - KEYBOARD });
+    await expect(page.locator('html')).toHaveClass(/keyboard-open/);
+
+    // Pressing Save must not blur the field: on iOS the keyboard would start
+    // closing, the sheet would move mid-tap, and the tap would be dropped
+    const sheet = await dialog(page).boundingBox();
+    const save = await page.locator('#edit-btn-save').boundingBox();
+    await page.mouse.move(save.x + save.width / 2, save.y + save.height / 2);
+    await page.mouse.down();
+    await expect(page.locator('#edit-label')).toBeFocused();
+    await expect(page.locator('html')).toHaveClass(/keyboard-open/);
+    expect(await dialog(page).boundingBox()).toEqual(sheet);
+
+    await page.mouse.up();
+    await expect(dialog(page)).toBeHidden();
+    await expect(card(page, 'a').locator('.counter-label')).toHaveText('Ace');
+  });
+
   test('goes back to its natural height when the keyboard closes', async ({ page }) => {
     await page.goto('/');
     await openEdit(page);

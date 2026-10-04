@@ -1964,6 +1964,21 @@ import { log } from "./logger.js";
 
     if (!dialog || !form) return;
 
+    // Keep focus in the field when a button or swatch is tapped. Otherwise the
+    // tap blurs the field, the keyboard starts closing and the sheet resizes
+    // mid-tap (see syncKeyboardState), and iOS drops a tap whose target moves:
+    // the first tap on Save only dismissed the keyboard. Focus still leaves
+    // when the sheet closes or the delete confirmation opens.
+    dialog.addEventListener("mousedown", (e) => {
+      const typing = document.activeElement?.matches("input, textarea");
+      const control = e.target.closest(
+        "button, .palette-swatch:not(.custom-color-picker)",
+      );
+      if (typing && control && dialog.contains(document.activeElement)) {
+        e.preventDefault();
+      }
+    });
+
     // Auto-select text on focus/tap for input fields. Deferred so it lands
     // after a tap places the cursor, which would otherwise undo the selection.
     form.querySelectorAll("input").forEach((input) => {
