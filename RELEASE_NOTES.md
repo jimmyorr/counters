@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.1.23
+
+* **Edit dialog:** With the keyboard up, the edit dialog now fills the space above it with Save pinned right on the keyboard, and nothing scrolls. Tighter spacing so it fits on small phones. Hid the iOS keyboard's prev/next/done bar.
+
 ## 0.1.22
 
 * **Contrast:** Leader pill arrow and outline stay visible for pale colors in light theme and dark colors in dark theme. Calculator title readable for very dark colors. Card −/+ buttons more visible. Card names readable on mid-tone custom colors.
