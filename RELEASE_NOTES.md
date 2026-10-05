@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.1.25
+
+* **Timer:** The stopwatch glow pulses more slowly, and the stopwatch display now has the same border style as the dice result.
+* **Dev:** The slow contrast sweep runs on its own with `npm run test:contrast`, so `npm run test:e2e` and releases finish faster. The README now documents the test commands.
+
 ## 0.1.24
 
 * **Edit dialog:** Save now works on the first tap with the keyboard up.
