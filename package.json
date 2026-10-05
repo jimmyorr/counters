@@ -14,8 +14,8 @@
     "test:contrast": "playwright test --grep @contrast",
     "release": "node scripts/release.js",
     "preview": "vite preview",
-    "ios": "npm run build && npx cap sync ios && npx cap open ios",
-    "android": "npm run build && npx cap sync android && npx cap open android"
+    "ios": "npx cap sync ios && npx cap open ios",
+    "android": "npx cap sync android && npx cap open android"
   },
   "keywords": [
     "score",
