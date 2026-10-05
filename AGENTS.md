@@ -23,7 +23,7 @@ Guidelines and rules for AI coding assistants working in the Counters repository
 ## Server & verification rules
 
 * **Dev server**: `npm run dev` starts the Vite dev server, by default at `http://localhost:5173`. One may already be running in another terminal, so check before starting another. Watch for port conflicts: if 5173 is taken, Vite quietly moves to the next free port (5174, 5175, …), and the server on 5173 may belong to a different project entirely. Confirm the page title is "Counters" before verifying against a server. Avoid browser-based verification unless it is absolutely necessary.
-* **Headless tests**: Prefer `npm run test:e2e` (Playwright, headless Chrome) over manual browser checks. It starts its own Vite server on port 5199 (or reuses one already there), so it doesn't depend on or conflict with a dev server. Set `BASE_URL` to test a different server. Tests live in `tests/e2e/` and should import `test`/`expect` from `./fixtures.js`, which blocks third-party requests and fails on uncaught page errors. Run it when changing UI behavior or startup/network code.
+* **Headless tests**: Prefer `npm run test:e2e` (Playwright, headless Chrome) over manual browser checks. It starts its own Vite server on port 5199 (or reuses one already there), so it doesn't depend on or conflict with a dev server. Set `BASE_URL` to test a different server. Tests live in `tests/e2e/` and should import `test`/`expect` from `./fixtures.js`, which blocks third-party requests and fails on uncaught page errors. Run it when changing UI behavior or startup/network code. The slow contrast sweep (tagged `@contrast`) is left out of it; run `npm run test:contrast` when changing colors, themes or palettes.
 
 ## Directory rules
 

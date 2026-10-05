@@ -4,7 +4,8 @@ import { seed, counter, card, contrast, PALETTES, presets } from './helpers.js';
 // Every surface that draws with a counter's color, checked in both themes for
 // every palette, so a new combination can't fail unnoticed. Text needs 4.5:1,
 // and large text (24px+, like the card value) and icons need 3:1 (WCAG 1.4.3
-// and 1.4.11).
+// and 1.4.11). It's slow, so it's tagged @contrast and left out of
+// `npm run test:e2e`; run it with `npm run test:contrast` after color changes.
 
 const THEMES = ['light', 'dark'];
 const TEXT = 4.5;
@@ -50,7 +51,7 @@ const sweep = async (page, counters, { check }) => {
 };
 
 for (const theme of THEMES) {
-  test.describe(`${theme} theme`, () => {
+  test.describe(`${theme} theme`, { tag: '@contrast' }, () => {
     test.beforeEach(async ({ page }) => {
       await page.emulateMedia({ colorScheme: theme });
     });
