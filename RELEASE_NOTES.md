@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.1.27
+
+* **Dialogs:** On Safari and iOS, sheets and menus now slide or fade away when closed, with the frosted backdrop fading out, instead of vanishing.
+
 ## 0.1.26
 
 * **Settings:** A shorter page with no section headings or repeated help text, so it fits small phones.
