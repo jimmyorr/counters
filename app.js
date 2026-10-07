@@ -1634,41 +1634,150 @@ import { log } from "./logger.js";
     });
   };
 
-  // Animate a card tumbling off screen, then collapse the space it left.
+  // Each card's on-screen box, by counter id, before a change re-renders them
+  const cardPositions = () => {
+    const positions = {};
+    $$(".counter-card").forEach((card) => {
+      const id = card.getAttribute("data-counter-id");
+      if (id) positions[id] = card.getBoundingClientRect();
+    });
+    return positions;
+  };
+
+  // Spring each re-rendered card from where it was (see cardPositions) into
+  // its new place. Shared by shuffle and delete so cards move the same way.
+  const flipCardsFrom = (firstPositions) => {
+    if (prefersReducedMotion()) return;
+    $$(".counter-card").forEach((card) => {
+      const first = firstPositions[card.getAttribute("data-counter-id")];
+      if (!first) return;
+      const last = card.getBoundingClientRect();
+      const deltaX = first.left - last.left;
+      const deltaY = first.top - last.top;
+      if (!deltaX && !deltaY) return;
+
+      // INVERT: move the card back to its old position instantly
+      card.style.transition = "none";
+      card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+      card.style.zIndex = "10";
+
+      // PLAY: animate to its new position
+      requestAnimationFrame(() => {
+        void card.offsetWidth; // Force reflow
+        card.style.transition =
+          "transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)";
+        card.style.transform = "translate(0, 0)";
+
+        setTimeout(() => {
+          card.style.zIndex = "";
+          card.style.transition = "";
+          card.style.transform = "";
+        }, 450);
+      });
+    });
+  };
+
+  // Tumble a copy of a card off screen in front of everything, so the card
+  // itself can leave the layout at once while the others slide into its place.
   // tilt, drop, and drift are the random ranges (deg, px, px) on top of the base motion.
-  const animateCardFallOut = (
+  const tumbleCardOut = (
     cardEl,
     { delay = 0, tilt = 30, drop = 50, drift = 80 } = {},
   ) => {
-    const h = cardEl.offsetHeight;
-    cardEl.classList.remove("animate-entry", "animate-reset");
-    cardEl.style.overflow = "hidden";
-    cardEl.style.pointerEvents = "none";
-    cardEl.style.height = `${h}px`; // Lock height synchronously
+    const rect = cardEl.getBoundingClientRect();
+    const ghost = cardEl.cloneNode(true);
+    ghost.removeAttribute("data-counter-id");
+    ghost.classList.remove("animate-entry");
+    ghost.setAttribute("aria-hidden", "true");
+    ghost.inert = true;
+    Object.assign(ghost.style, {
+      position: "fixed",
+      left: `${rect.left}px`,
+      top: `${rect.top}px`,
+      width: `${rect.width}px`,
+      height: `${rect.height}px`,
+      margin: "0",
+      zIndex: "150", // over the header and nav, under the toast
+      pointerEvents: "none",
+      viewTransitionName: "none",
+    });
+    document.body.append(ghost);
 
     const rotateDir = Math.random() > 0.5 ? 1 : -1;
     const rotateAngle = 25 + Math.random() * tilt;
     const dropY = 180 + Math.random() * drop;
     const dropX = (Math.random() - 0.5) * drift;
-    const collapsing = ["height", "margin-top", "margin-bottom", "padding-top", "padding-bottom", "border-width"];
-    const bounce = "0.3s cubic-bezier(0.34, 1.56, 0.64, 1)";
+    ghost.style.transformOrigin = rotateDir > 0 ? "top left" : "top right";
+    ghost
+      .animate(
+        [
+          { transform: "none", opacity: 1 },
+          { opacity: 1, offset: 0.2 },
+          {
+            transform: `translate(${dropX}px, ${dropY}px) rotate(${rotateDir * rotateAngle}deg)`,
+            opacity: 0,
+          },
+        ],
+        {
+          duration: 500,
+          delay: delay * 1000,
+          easing: "cubic-bezier(0.55, 0.085, 0.68, 0.53)",
+          fill: "backwards",
+        },
+      )
+      .finished.catch(() => {})
+      .finally(() => ghost.remove());
+  };
 
-    // Wait 1 frame for the browser to paint the height lock
-    requestAnimationFrame(() => {
-      cardEl.style.transformOrigin = rotateDir > 0 ? "top left" : "top right";
-      // Delay the layout collapse so the card falls out first
-      cardEl.style.transition = [
-        `transform 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) ${delay}s`,
-        `opacity 0.4s ease-in ${delay + 0.1}s`,
-        ...collapsing.map((prop) => `${prop} ${bounce} ${delay + 0.3}s`),
-      ].join(", ");
+  // Count each card's value up or down from what it showed (fromValues: id ->
+  // value) to its current value, slightly staggered, with a small pop as each
+  // lands. A card stops counting if anything else changes it meanwhile.
+  const countCardsFrom = (fromValues, { delay = 0 } = {}) => {
+    if (prefersReducedMotion()) return;
+    const DURATION = 600;
+    const decimals = (n) => (String(n).split(".")[1] || "").length;
+    const cards = [...$$(".counter-card")].filter((card) => {
+      const id = card.getAttribute("data-counter-id");
+      const counter = state.counters.find((c) => c.id === id);
+      return counter && id in fromValues && fromValues[id] !== counter.value;
+    });
+    const stagger = Math.min(50, 250 / Math.max(cards.length, 1));
 
-      // Wait 1 more frame so the transition is active before changing styles
-      requestAnimationFrame(() => {
-        cardEl.style.transform = `translate(${dropX}px, ${dropY}px) rotate(${rotateDir * rotateAngle}deg)`;
-        cardEl.style.opacity = "0";
-        for (const prop of collapsing) cardEl.style.setProperty(prop, "0px");
-      });
+    cards.forEach((card, i) => {
+      const id = card.getAttribute("data-counter-id");
+      const from = fromValues[id];
+      const to = state.counters.find((c) => c.id === id).value;
+      const places = Math.max(decimals(from), decimals(to));
+      const display = card.querySelector(".value-display");
+      if (!display) return;
+      let shown = formatNumber(from);
+      display.textContent = shown;
+      let start = null;
+
+      const tick = (now) => {
+        // Re-rendered (e.g. Undo) or changed by a tap: leave it be
+        if (!display.isConnected || display.textContent !== shown) return;
+        start ??= now + delay + i * stagger;
+        const p = Math.min(1, Math.max(0, (now - start) / DURATION));
+        const eased = 1 - (1 - p) ** 3;
+        shown = formatNumber(
+          p < 1 ? Number((from + (to - from) * eased).toFixed(places)) : to,
+        );
+        display.textContent = shown;
+        if (p < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          display.animate(
+            [
+              { transform: "scale(1)" },
+              { transform: "scale(1.15)", offset: 0.4 },
+              { transform: "scale(1)" },
+            ],
+            { duration: 260, easing: "ease-out" },
+          );
+        }
+      };
+      requestAnimationFrame(tick);
     });
   };
 
@@ -1718,50 +1827,11 @@ import { log } from "./logger.js";
           saveCounters();
 
           renderCountersList();
-
-          const listWrapper = $("#counters-list-wrapper");
-          if (listWrapper) {
-            listWrapper.classList.remove("animate-reset");
-            void listWrapper.offsetWidth; // Trigger reflow
-            listWrapper.classList.add("animate-reset");
-
-            const cards = Array.from($$(".counter-card"));
-            const animDuration = 0.85; // 850ms flip duration
-            const maxStagger = 0.16; // Tight 160ms window so all cards spin together without lockstep
-
-            // Generate well-distributed delays across the tight stagger window
-            const delays = cards.map((_, i) => {
-              const base = (i / Math.max(cards.length - 1, 1)) * maxStagger;
-              const jitter =
-                (Math.random() - 0.5) *
-                (maxStagger / Math.max(cards.length, 1)) *
-                0.5;
-              return Math.max(0, base + jitter);
-            });
-
-            // Fisher-Yates shuffle to assign delays in completely random order
-            for (let i = delays.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1));
-              [delays[i], delays[j]] = [delays[j], delays[i]];
-            }
-
-            cards.forEach((card, index) => {
-              card.style.animationDelay = `${delays[index].toFixed(3)}s`;
-              card.style.animationFillMode = "backwards";
-            });
-
-            const maxDelay = Math.max(...delays, 0);
-            const totalDurationMs =
-              Math.round((animDuration + maxDelay) * 1000) + 100;
-
-            setTimeout(() => {
-              listWrapper.classList.remove("animate-reset");
-              cards.forEach((c) => {
-                c.style.animationDelay = "";
-                c.style.animationFillMode = "";
-              });
-            }, totalDurationMs);
-          }
+          // Count down once the confirm sheet has mostly slid away
+          countCardsFrom(
+            Object.fromEntries(prevValues.map(({ id, value }) => [id, value])),
+            { delay: 250 },
+          );
 
           showToast("All counters reset", {
             actionLabel: "Undo",
@@ -1795,11 +1865,7 @@ import { log } from "./logger.js";
       if (state.counters.length === 0) return;
 
       // FIRST: Capture current positions for FLIP animation
-      const firstPositions = {};
-      $$(".counter-card").forEach((card) => {
-        const id = card.getAttribute("data-counter-id");
-        if (id) firstPositions[id] = card.getBoundingClientRect();
-      });
+      const firstPositions = cardPositions();
 
       // Capture original order
       const originalOrder = state.counters.map((c) => c.id).join(",");
@@ -1824,35 +1890,7 @@ import { log } from "./logger.js";
       renderCountersList(); // Renders new DOM elements
 
       // LAST, INVERT, PLAY
-      const animateShuffle = !prefersReducedMotion();
-      $$(".counter-card").forEach((card) => {
-        const id = card.getAttribute("data-counter-id");
-        const first = firstPositions[id];
-        if (first && animateShuffle) {
-          const last = card.getBoundingClientRect();
-          const deltaX = first.left - last.left;
-          const deltaY = first.top - last.top;
-
-          // INVERT: move new card to old position instantly
-          card.style.transition = "none";
-          card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-          card.style.zIndex = "10";
-
-          // PLAY: animate back to new position
-          requestAnimationFrame(() => {
-            void card.offsetWidth; // Force reflow
-            card.style.transition =
-              "transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)";
-            card.style.transform = "translate(0, 0)";
-
-            setTimeout(() => {
-              card.style.zIndex = "";
-              card.style.transition = "";
-              card.style.transform = "";
-            }, 450);
-          });
-        }
-      });
+      flipCardsFrom(firstPositions);
 
       const newOrder = state.counters.map((c) => c.id).join(",");
 
@@ -1925,54 +1963,62 @@ import { log } from "./logger.js";
       dialog.close();
       if (state.counters.length === 0) return;
       showConfirmDialog("Are you sure you want to delete all counters?", () => {
-        const tabCounters = $("#tab-counters");
-        if (tabCounters) tabCounters.style.overflow = "hidden";
-
-        const completeDeletion = () => {
-          if (tabCounters) {
-            tabCounters.style.overflow = "";
-            tabCounters.scrollTop = 0;
-          }
-          const deletedCounters = state.counters;
-          const deletedHistory = state.history;
-          state.counters = [];
-          state.history = [];
-          saveCounters();
-          saveHistory();
-          renderCountersList();
-          renderHistory();
-          showToast("All counters deleted", {
-            actionLabel: "Undo",
-            duration: 5000,
-            onAction: () => {
-              state.counters = deletedCounters;
-              state.history = deletedHistory;
-              saveCounters();
-              saveHistory();
-              renderCountersList();
-              renderHistory();
-              showToast("Counters restored");
-            },
-          });
-          playResetSound();
-          playHaptic(ImpactStyle.Medium);
-        };
-
-        const cards = $$(".counter-card");
-        if (cards.length > 0 && !prefersReducedMotion()) {
+        // Cards tumble out in a cascade (capped so long lists don't drag on)
+        // while the empty state rises in behind the last one
+        const cards = [...$$(".counter-card")];
+        let lastLeavesMs = 0;
+        if (!prefersReducedMotion()) {
+          const stagger = Math.min(0.06, 0.6 / cards.length);
           cards.forEach((cardEl, index) => {
-            // 60ms cascade stagger
-            animateCardFallOut(cardEl, {
-              delay: index * 0.06,
+            tumbleCardOut(cardEl, {
+              delay: index * stagger,
               tilt: 45,
               drop: 80,
               drift: 120,
             });
           });
-          setTimeout(completeDeletion, 700 + cards.length * 60);
-        } else {
-          completeDeletion();
+          lastLeavesMs = ((cards.length - 1) * stagger + 0.5) * 1000;
         }
+
+        const deletedCounters = state.counters;
+        const deletedHistory = state.history;
+        state.counters = [];
+        state.history = [];
+        saveCounters();
+        saveHistory();
+        renderCountersList();
+        renderHistory();
+
+        if (lastLeavesMs) {
+          $("#btn-empty-placeholder-icon")?.animate(
+            [
+              { opacity: 0, transform: "translateY(24px) scale(0.96)" },
+              { opacity: 1, transform: "none" },
+            ],
+            {
+              duration: 450,
+              delay: Math.max(0, lastLeavesMs - 300),
+              easing: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+              fill: "backwards",
+            },
+          );
+        }
+
+        showToast("All counters deleted", {
+          actionLabel: "Undo",
+          duration: 5000,
+          onAction: () => {
+            state.counters = deletedCounters;
+            state.history = deletedHistory;
+            saveCounters();
+            saveHistory();
+            renderCountersList();
+            renderHistory();
+            showToast("Counters restored");
+          },
+        });
+        playResetSound();
+        playHaptic(ImpactStyle.Medium);
       });
     });
   };
@@ -2119,6 +2165,7 @@ import { log } from "./logger.js";
       const counter = state.counters.find(
         (c) => c.id === state.activeCounterIdForEdit,
       );
+      const valueBefore = counter?.value;
       if (counter) {
         const oldValue = counter.value;
         if (label !== counter.label) delete counter.autoNamed;
@@ -2162,11 +2209,8 @@ import { log } from "./logger.js";
       triggerAutoSortWithDebounce();
       if (isReset) {
         playResetSound();
-        const card = $(`.counter-card[data-counter-id="${counter?.id}"]`);
-        if (card && !prefersReducedMotion()) {
-          card.classList.add("animate-reset");
-          setTimeout(() => card.classList.remove("animate-reset"), 950);
-        }
+        // Count down once the edit sheet has mostly slid away
+        if (counter) countCardsFrom({ [counter.id]: valueBefore }, { delay: 250 });
       } else {
         playSuccessSound();
       }
@@ -2200,13 +2244,7 @@ import { log } from "./logger.js";
           const counterId = state.activeCounterIdForEdit;
           const cardEl = $(`.counter-card[data-counter-id="${counterId}"]`);
 
-          const tabCounters = $("#tab-counters");
-          if (tabCounters) tabCounters.style.overflow = "hidden";
-
           const completeDeletion = () => {
-            if (tabCounters) tabCounters.style.overflow = "";
-            // Re-resolve the index: auto-sort may have reordered the array
-            // during the exit animation, making the captured idx stale
             const deletedIndex = state.counters.findIndex(
               (c) => c.id === counterId,
             );
@@ -2252,12 +2290,11 @@ import { log } from "./logger.js";
 
           dialog.close();
 
-          if (cardEl && !prefersReducedMotion()) {
-            animateCardFallOut(cardEl);
-            setTimeout(completeDeletion, 700);
-          } else {
-            completeDeletion();
-          }
+          // The card tumbles out in front while the rest slide into place
+          const firstPositions = cardPositions();
+          if (cardEl && !prefersReducedMotion()) tumbleCardOut(cardEl);
+          completeDeletion();
+          flipCardsFrom(firstPositions);
         }
       });
     });
