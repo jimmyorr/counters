@@ -79,6 +79,7 @@ const GAME_HISTORY = [
 
 const card = (id) => `.counter-card[data-counter-id="${id}"]`;
 const tab = (name) => `[data-tab-btn="${name}"]`;
+const addTime = (secs) => `.timer-inc-btn[data-secs="${secs}"]`;
 
 // The app icon and name, with a tagline: beside the screens on stages with
 // `logo`, and on the title card. The tagline is the App Store subtitle from
@@ -265,18 +266,32 @@ const SHOTS = {
       await app.wait(2500);
     },
   },
-  // The stopwatch running, glowing
+  // A countdown running, glowing: a minute and a half, 12 s in
   timer: {
     counters: PLAYERS,
     async setup(app) {
       await app.tap(tab('timer'));
       await app.wait(600);
+      await app.tap(addTime(60));
+      await app.wait(250);
+      await app.tap(addTime(30));
+      await app.wait(250);
       await app.tap('#btn-timer-placeholder-start');
       await app.wait(12_400);
     },
-    seconds: 4,
+    // The clip catches the last seconds of a 10 s countdown: it runs out,
+    // the clock shakes, and the timer is ready again
+    async clipSetup(app) {
+      await app.tap(tab('timer'));
+      await app.wait(600);
+      await app.tap(addTime(10));
+      await app.wait(250);
+      await app.tap('#btn-timer-placeholder-start');
+      await app.wait(5_600);
+    },
+    seconds: 5.5,
     async clip(app) {
-      await app.wait(4000);
+      await app.wait(5500);
     },
   },
   // The history of a game
