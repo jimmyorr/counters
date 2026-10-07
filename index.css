@@ -223,8 +223,11 @@ body > .app-nav {
   top: 0;
   height: calc(var(--header-height) + env(safe-area-inset-top, 0px));
   background-color: var(--glass-bg);
-  backdrop-filter: blur(16px);
+  /* Prefixed first, here and below: when the standard property comes first,
+     the production CSS minifier (Lightning CSS) drops it, and Chrome only
+     reads the standard one */
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-light);
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -1446,8 +1449,8 @@ input:checked + .slider-round:before {
   bottom: 0;
   height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
   background-color: var(--glass-bg);
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   border-top: 1px solid var(--border-light);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1527,8 +1530,8 @@ dialog:not([open]) {
 /* Modal Backdrops styling */
 dialog::backdrop {
   background-color: var(--modal-backdrop);
-  backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   opacity: 0;
   transition:
     display 0.4s allow-discrete,
@@ -1555,8 +1558,8 @@ dialog[open]::backdrop {
   max-width: var(--max-app-width);
   width: 100%;
   background-color: var(--overlay-bg);
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
   border: 1px solid var(--border-light);
@@ -2070,8 +2073,8 @@ input[type="number"]::-webkit-inner-spin-button {
    -------------------------------------------------------------------------- */
 .options-menu-dialog {
   background-color: var(--overlay-bg);
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   border-radius: 20px;
   border: 1px solid var(--border-light);
   box-shadow: var(--card-shadow);
