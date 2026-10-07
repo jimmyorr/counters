@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.1.28
+
+* **Animations:** Deleted counters now tumble out in front while the rest slide into place, and Undo shows right away. Delete all ends with the empty state rising in, with no blank pause. Reset counts the values down instead of flipping the cards.
+
 ## 0.1.27
 
 * **Dialogs:** On Safari and iOS, sheets and menus now slide or fade away when closed, with the frosted backdrop fading out, instead of vanishing.
