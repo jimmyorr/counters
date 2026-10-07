@@ -352,7 +352,7 @@ let base = process.env.APP_URL;
 // stepping for CSS animations and transitions. Each step pauses any new
 // animation and moves every animation on by dt, finishing those that reach
 // their end, so they keep time with the virtual clock.
-function installPromoHooks(seed) {
+function installPromoHooks({ seed, hideCaret }) {
   const mulberry = (a) => () => {
     a = (a + 0x6d2b79f5) | 0;
     let t = Math.imul(a ^ (a >>> 15), 1 | a);
@@ -360,6 +360,17 @@ function installPromoHooks(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
   Math.random = mulberry(seed);
+
+  // No text cursor in renders. Hidden here for good rather than by each
+  // screenshot (Playwright's default), whose restyle just before the capture
+  // can catch a focused field's sheet half redrawn, as a blank patch
+  if (hideCaret) {
+    document.addEventListener('DOMContentLoaded', () => {
+      const style = document.createElement('style');
+      style.textContent = '* { caret-color: transparent !important; }';
+      document.head.append(style);
+    });
+  }
 
   // Smooth scrolls (switching tabs) run in real time in the browser, so they
   // play out on animation frames instead, which follow the virtual clock.
@@ -511,7 +522,7 @@ async function openShot(browser, name, target, { live = false, forClip = false }
       },
     ],
   );
-  await page.addInitScript(installPromoHooks, 1);
+  await page.addInitScript(installPromoHooks, { seed: 1, hideCaret: !live });
   if (!live) await page.clock.install({ time: T0 });
   // The startup banner prints once every handler is bound
   const started = page.waitForEvent('console', {
@@ -551,7 +562,7 @@ const H264 = ['-c:v', 'libx264', '-crf', '18', '-pix_fmt', 'yuv420p'];
 async function still(browser, name, target) {
   if (!target.stage) {
     const page = await openShot(browser, name, target);
-    const jpeg = await page.screenshot({ type: 'jpeg', quality: 92 });
+    const jpeg = await page.screenshot({ type: 'jpeg', caret: 'initial', quality: 92 });
     reportErrors(name, page);
     await page.close();
     return jpeg;
@@ -564,7 +575,7 @@ async function stageStill(browser, names, target) {
   const screens = [];
   for (const name of names) {
     const page = await openShot(browser, name, stage.screenTarget);
-    screens.push(await page.screenshot({ type: 'jpeg', quality: 95 }));
+    screens.push(await page.screenshot({ type: 'jpeg', caret: 'initial', quality: 95 }));
     reportErrors(name, page);
     await page.close();
   }
@@ -743,7 +754,7 @@ async function video(browser) {
     let frames = 0;
     const frameFile = (i) => path.join(frameDir, `${String(i).padStart(5, '0')}.jpg`);
     page.app.onFrame = async () => {
-      const jpeg = await page.screenshot({ type: 'jpeg', quality: 95 });
+      const jpeg = await page.screenshot({ type: 'jpeg', caret: 'initial', quality: 95 });
       if (stage) {
         await stage.setScreens([jpeg]);
         await stage.screenshot({ path: frameFile(frames), type: 'jpeg', quality: 95 });
