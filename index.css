@@ -1538,6 +1538,15 @@ dialog[open]::backdrop {
   }
 }
 
+/* Exit where the overlay property isn't supported (WebKit): app.js keeps a
+   closing dialog open with .closing while these play, then closes it. They
+   run quicker than the usual exit, as the page behind ignores taps until the
+   dialog is closed (the length is in app.js too) */
+dialog[open].closing::backdrop {
+  opacity: 0;
+  transition-duration: 0.25s;
+}
+
 /* Bottom Sheet Slide Up Panels */
 .bottom-sheet-dialog {
   position: fixed;
@@ -1605,6 +1614,11 @@ dialog[open].bottom-sheet-dialog {
   @starting-style {
     transform: translate(-50%, 100%);
   }
+}
+
+dialog[open].bottom-sheet-dialog.closing {
+  transform: translate(-50%, 100%);
+  transition-duration: 0.25s;
 }
 
 /* Bottom Sheet Contents */
@@ -2096,6 +2110,12 @@ dialog[open].options-menu-dialog {
   }
 }
 
+dialog[open].options-menu-dialog.closing {
+  transform: translate(-50%, -50%) scale(0.92);
+  opacity: 0;
+  transition-duration: 0.25s;
+}
+
 .options-dialog-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border-light);
@@ -2484,6 +2504,11 @@ dialog[open].options-menu-dialog {
       opacity: 0;
     }
   }
+  dialog[open].bottom-sheet-dialog.closing {
+    transform: translate(-50%, 0);
+    opacity: 0;
+    transition-duration: 0.15s;
+  }
 
   .options-menu-dialog {
     transform: translate(-50%, -50%) scale(1);
@@ -2499,6 +2524,11 @@ dialog[open].options-menu-dialog {
     @starting-style {
       opacity: 0;
     }
+  }
+  dialog[open].options-menu-dialog.closing {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+    transition-duration: 0.15s;
   }
 
   .counter-card.animate-entry {

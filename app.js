@@ -103,9 +103,43 @@ import { log } from "./logger.js";
   // Central helper to track when dialogs are opened.
   // This is used to prevent synthetic 'click' events from instantly closing them.
   const openDialog = (dialog) => {
+    // Reopened while still playing its exit (below): finish closing first
+    if (dialog.closeTimer) {
+      clearTimeout(dialog.closeTimer);
+      dialog.closeTimer = null;
+      HTMLDialogElement.prototype.close.call(dialog);
+      dialog.classList.remove("closing");
+    }
     dialog.dataset.openedAt = Date.now().toString();
     dialog.showModal();
   };
+
+  // Where the CSS overlay property isn't supported (WebKit, so Safari and the
+  // iOS app), a dialog leaves the top layer the moment it closes, taking its
+  // backdrop with it, so its exit transition never plays. There each dialog's
+  // close() adds .closing, which plays the exit (index.css), and closes for
+  // real once it's done. Escape goes the same way. Chrome plays it on its own.
+  if (!CSS.supports("overlay", "auto")) {
+    const nativeClose = HTMLDialogElement.prototype.close;
+    document.querySelectorAll("dialog").forEach((dialog) => {
+      dialog.close = (returnValue) => {
+        if (!dialog.open || dialog.closeTimer) return;
+        dialog.classList.add("closing");
+        // The .closing transitions' length in index.css: quicker than the
+        // usual exit, as the page behind ignores taps until the dialog closes
+        const exitMs = prefersReducedMotion() ? 150 : 250;
+        dialog.closeTimer = setTimeout(() => {
+          dialog.closeTimer = null;
+          nativeClose.call(dialog, returnValue);
+          dialog.classList.remove("closing");
+        }, exitMs);
+      };
+      dialog.addEventListener("cancel", (e) => {
+        e.preventDefault();
+        dialog.close();
+      });
+    });
+  }
 
   // ------------------------------------------------------------------------
   // 1. Core Reactive State System
