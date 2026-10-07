@@ -4,14 +4,19 @@
 // with `npm run promo:open -- <shot>` (a Chrome window in that state), try
 // changes there, then edit the shot here.
 //
-// `setup(app)` runs after the app loads and before a still or a clip; `clip`
-// (with `seconds`) is what happens during a video clip. Both get an app
-// helper whose time is virtual: `app.wait(ms)` advances the app's clock (and,
-// while filming, records the frames), so every render is the same.
+// `setup(app)` runs after the app loads and before a still or a clip;
+// `clipSetup` replaces it before a clip (null for none), when the clip should
+// start somewhere else. `clip` (with `seconds`) is what happens during a video
+// clip. They all get an app helper whose time is virtual: `app.wait(ms)`
+// advances the app's clock (and, while filming, records the frames), so every
+// render is the same.
 //   app.tap(selector)        taps an element (a dot shows where, in videos)
 //   app.wait(ms)             lets time pass
 //   app.type(selector, text) types into a field, a key at a time
 //   app.random(seed)         restarts the app's random numbers (dice rolls)
+
+const fs = require('fs');
+const path = require('path');
 
 // Shared by every shot: no sounds, and the default palette and layout unless
 // a shot picks its own
@@ -43,6 +48,15 @@ const PLAYERS = [
   counter('dev', 'Dev', 29, 3),
 ];
 
+// Where the scoreboard clip leaves them: Dev scored 3, then Ben's +15 took
+// the lead
+const PLAYERS_LATER = [
+  counter('ben', 'Ben', 52, 1),
+  counter('chloe', 'Chloe', 51, 2),
+  counter('alice', 'Alice', 42, 0),
+  counter('dev', 'Dev', 32, 3),
+];
+
 const entry = (counterLabel, color, actionLabel, progression, timestamp) => ({
   id: timestamp.replace(/\D/g, ''),
   counterLabel,
@@ -67,8 +81,14 @@ const card = (id) => `.counter-card[data-counter-id="${id}"]`;
 const tab = (name) => `[data-tab-btn="${name}"]`;
 
 // The app icon and name, with a tagline: beside the screens on stages with
-// `logo`, and on the title card
-const LOGO = { title: 'COUNTERS', tagline: 'Keep score of anything' };
+// `logo`, and on the title card. The tagline is the App Store subtitle from
+// the README's store metadata, so the two stay the same.
+const subtitle = () => {
+  const readme = fs.readFileSync(path.join(__dirname, '../README.md'), 'utf8');
+  const section = readme.split(/^### Subtitle$/m)[1].split(/^#/m)[0];
+  return section.replace(/<!--[\s\S]*?-->/g, '').trim();
+};
+const LOGO = { title: 'COUNTERS', tagline: subtitle() };
 
 // Title and end cards show the logo or just the name, plus lines of smaller
 // text (the web address)
@@ -170,7 +190,7 @@ const SHOTS = {
     counters: PLAYERS,
     settings: { autoSort: true },
     history: GAME_HISTORY,
-    seconds: 7,
+    seconds: 7.5,
     async clip(app) {
       await app.wait(500);
       for (let i = 0; i < 3; i++) {
@@ -178,15 +198,17 @@ const SHOTS = {
         await app.wait(450);
       }
       await app.tap(`${card('ben')} .card-value-body`);
-      await app.wait(900);
+      await app.wait(1200);
       await app.tap('#calc-quick-add-container button[data-quick-val="15"]');
       // Auto-sort waits 3 s after the last change, then moves the cards
       await app.wait(4000);
     },
   },
   // Adding points with the calculator
+  // Picks up where the scoreboard clip ends, so the video's scores carry on
   calculator: {
-    counters: PLAYERS,
+    counters: PLAYERS_LATER,
+    settings: { autoSort: true },
     history: GAME_HISTORY,
     async setup(app) {
       await app.tap(`${card('alice')} .card-value-body`);
@@ -194,9 +216,15 @@ const SHOTS = {
       await app.type('#calc-number-input', '12');
       await app.wait(300);
     },
+    // The clip starts on the scoreboard and goes through the whole entry
+    clipSetup: null,
     seconds: 4,
     async clip(app) {
-      await app.wait(400);
+      await app.wait(500);
+      await app.tap(`${card('alice')} .card-value-body`);
+      await app.wait(700);
+      await app.type('#calc-number-input', '12');
+      await app.wait(600);
       await app.tap('#calc-btn-submit');
       await app.wait(1500);
     },
@@ -246,9 +274,9 @@ const SHOTS = {
       await app.tap('#btn-timer-placeholder-start');
       await app.wait(12_400);
     },
-    seconds: 3,
+    seconds: 4,
     async clip(app) {
-      await app.wait(3000);
+      await app.wait(4000);
     },
   },
   // The history of a game

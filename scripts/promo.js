@@ -28,7 +28,8 @@
 // http://localhost:5173/) uses the dev server instead. Output goes to promo/
 // (OUT=dir). Options (env): SHEET (the target for the contact sheet, shrunk;
 // default iphone), FPS (30), MUSIC (an audio file for the video; default
-// silence). Needs ffmpeg and Chrome.
+// silence), MUSIC_START (seconds into the track to start it, e.g. to skip a
+// quiet intro; default 0). Needs ffmpeg and Chrome.
 //
 // Every shot runs on a virtual clock: Playwright's clock drives the app's
 // timers and animation frames, and the page's CSS animations and transitions
@@ -68,6 +69,7 @@ if (mode === 'open' && args.length !== 1) {
 const OUT = path.resolve(process.env.OUT || path.join(ROOT, 'promo'));
 const FPS = Number(process.env.FPS || 30);
 const MUSIC = process.env.MUSIC || 'none';
+const MUSIC_START = Number(process.env.MUSIC_START || 0);
 // The app's clock starts here in every shot (local time)
 const T0 = new Date('2026-01-01T20:42:00').getTime();
 let failed = false;
@@ -475,9 +477,9 @@ function appHelper(page, { live = false } = {}) {
 }
 
 // Opens a shot in a fresh context (its own saved state), at a target's size
-// and density, emulating a phone or tablet, and runs its setup. `live` skips
-// the virtual clock, for the open mode.
-async function openShot(browser, name, target, { live = false } = {}) {
+// and density, emulating a phone or tablet, and runs its setup (`forClip`:
+// the clip's). `live` skips the virtual clock, for the open mode.
+async function openShot(browser, name, target, { live = false, forClip = false } = {}) {
   const shot = SHOTS[name];
   const context = await browser.newContext({
     viewport: { width: target.width, height: target.height },
@@ -522,7 +524,9 @@ async function openShot(browser, name, target, { live = false } = {}) {
   if (!live) await page.clock.pauseAt(T0 + 1000);
   const app = appHelper(page, { live });
   await app.wait(600);
-  if (shot.setup) await shot.setup(app);
+  // A clip can start from its own setup (clipSetup, even an empty one)
+  const setup = forClip && 'clipSetup' in shot ? shot.clipSetup : shot.setup;
+  if (setup) await setup(app);
   await app.wait(300);
   page.app = app;
   page.close = () => context.close();
@@ -723,7 +727,7 @@ async function video(browser) {
       ...['-t', String(card.seconds), '-vf', `scale=${pixelW}:${pixelH}`, ...H264, mp4],
     ]);
     fs.rmSync(png);
-    return { mp4, seconds: card.seconds };
+    return { mp4, seconds: card.seconds, card: true };
   };
   for (const name of selected) {
     const shot = SHOTS[name];
@@ -732,7 +736,9 @@ async function video(browser) {
     fs.rmSync(frameDir, { recursive: true, force: true });
     fs.mkdirSync(frameDir, { recursive: true });
     const stage = target.stage ? await openStage(browser, target, 1) : null;
-    const page = await openShot(browser, name, stage ? stage.screenTarget : target);
+    const page = await openShot(browser, name, stage ? stage.screenTarget : target, {
+      forClip: true,
+    });
     const wanted = Math.round(shot.seconds * FPS);
     let frames = 0;
     const frameFile = (i) => path.join(frameDir, `${String(i).padStart(5, '0')}.jpg`);
@@ -775,23 +781,27 @@ async function video(browser) {
   fs.rmSync(firstFrame, { force: true });
   fs.rmSync(lastFrame, { force: true });
 
-  // Edit: the parts joined by short crossfades, with music faded in and out.
+  // Edit: the parts joined by short crossfades between clips, and a slower dip
+  // through black into and out of a card (a crossfade would show the stage's
+  // logo and the card's on top of each other), with music faded in and out.
   // Without music the video still gets a silent audio track, which the App
   // Store expects of previews.
-  const FADE = 0.5;
+  const toCard = parts.slice(1).map((part, i) => !!(part.card || parts[i].card));
+  const fades = toCard.map((card) => (card ? 1 : 0.5));
   let filter = '';
   let offset = 0;
   let last = '[0:v]';
   parts.slice(1).forEach((part, i) => {
-    offset += parts[i].seconds - FADE;
-    filter += `${last}[${i + 1}:v]xfade=transition=fade:duration=${FADE}:offset=${offset.toFixed(3)}[x${i}];`;
+    offset += parts[i].seconds - fades[i];
+    filter += `${last}[${i + 1}:v]xfade=transition=${toCard[i] ? 'fadeblack' : 'fade'}:duration=${fades[i]}:offset=${offset.toFixed(3)}[x${i}];`;
     last = `[x${i}]`;
   });
-  const total = parts.reduce((sum, p) => sum + p.seconds, 0) - FADE * (parts.length - 1);
+  const total =
+    parts.reduce((sum, p) => sum + p.seconds, 0) - fades.reduce((sum, f) => sum + f, 0);
   const audioIn =
     MUSIC === 'none'
       ? ['-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000']
-      : ['-i', MUSIC];
+      : ['-ss', String(MUSIC_START), '-i', MUSIC];
   filter += `[${parts.length}:a]atrim=0:${total.toFixed(3)}`;
   if (MUSIC !== 'none') {
     filter += `,afade=t=in:d=1,afade=t=out:st=${(total - 2).toFixed(3)}:d=2`;
