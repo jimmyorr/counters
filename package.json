@@ -15,7 +15,13 @@
     "release": "node scripts/release.js",
     "preview": "vite preview",
     "ios": "npx cap sync ios && npx cap open ios",
-    "android": "npx cap sync android && npx cap open android"
+    "android": "npx cap sync android && npx cap open android",
+    "promo:sheet": "node scripts/promo.js sheet",
+    "promo:stills": "node scripts/promo.js stills",
+    "promo:video": "node scripts/promo.js video",
+    "promo:artwork": "node scripts/promo.js artwork",
+    "promo:open": "node scripts/promo.js open",
+    "promo:view": "node scripts/promo.js view"
   },
   "keywords": [
     "score",

@@ -100,3 +100,18 @@ To skip the e2e tests (e.g. when tests are known to be failing for unrelated rea
 ```bash
 npm run release -- --skip-tests
 ```
+
+### 5. Promotional screenshots and video
+
+```bash
+npm run promo:sheet [-- shot ...]     # small renders and a contact sheet, for review
+npm run promo:stills [-- shot ...]    # each shot for each still target
+npm run promo:view                    # open promo/index.html, a page for browsing the stills
+npm run promo:artwork [-- name ...]   # single images: the YouTube thumbnail (1280x720), the App Store header (3840x1646, a PNG: App Store Connect rejects a JPEG header) and search results asset (3840x2560), and Google Play's feature graphic (1024x500)
+npm run promo:video -- <target>       # the clips, then the edited video (iphone-preview, ipad-preview or trailer)
+npm run promo:open -- <shot>          # a Chrome window with the shot set up, to adjust it
+```
+
+Renders the shots in `scripts/promo-shots.js`. Each shot is saved app state (counters, settings, history) plus a few scripted taps, so the chosen moments live in source control and re-render after visual changes. To change one, open it with `promo:open`, try changes there, then edit the shot. `TARGETS` there sets the outputs: App Store screenshots for iPhone 6.9" (1320x2868) and 6.3" (1206x2622, the size App Store Connect requires) and iPad (2064x2752, in the grid layout), the website (1920x1080) and social sharing (1200x630), and the videos: App Store previews for iPhone (886x1920) and iPad (1200x1600), which open straight on the app and end on the icon, name and tagline, and a 1920x1080 trailer for the website, YouTube and Google Play, which opens on the icon and name and ends with the web address. Device targets show the app full screen; the landscape ones show it as a phone screen over a dark backdrop, beside the icon and name. In videos, a soft dot shows each tap. The video is the clips (shots with `seconds`, in list order) between the target's title and end cards, joined by crossfades, with a silent audio track (`MUSIC=file` adds music).
+
+It builds the app into a temporary directory (never `docs/`), or uses `APP_URL` (e.g. the dev server), and blocks third-party requests so renders stay out of analytics. Output goes to `promo/` (`OUT=dir`, ignored by git). `stills` also writes `promo/index.html`, a page for browsing the stills by device or by shot. Every shot runs on a virtual clock: Playwright's clock drives the app's timers and animation frames, and the page's CSS animations, transitions and smooth scrolls are stepped with it, so renders come out the same every time. Dice rolls use seeded random numbers. Clips advance exactly 1/30 s per frame. Options: `SHEET` (the target the contact sheet shrinks, default `iphone`), `STILLS` (comma-separated still targets), `TARGET` (the target `promo:open` emulates, default `iphone`) and `FPS` (30). Needs `ffmpeg` (`brew install ffmpeg`) and Chrome.

@@ -42,3 +42,6 @@ ios/App/App/public/
 # !.agent/skills/
 # !.agent/rules/
 .superpowers/
+
+# Promo renders (npm run promo:*)
+promo/
