@@ -1190,15 +1190,6 @@ html[data-layout="grid"] .card-direct-zone-plus {
   box-shadow: var(--card-shadow);
 }
 
-.settings-section h3 {
-  font-size: 15px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--accent-color);
-  margin-bottom: 16px;
-}
-
 .settings-row {
   display: flex;
   align-items: center;
