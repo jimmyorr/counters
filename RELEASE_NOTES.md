@@ -1,5 +1,12 @@
 # Release notes
 
+## 0.1.26
+
+* **Settings:** A shorter page with no section headings or repeated help text, so it fits small phones.
+* **Visuals:** The frosted blur behind the header, nav bar and dialogs works again in Chrome and on Android.
+* **Security:** Updated Capacitor to 8.5.2.
+* **Dev:** New `npm run promo:*` renders for App Store screenshots, artwork, previews and a trailer.
+
 ## 0.1.25
 
 * **Timer:** The stopwatch glow pulses more slowly, and the stopwatch display now has the same border style as the dice result.
