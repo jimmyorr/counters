@@ -43,7 +43,7 @@
   "author": "Jimmy Orr",
   "license": "MIT",
   "devDependencies": {
-    "@capacitor/android": "^8.4.0",
+    "@capacitor/android": "^8.4.3",
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.4.0",
     "@capacitor/ios": "^8.4.0",
