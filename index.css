@@ -1404,13 +1404,42 @@ input:checked + .slider-round:before {
 }
 
 .about-version {
-  text-align: center;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
   font-size: 12px;
-  color: var(--text-tertiary);
+  color: var(--text-secondary); /* A11y contrast fix */
   margin-top: 10px;
+}
+
+.app-store-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-store-separator {
+  color: var(--text-secondary);
+}
+
+.app-store-link {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity var(--trans-fast);
+}
+
+.app-store-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+@media (display-mode: standalone) {
+  .app-store-container {
+    display: none !important;
+  }
 }
 
 /* --------------------------------------------------------------------------

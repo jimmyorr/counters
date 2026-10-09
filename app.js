@@ -40,6 +40,10 @@ import { log } from "./logger.js";
     FirebaseAnalytics.setEnabled({ enabled: true }).catch((err) => {
       console.error("Failed to enable Firebase Analytics:", err);
     });
+    const appStoreContainer = document.getElementById("about-app-store-container");
+    if (appStoreContainer) {
+      appStoreContainer.style.display = "none";
+    }
   }
 
   // Whether the user asked the OS to minimize non-essential motion
