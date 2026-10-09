@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.1.29
+
+* **Settings:** Added a link to the iOS App Store for web visitors.
+* **Security:** Updated dependencies and completed Capacitor migration.
 ## 0.1.28
 
 * **Animations:** Deleted counters now tumble out in front while the rest slide into place, and Undo shows right away. Delete all ends with the empty state rising in, with no blank pause. Reset counts the values down instead of flipping the cards.
