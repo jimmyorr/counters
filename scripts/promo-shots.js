@@ -87,7 +87,13 @@ const addTime = (secs) => `.timer-inc-btn[data-secs="${secs}"]`;
 const subtitle = () => {
   const readme = fs.readFileSync(path.join(__dirname, '../README.md'), 'utf8');
   const section = readme.split(/^### Subtitle$/m)[1].split(/^#/m)[0];
-  return section.replace(/<!--[\s\S]*?-->/g, '').trim();
+  let cleaned = section;
+  let prev;
+  do {
+    prev = cleaned;
+    cleaned = cleaned.replace(/<!--[\s\S]*?-->/g, '');
+  } while (cleaned !== prev);
+  return cleaned.trim();
 };
 const LOGO = { title: 'COUNTERS', tagline: subtitle() };
 
