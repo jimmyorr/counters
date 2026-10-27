@@ -79,8 +79,58 @@ fs.writeFileSync(packageJsonPath, updatedPackageJson, 'utf8');
 console.log('Successfully updated description and keywords in package.json');
 
 // --- UPDATE index.html ---
-// Extract first paragraph of description for meta description tag
-const metaDescriptionHtml = `    <meta\n      name="description"\n      content="${descParagraph}"\n    />`;
+// Extract first paragraph of description for meta description, Open Graph, Twitter, and JSON-LD
+const structuredData = JSON.stringify(
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'Counters',
+    url: 'https://counters.cowneck.com/',
+    description: descParagraph,
+    applicationCategory: 'UtilityApplication',
+    operatingSystem: 'Web, iOS, Android',
+    image: 'https://counters.cowneck.com/og-image.jpg',
+    author: {
+      '@type': 'Person',
+      name: 'Jimmy Orr',
+      url: 'https://linktr.ee/jimmyorr',
+    },
+    isPartOf: {
+      '@type': 'WebSite',
+      name: 'cowneck',
+      url: 'https://cowneck.com/',
+    },
+  },
+  null,
+  2
+)
+  .split('\n')
+  .map(line => `    ${line}`)
+  .join('\n');
+
+const metaDescriptionHtml = [
+  '    <meta',
+  '      name="description"',
+  `      content="${descParagraph}"`,
+  '    />',
+  '    <link rel="canonical" href="https://counters.cowneck.com/" />',
+  '    <meta property="og:type" content="website" />',
+  '    <meta property="og:site_name" content="Counters" />',
+  '    <meta property="og:title" content="Counters" />',
+  `    <meta property="og:description" content="${descParagraph}" />`,
+  '    <meta property="og:url" content="https://counters.cowneck.com/" />',
+  '    <meta property="og:image" content="https://counters.cowneck.com/og-image.jpg" />',
+  '    <meta property="og:image:width" content="1200" />',
+  '    <meta property="og:image:height" content="630" />',
+  '    <meta property="og:image:alt" content="Counters — A minimalist counting app" />',
+  '    <meta name="twitter:card" content="summary_large_image" />',
+  '    <meta name="twitter:title" content="Counters" />',
+  `    <meta name="twitter:description" content="${descParagraph}" />`,
+  '    <meta name="twitter:image" content="https://counters.cowneck.com/og-image.jpg" />',
+  '    <script type="application/ld+json">',
+  structuredData,
+  '    </script>',
+].join('\n');
 const metaStartTag = '<!-- sync-start:meta-description -->';
 const metaEndTag = '<!-- sync-end:meta-description -->';
 const metaRegex = new RegExp(`${metaStartTag}[\\s\\S]*?${metaEndTag}`);
