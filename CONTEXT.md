@@ -13,10 +13,10 @@ The application UI is structured into three primary source files:
 
 Application state is held inside the global `state` object in `app.js`. It tracks:
 - `counters`: An array of counter objects (id, label, value, color, increment, resetValue).
-- `settings`: An object holding user preferences (layout, topBarContent, autoSort, soundEnabled, quickAddValues, themeHue, keepAwake).
+- `settings`: An object holding user preferences (layout, topBarContent, autoSort, soundEnabled, hapticsEnabled, quickAddValues, theme, themeHue, keepAwake, palette).
 - `history`: An array of transaction objects tracking time, counterLabel, actionLabel, and progression diffs.
 
-Whenever state is mutated, it is simultaneously flushed to `localStorage` using keys prefixed with `counters-` (e.g. `counters-list`, `counters-settings`). On application boot, the state is re-hydrated from `localStorage`.
+Whenever state is mutated, it is simultaneously flushed to Capacitor `Preferences` using keys prefixed with `counters-` (`counters-list`, `counters-settings`, `counters-history`), with `counters-theme` and `counters-layout` mirrored to `localStorage` so the pre-load script in `index.html` can apply them synchronously before first paint. On application boot, the state is re-hydrated from Capacitor `Preferences`.
 
 ## Development rules
 

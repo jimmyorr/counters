@@ -317,6 +317,9 @@ import { log } from "./logger.js";
 
       if (savedSettings) {
         state.settings = { ...state.settings, ...JSON.parse(savedSettings) };
+      } else {
+        const legacyLayout = localStorage.getItem("counters-layout");
+        if (legacyLayout) state.settings.layout = legacyLayout;
       }
       // Theme used to live only in localStorage; adopt it once, then Preferences is the source of truth
       if (!state.settings.theme) {
@@ -325,6 +328,7 @@ import { log } from "./logger.js";
         saveSettings();
       }
       applyTheme(state.settings.theme);
+      localStorage.setItem("counters-layout", state.settings.layout);
       localStorage.setItem("counters-theme", state.settings.theme);
       document.documentElement.style.setProperty(
         "--theme-hue",
