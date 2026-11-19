@@ -545,8 +545,34 @@ import { log } from "./logger.js";
         break;
       }
     }
+    let graphicLight = "#000000";
+    for (let l = 60; l >= 0; l -= 1) {
+      const candidate = hslToHex(hue, 94, l);
+      if (
+        ["#ffffff", "#f2f3f7", "#e9ebee"].every(
+          (s) => contrastRatio(candidate, s) >= 3.15,
+        )
+      ) {
+        graphicLight = candidate;
+        break;
+      }
+    }
+    let graphicDark = "#ffffff";
+    for (let l = 65; l <= 100; l += 1) {
+      const candidate = hslToHex(hue, 92, l);
+      if (
+        ["#0d0e11", "#16171d", "#21232c"].every(
+          (s) => contrastRatio(candidate, s) >= 3.15,
+        )
+      ) {
+        graphicDark = candidate;
+        break;
+      }
+    }
     root.style.setProperty("--accent-ink-light", inkLight);
     root.style.setProperty("--accent-ink-dark", inkDark);
+    root.style.setProperty("--accent-graphic-light", graphicLight);
+    root.style.setProperty("--accent-graphic-dark", graphicDark);
     root.style.setProperty("--accent-on-fill-light", getReadableTextColor(accLight));
     root.style.setProperty("--accent-on-fill-dark", getReadableTextColor(accDark));
     if (ambientInitialized && currentAmbientLeaderHex === null) {

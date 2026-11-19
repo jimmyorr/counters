@@ -103,6 +103,22 @@ test.describe('color contrast', () => {
       await page.goto('/');
       await page.locator('[data-tab-btn="dice"]').click();
       await expect(page.locator('#btn-roll-action')).toBeVisible();
+      await page.locator('#btn-roll-action').click();
+      await expect(page.locator('#dice-result-card')).toHaveClass(/rolled/);
+
+      const pipVsDie = () =>
+        page.locator('#dice-shake-icon').evaluate((el) => {
+          const lum = (css) => {
+            const [r, g, b] = css.match(/[\d.]+/g).slice(0, 3).map((v) => {
+              const c = Number(v) / 255;
+              return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+            });
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          };
+          const a = lum(getComputedStyle(el.querySelector('.accent-badge-fill')).fill);
+          const b = lum(getComputedStyle(el.querySelector('.accent-badge-pip')).fill);
+          return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+        });
 
       for (const hue of [0, 60, 120, 180, 205, 240, 258, 275, 300]) {
         await page.locator('#setting-theme-hue').evaluate((el, h) => {
@@ -112,7 +128,19 @@ test.describe('color contrast', () => {
         }, hue);
         expect(await contrast(page.locator('.nav-item.active .nav-text')), `${theme} nav hue ${hue}`).toBeGreaterThanOrEqual(4.5);
         expect(await contrast(page.locator('#btn-roll-action')), `${theme} primary btn hue ${hue}`).toBeGreaterThanOrEqual(4.5);
+        expect(await contrast(page.locator('#dice-result-card'), 'borderTopColor'), `${theme} rolled border hue ${hue}`).toBeGreaterThanOrEqual(3);
+        expect(await contrast(page.locator('#dice-shake-icon .accent-badge-fill'), 'stroke'), `${theme} die rim hue ${hue}`).toBeGreaterThanOrEqual(3);
+        expect(await pipVsDie(), `${theme} die pips hue ${hue}`).toBeGreaterThanOrEqual(4.5);
       }
+
+      // Check outlined timer icon at pale yellow hue (60) as well
+      await page.locator('[data-tab-btn="timer"]').click();
+      await page.locator('#setting-theme-hue').evaluate((el) => {
+        el.value = '60';
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        document.getAnimations().forEach((a) => a.finish());
+      });
+      expect(await contrast(page.locator('#timer-shake-icon')), `${theme} timer icon hue 60`).toBeGreaterThanOrEqual(3);
 
       await page.locator('#btn-open-options').click();
       await page.locator('#menu-btn-open-display-options').click();

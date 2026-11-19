@@ -52,6 +52,7 @@
   --overlay-bg: rgba(255, 255, 255, 0.96);
   --accent-color: hsl(var(--theme-hue), 94%, 60%);
   --accent-ink: var(--accent-ink-light, #226595);
+  --accent-graphic: var(--accent-graphic-light, #078eed);
   --accent-on-fill: var(--accent-on-fill-light, #000000);
   --accent-light: hsla(var(--theme-hue), 94%, 60%, 0.1);
   --glass-bg: rgba(242, 243, 247, 0.75);
@@ -76,6 +77,7 @@
   --overlay-bg: rgba(22, 23, 29, 0.96);
   --accent-color: hsl(var(--theme-hue), 92%, 65%);
   --accent-ink: var(--accent-ink-dark, #54b3f8);
+  --accent-graphic: var(--accent-graphic-dark, #54b3f8);
   --accent-on-fill: var(--accent-on-fill-dark, #000000);
   --accent-light: hsla(var(--theme-hue), 92%, 65%, 0.15);
   --glass-bg: rgba(13, 14, 17, 0.75);
@@ -131,7 +133,7 @@ a:focus-visible,
 select:focus-visible,
 .nav-item:focus-visible,
 .counter-card:focus-visible {
-  outline: 2px solid var(--accent-color);
+  outline: 2px solid var(--accent-graphic);
   outline-offset: 2px;
 }
 
@@ -745,7 +747,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 @media (hover: hover) {
   .empty-state-card:hover {
     transform: translateY(-2px);
-    border-color: var(--accent-color);
+    border-color: var(--accent-graphic);
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
   }
 }
@@ -755,12 +757,12 @@ html[data-layout="grid"] .card-direct-zone-plus {
 }
 
 .empty-state-card:focus-visible {
-  outline: 2px solid var(--accent-color);
+  outline: 2px solid var(--accent-graphic);
   outline-offset: 4px;
 }
 
 .empty-state-card .placeholder-icon {
-  color: var(--accent-color);
+  color: var(--accent-graphic);
   margin-bottom: 0;
   transition: transform var(--trans-fast) var(--ease-spring);
 }
@@ -789,7 +791,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 .primary-btn {
   background-color: var(--accent-color);
   color: var(--accent-on-fill, #000000);
-  border: none;
+  border: 1px solid transparent;
   font-family: var(--font-primary);
   font-weight: 600;
   font-size: 15px;
@@ -797,6 +799,10 @@ html[data-layout="grid"] .card-direct-zone-plus {
   border-radius: 12px;
   cursor: pointer;
   transition: all var(--trans-fast);
+}
+
+.light-mode .primary-btn:not(.bottom-sheet-dialog .primary-btn) {
+  border-color: color-mix(in srgb, var(--accent-graphic) 40%, transparent);
 }
 
 @media (hover: hover) {
@@ -829,7 +835,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 
 @media (hover: hover) {
   .secondary-btn:hover {
-    border-color: var(--accent-color);
+    border-color: var(--accent-graphic);
     color: var(--text-primary);
   }
 }
@@ -854,7 +860,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 }
 
 .placeholder-icon {
-  color: var(--accent-color);
+  color: var(--accent-graphic);
   margin-bottom: 24px;
 }
 
@@ -862,6 +868,24 @@ html[data-layout="grid"] .card-direct-zone-plus {
   width: 64px;
   height: 64px;
   display: block;
+}
+
+.accent-badge-svg {
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.14));
+}
+
+.accent-badge-fill {
+  fill: var(--accent-color);
+  stroke: var(--accent-graphic);
+  stroke-width: 0.75;
+}
+
+.accent-badge-pip {
+  fill: var(--accent-on-fill, #000000);
+}
+
+.accent-badge-mark {
+  stroke: var(--accent-on-fill, #000000);
 }
 
 .placeholder-icon.pop {
@@ -925,7 +949,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 @media (hover: hover) {
   .dice-type-btn:hover {
     transform: translateY(-2px);
-    border-color: var(--accent-color);
+    border-color: var(--accent-graphic);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   }
 }
@@ -939,6 +963,10 @@ html[data-layout="grid"] .card-direct-zone-plus {
   border-color: transparent;
   color: var(--accent-on-fill, #000000);
   box-shadow: 0 4px 14px var(--accent-light);
+}
+
+.light-mode .dice-type-btn.active {
+  border-color: color-mix(in srgb, var(--accent-graphic) 40%, transparent);
 }
 
 .dice-stepper-row {
@@ -973,7 +1001,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 @media (hover: hover) {
   .stepper-btn:hover {
     background-color: var(--bg-tertiary);
-    border-color: var(--accent-color);
+    border-color: var(--accent-graphic);
     color: var(--accent-ink);
   }
 }
@@ -1026,7 +1054,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 /* A result for the selected dice gets the accent border; changing the dice
    clears it (same language as the stopwatch display) */
 .dice-result-card.rolled {
-  border-color: var(--accent-color);
+  border-color: var(--accent-graphic);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
@@ -1279,7 +1307,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 
 input:checked + .slider-round {
   background-color: var(--accent-color);
-  border-color: transparent;
+  border-color: var(--accent-graphic);
 }
 
 input:checked + .slider-round:before {
@@ -1330,7 +1358,7 @@ input:checked + .slider-round:before {
 }
 
 .settings-input:focus {
-  border-color: var(--accent-color);
+  border-color: var(--accent-graphic);
 }
 
 .settings-input.input-error {
@@ -1378,12 +1406,12 @@ input:checked + .slider-round:before {
   100% {
     box-shadow:
       var(--card-shadow),
-      0 0 8px 0 color-mix(in srgb, var(--accent-color) 15%, transparent);
+      0 0 8px 0 color-mix(in srgb, var(--accent-graphic) 18%, transparent);
   }
   50% {
     box-shadow:
       var(--card-shadow),
-      0 0 28px 4px color-mix(in srgb, var(--accent-color) 45%, transparent);
+      0 0 28px 4px color-mix(in srgb, var(--accent-graphic) 45%, transparent);
   }
 }
 
@@ -1392,7 +1420,7 @@ input:checked + .slider-round:before {
 .placeholder-timer-visual.has-time,
 #tab-timer:has(#btn-timer-placeholder-start.danger-btn-outline)
   .placeholder-timer-visual {
-  border-color: var(--accent-color);
+  border-color: var(--accent-graphic);
 }
 
 #tab-timer:has(#btn-timer-placeholder-start.danger-btn-outline)
@@ -1406,7 +1434,7 @@ input:checked + .slider-round:before {
     animation: none;
     box-shadow:
       var(--card-shadow),
-      0 0 18px 2px color-mix(in srgb, var(--accent-color) 30%, transparent);
+      0 0 18px 2px color-mix(in srgb, var(--accent-graphic) 32%, transparent);
   }
 }
 
@@ -1516,7 +1544,7 @@ input:checked + .slider-round:before {
 .nav-item:focus-visible {
   outline: none !important;
   border-radius: 16px;
-  box-shadow: inset 0 0 0 2px var(--accent-color);
+  box-shadow: inset 0 0 0 2px var(--accent-graphic);
 }
 
 /* --------------------------------------------------------------------------
