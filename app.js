@@ -409,6 +409,105 @@ import { log } from "./logger.js";
     return whiteContrast >= contrastRatio(hex, "#000000") ? "#ffffff" : "#000000";
   };
 
+  // Helper: Convert #rrggbb to { h, s, l } (0-360, 0-100, 0-100)
+  const hexToHsl = (hex) => {
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) return { h: 205, s: 82, l: 58 };
+    const [r, g, b] = [1, 3, 5].map(
+      (i) => parseInt(hex.slice(i, i + 2), 16) / 255,
+    );
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const l = (max + min) / 2;
+    if (max === min) return { h: 0, s: 0, l: l * 100 };
+    const d = max - min;
+    const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    const h =
+      max === r
+        ? ((g - b) / d + (g < b ? 6 : 0)) * 60
+        : max === g
+          ? ((b - r) / d + 2) * 60
+          : ((r - g) / d + 4) * 60;
+    return { h, s: s * 100, l: l * 100 };
+  };
+
+  const hexToRgba = (hex, alpha) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  let ambientInitialized = false;
+  let currentAmbientLeaderHex = null;
+
+  // Subtle ambient radial gradient influenced by the current leader (or calm
+  // theme-hue fallback when empty or showing Total). Transitions slowly via
+  // CSS @property once initialized.
+  const updateAmbientBackdrop = (
+    leaderHex = null,
+    { immediate = false } = {},
+  ) => {
+    currentAmbientLeaderHex = leaderHex;
+    const backdrop = document.getElementById("ambient-backdrop");
+    if (!backdrop) return;
+
+    const isDark = document.documentElement.classList.contains("dark-mode");
+    let glow1, glow2, glow3;
+
+    if (leaderHex && /^#[0-9a-f]{6}$/i.test(leaderHex)) {
+      const { h, s, l } = hexToHsl(leaderHex);
+      if (s < 10) {
+        // Near-neutral custom colors (#ffffff, #000000, greys) stay neutral
+        const base = hslToHex(
+          220,
+          Math.round(s),
+          isDark ? (l > 50 ? 78 : 56) : l < 50 ? 38 : 56,
+        );
+        glow1 = hexToRgba(base, isDark ? 0.08 : 0.055);
+        glow2 = hexToRgba(base, isDark ? 0.05 : 0.038);
+        glow3 = hexToRgba(base, isDark ? 0.025 : 0.018);
+      } else {
+        const glowSat = Math.round(Math.min(92, Math.max(s * 0.85 + 15, 48)));
+        const primary = hslToHex(h, glowSat, isDark ? 58 : 60);
+        const secondary = hslToHex(
+          (h + 28) % 360,
+          Math.max(42, glowSat - 8),
+          isDark ? 54 : 58,
+        );
+        const center = hslToHex(
+          (h + 348) % 360,
+          Math.max(40, glowSat - 12),
+          isDark ? 56 : 60,
+        );
+        glow1 = hexToRgba(primary, isDark ? 0.125 : 0.075);
+        glow2 = hexToRgba(secondary, isDark ? 0.08 : 0.05);
+        glow3 = hexToRgba(center, isDark ? 0.038 : 0.024);
+      }
+    } else {
+      const hue = Number(state.settings.themeHue ?? 205);
+      const primary = hslToHex(hue, 82, isDark ? 58 : 60);
+      const secondary = hslToHex((hue + 28) % 360, 72, isDark ? 54 : 58);
+      const center = hslToHex((hue + 348) % 360, 68, isDark ? 56 : 60);
+      glow1 = hexToRgba(primary, isDark ? 0.065 : 0.045);
+      glow2 = hexToRgba(secondary, isDark ? 0.04 : 0.03);
+      glow3 = hexToRgba(center, isDark ? 0.02 : 0.015);
+    }
+
+    const skipTransition = !ambientInitialized || immediate;
+    if (skipTransition) {
+      backdrop.classList.remove("ambient-ready");
+    }
+
+    backdrop.style.setProperty("--ambient-glow-1", glow1);
+    backdrop.style.setProperty("--ambient-glow-2", glow2);
+    backdrop.style.setProperty("--ambient-glow-3", glow3);
+    backdrop.dataset.leaderColor = leaderHex || "";
+
+    if (skipTransition) {
+      void backdrop.offsetWidth;
+      backdrop.classList.add("ambient-ready");
+      ambientInitialized = true;
+    }
+  };
+
   // Update --theme-hue plus readable accent ink and button-fill text tokens across
   // all light and dark surfaces so every hue (0-360) meets WCAG AA (4.5:1).
   const applyAccentTokens = (hue) => {
@@ -450,6 +549,9 @@ import { log } from "./logger.js";
     root.style.setProperty("--accent-ink-dark", inkDark);
     root.style.setProperty("--accent-on-fill-light", getReadableTextColor(accLight));
     root.style.setProperty("--accent-on-fill-dark", getReadableTextColor(accDark));
+    if (ambientInitialized && currentAmbientLeaderHex === null) {
+      updateAmbientBackdrop(null, { immediate: true });
+    }
   };
 
   // Apply "light", "dark", or "system" theme classes and browser theme-color meta
@@ -463,6 +565,9 @@ import { log } from "./logger.js";
     const themeMeta = document.querySelector('meta[name="theme-color"]');
     if (themeMeta) {
       themeMeta.setAttribute("content", isDark ? "#0d0e11" : "#f2f3f7");
+    }
+    if (ambientInitialized) {
+      updateAmbientBackdrop(currentAmbientLeaderHex, { immediate: true });
     }
   };
 
@@ -920,6 +1025,7 @@ import { log } from "./logger.js";
       leaderContainer.style.opacity = "0";
       leaderContainer.style.pointerEvents = "none";
       leaderText.textContent = "";
+      updateAmbientBackdrop(null);
       return;
     }
 
@@ -942,6 +1048,7 @@ import { log } from "./logger.js";
       leaderContainer.style.removeProperty("--leader-ink-dark-border");
       icon.innerHTML = `<path d="M19 18v2H5v-2l6-6-6-6V4h14v2h-9.35L14 12l-4.35 6H19z"/>`;
       leaderText.textContent = `Total: ${formatNumber(totalValue)}`;
+      updateAmbientBackdrop(null);
       return;
     }
 
@@ -964,6 +1071,7 @@ import { log } from "./logger.js";
       ? `<path d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"/>`
       : `<path d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"/>`;
     leaderText.textContent = leader.label;
+    updateAmbientBackdrop(themeHex);
   };
 
   // Compile individual counter card templates into the wrapper list

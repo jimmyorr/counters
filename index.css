@@ -157,27 +157,53 @@ body {
   overflow: hidden;
 }
 
-/* Limit webapp boundary to form a beautiful centered mobile frame on desktop screens */
-body::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+@property --ambient-glow-1 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: rgba(58, 168, 248, 0.065);
+}
+
+@property --ambient-glow-2 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: rgba(99, 102, 241, 0.04);
+}
+
+@property --ambient-glow-3 {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: rgba(58, 168, 248, 0.02);
+}
+
+/* Subtle ambient atmosphere influenced by the current leader */
+.ambient-backdrop {
+  position: fixed;
+  inset: 0;
   background-image:
     radial-gradient(
-      circle at 30% 20%,
-      rgba(85, 177, 249, 0.08) 0%,
-      transparent 40%
+      circle at 14% 14%,
+      var(--ambient-glow-1) 0%,
+      transparent 52%
     ),
     radial-gradient(
-      circle at 80% 70%,
-      rgba(249, 133, 26, 0.06) 0%,
-      transparent 45%
+      circle at 86% 84%,
+      var(--ambient-glow-2) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 50% 46%,
+      var(--ambient-glow-3) 0%,
+      transparent 68%
     );
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
+}
+
+.ambient-backdrop.ambient-ready {
+  transition:
+    --ambient-glow-1 2.6s ease-in-out,
+    --ambient-glow-2 2.6s ease-in-out,
+    --ambient-glow-3 2.6s ease-in-out;
 }
 
 /* App Viewport Boundaries */
@@ -2652,6 +2678,10 @@ dialog[open].options-menu-dialog.closing {
     transform: translate(-50%, -50%) scale(1);
     opacity: 0;
     transition-duration: 0.15s;
+  }
+
+  .ambient-backdrop.ambient-ready {
+    transition: none;
   }
 
   .counter-card.animate-entry {

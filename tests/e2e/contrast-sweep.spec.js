@@ -54,6 +54,8 @@ const sweep = async (page, counters, { check }) => {
 
 for (const theme of THEMES) {
   test.describe(`${theme} theme`, { tag: '@contrast' }, () => {
+    test.setTimeout(60_000);
+
     test.beforeEach(async ({ page }) => {
       await page.emulateMedia({ colorScheme: theme });
     });

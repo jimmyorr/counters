@@ -6,7 +6,7 @@
 
 The application UI is structured into three primary source files:
 - `index.html`: Contains the structural semantic markup, modal definitions, bottom sheet dialogs, and SVG icons.
-- `index.css`: Houses a modern, CSS-variable driven design system handling everything from typography and component styling to responsive dark/light mode toggles.
+- `index.css`: Houses a modern, CSS-variable driven design system handling everything from typography and component styling to responsive dark/light mode toggles and a subtle `@property`-interpolated ambient background gradient influenced by the leading counter.
 - `app.js`: The central JavaScript controller managing internal state, DOM binding, logic events, animations, sounds, and persistent storage.
 
 ## State management
