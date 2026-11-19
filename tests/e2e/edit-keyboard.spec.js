@@ -85,6 +85,20 @@ test.describe('on a phone', () => {
     expect(bottom).toBe(viewportBottom);
     expect(top).toBeGreaterThan(200); // content-sized, not full height
   });
+
+  test('still fits without scrolling when reorder controls are shown', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('#btn-add-counter').click();
+    await openEdit(page);
+    await expect(page.locator('#edit-reorder-row')).toBeVisible();
+
+    await page.locator('#edit-label').focus();
+    await page.setViewportSize({ width: 375, height: 667 - KEYBOARD });
+    await expect(page.locator('html')).toHaveClass(/keyboard-open/);
+    const { scrolls } = await geometry(page);
+    expect(scrolls).toBe(false);
+    await expect(page.locator('#edit-btn-save')).toBeInViewport();
+  });
 });
 
 test.describe('on desktop', () => {

@@ -64,3 +64,21 @@ test('always opens in add mode', async ({ page }) => {
   await expect(page.locator('#calc-op-plus')).toHaveClass(/active/);
   await expect(page.locator('#calc-quick-add-container button').first()).toHaveText('+5');
 });
+
+test('accepts decimal quick-add presets and avoids floating-point drift', async ({ page }) => {
+  await page.locator('#btn-open-options').click();
+  await page.locator('#menu-btn-open-settings').click();
+  const quickInput = page.locator('#setting-quick-add-values');
+  await quickInput.fill('0.1, 0.2, 2.5');
+  await expect(page.locator('#quick-add-feedback')).toBeHidden();
+  await expect(quickInput).not.toHaveAttribute('aria-invalid', 'true');
+  await page.keyboard.press('Escape');
+
+  await openCalculator(page, card(page, 'a'));
+  await page.locator('#calc-quick-add-container button[data-quick-val="0.1"]').click();
+  await openCalculator(page, card(page, 'a'));
+  await page.locator('#calc-quick-add-container button[data-quick-val="0.2"]').click();
+
+  await expect(valueOf(card(page, 'a'))).toHaveText('10.3');
+  expect((await stored(page, 'counters-list'))[0].value).toBe(10.3);
+});

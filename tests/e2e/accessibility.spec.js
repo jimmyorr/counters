@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures.js';
-import { seed, counter, card, contrast, PALETTES, presets } from './helpers.js';
+import { seed, stored, counter, card, labels, contrast, PALETTES, presets } from './helpers.js';
 
 test.describe('counter cards', () => {
   test.beforeEach(async ({ page }) => {
@@ -95,6 +95,133 @@ test.describe('color contrast', () => {
     await page.goto('/');
     await card(page, 'y').locator('.card-value-body').click();
     expect(await contrast(page.locator('#calc-btn-submit'))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  for (const theme of ['light', 'dark']) {
+    test(`${theme}: accent controls stay readable across custom theme hues`, async ({ page }) => {
+      await seed(page, { counters: [counter('a', 'Alpha', 5)], settings: { theme } });
+      await page.goto('/');
+      await page.locator('[data-tab-btn="dice"]').click();
+      await expect(page.locator('#btn-roll-action')).toBeVisible();
+
+      for (const hue of [0, 60, 120, 180, 205, 240, 258, 275, 300]) {
+        await page.locator('#setting-theme-hue').evaluate((el, h) => {
+          el.value = String(h);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          document.getAnimations().forEach((a) => a.finish());
+        }, hue);
+        expect(await contrast(page.locator('.nav-item.active .nav-text')), `${theme} nav hue ${hue}`).toBeGreaterThanOrEqual(4.5);
+        expect(await contrast(page.locator('#btn-roll-action')), `${theme} primary btn hue ${hue}`).toBeGreaterThanOrEqual(4.5);
+      }
+
+      await page.locator('#btn-open-options').click();
+      await page.locator('#menu-btn-open-display-options').click();
+      await expect(page.locator('#layout-opt-list')).toBeVisible();
+      expect(await contrast(page.locator('#layout-opt-list'))).toBeGreaterThanOrEqual(4.5);
+    });
+
+    test(`${theme}: destructive menu and confirm buttons meet 4.5:1`, async ({ page }) => {
+      await seed(page, { counters: [counter('a', 'Alpha', 5)], settings: { theme } });
+      await page.goto('/');
+      await page.locator('#btn-open-options').click();
+      await expect(page.locator('#menu-btn-delete-all')).toBeVisible();
+      expect(await contrast(page.locator('#menu-btn-delete-all'))).toBeGreaterThanOrEqual(4.5);
+
+      await page.locator('#menu-btn-delete-all').click();
+      await expect(page.locator('#confirm-btn-ok')).toBeVisible();
+      expect(await contrast(page.locator('#confirm-btn-ok'))).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+});
+
+test.describe('keyboard navigation and non-drag reordering', () => {
+  test('tabs expose WAI-ARIA roles, inert off-screen panels, and arrow key switching', async ({ page }) => {
+    await page.goto('/');
+    const countersTab = page.locator('[data-tab-btn="counters"]');
+    const diceTab = page.locator('[data-tab-btn="dice"]');
+    const timerTab = page.locator('[data-tab-btn="timer"]');
+
+    await expect(countersTab).toHaveAttribute('aria-selected', 'true');
+    await expect(countersTab).toHaveAttribute('tabindex', '0');
+    await expect(diceTab).toHaveAttribute('tabindex', '-1');
+    await expect(page.locator('#tab-counters')).toHaveJSProperty('inert', false);
+    await expect(page.locator('#tab-dice')).toHaveJSProperty('inert', true);
+    await expect(page.locator('#tab-timer')).toHaveJSProperty('inert', true);
+
+    await countersTab.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(diceTab).toBeFocused();
+    await expect(diceTab).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#tab-dice')).toHaveJSProperty('inert', false);
+    await expect(page.locator('#tab-counters')).toHaveJSProperty('inert', true);
+
+    await page.keyboard.press('End');
+    await expect(timerTab).toBeFocused();
+    await expect(page.locator('#tab-timer')).toHaveJSProperty('inert', false);
+
+    await page.keyboard.press('Home');
+    await expect(countersTab).toBeFocused();
+    await expect(page.locator('#tab-counters')).toHaveJSProperty('inert', false);
+  });
+
+  test('preset color swatches are keyboard-operable buttons with names and pressed state', async ({ page }) => {
+    await seed(page, { counters: [counter('a', 'Alpha', 0, { color: 0 })] });
+    await page.goto('/');
+    await card(page, 'a').locator('.card-header').click();
+
+    const swatches = page.locator('#edit-palette-container button.palette-swatch');
+    await expect(swatches).toHaveCount(8);
+    const active = page.locator('#edit-palette-container button.palette-swatch[data-color-id="0"]');
+    await expect(active).toHaveAttribute('aria-pressed', 'true');
+    await expect(active).toHaveAttribute('aria-label', /.+/);
+
+    const other = page.locator('#edit-palette-container button.palette-swatch[data-color-id="4"]');
+    await other.focus();
+    await page.keyboard.press('Space');
+    await expect(other).toHaveAttribute('aria-pressed', 'true');
+    await expect(active).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('counters can be reordered without dragging from the edit dialog (#23)', async ({ page }) => {
+    await seed(page, {
+      counters: [counter('a', 'Alpha'), counter('b', 'Bravo'), counter('c', 'Charlie')],
+    });
+    await page.goto('/');
+    await card(page, 'a').locator('.card-header').click();
+
+    const up = page.locator('#edit-btn-move-up');
+    const down = page.locator('#edit-btn-move-down');
+    await expect(page.locator('#edit-reorder-row')).toBeVisible();
+    await expect(up).toBeDisabled();
+    await expect(down).toBeEnabled();
+
+    await down.focus();
+    await page.keyboard.press('Enter');
+    await expect(labels(page)).toHaveText(['Bravo', 'Alpha', 'Charlie']);
+    await expect(up).toBeEnabled();
+    await expect(down).toBeEnabled();
+
+    await page.keyboard.press('Enter');
+    await expect(labels(page)).toHaveText(['Bravo', 'Charlie', 'Alpha']);
+    await expect(down).toBeDisabled();
+    // Focus shifts to Move up instead of dropping to body when Move down hits the end
+    await expect(up).toBeFocused();
+    await expect(page.locator('#sr-announcer')).toHaveText('Alpha moved to position 3 of 3');
+
+    await page.keyboard.press('Escape');
+    await page.reload();
+    await expect(labels(page)).toHaveText(['Bravo', 'Charlie', 'Alpha']);
+    expect((await stored(page, 'counters-list')).map((c) => c.id)).toEqual(['b', 'c', 'a']);
+  });
+
+  test('reorder controls stay hidden when auto-sort is enabled', async ({ page }) => {
+    await seed(page, {
+      counters: [counter('a', 'Alpha', 10), counter('b', 'Bravo', 5)],
+      settings: { autoSort: true },
+    });
+    await page.goto('/');
+    await card(page, 'a').locator('.card-header').click();
+    await expect(page.locator('#edit-reorder-row')).toBeHidden();
   });
 });
 

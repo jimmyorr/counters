@@ -155,7 +155,7 @@ const state = {mode: 'device', pick: devices[0]};
 try {
   const [mode, pick] = decodeURIComponent(location.hash.slice(1)).split('/');
   if (mode === 'device' || mode === 'shot') Object.assign(state, {mode, pick});
-} catch {}
+} catch { /* ignore */ }
 function button(label, pressed, onClick) {
   const b = document.createElement('button');
   b.textContent = label;
@@ -624,8 +624,18 @@ async function main() {
     server = await serveDir(buildDir);
     base = `http://localhost:${server.address().port}/`;
   }
+  const systemChromium = [
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/google-chrome',
+  ].find((candidate) => fs.existsSync(candidate));
+  const launchTarget = process.env.CHROME_PATH
+    ? { executablePath: process.env.CHROME_PATH }
+    : systemChromium
+      ? { executablePath: systemChromium }
+      : { channel: 'chrome' };
   const browser = await chromium.launch({
-    channel: 'chrome',
+    ...launchTarget,
     headless: mode !== 'open',
   });
   try {

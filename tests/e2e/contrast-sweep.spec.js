@@ -33,7 +33,9 @@ const sweep = async (page, counters, { check }) => {
     await c.locator('.card-value-body').click();
     await expect(page.locator('#calc-dialog-title')).toBeVisible();
     await check(`${id} calculator title`, page.locator('#calc-dialog-title'), TEXT);
+    await check(`${id} calculator op sign`, page.locator('.math-op-indicator'), ICON);
     await check(`${id} calculator active op`, page.locator('#calc-op-plus'), ICON);
+    await check(`${id} calculator quick-add`, page.locator('#calc-quick-add-container button').first(), TEXT);
     await check(`${id} calculator submit`, page.locator('#calc-btn-submit'), TEXT);
     await page.keyboard.press('Escape');
     await expect(page.locator('#calculator-dialog')).toBeHidden();

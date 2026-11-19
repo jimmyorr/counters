@@ -35,10 +35,18 @@ import { log } from "./logger.js";
     window.gtag = gtag;
     gtag("js", new Date());
     gtag("config", "G-K0MFHHQ1RM");
+
+    if (/android/i.test(navigator.userAgent)) {
+      const storeLink = document.getElementById("about-app-store-link");
+      if (storeLink) {
+        storeLink.href =
+          "https://play.google.com/store/apps/details?id=com.cowneck.counters";
+      }
+    }
   } else {
     // Native App via Capacitor
     FirebaseAnalytics.setEnabled({ enabled: true }).catch((err) => {
-      console.error("Failed to enable Firebase Analytics:", err);
+      log.error("Failed to enable Firebase Analytics:", err);
     });
     const appStoreContainer = document.getElementById("about-app-store-container");
     if (appStoreContainer) {
@@ -114,6 +122,7 @@ import { log } from "./logger.js";
       HTMLDialogElement.prototype.close.call(dialog);
       dialog.classList.remove("closing");
     }
+    dialog.style.transform = "";
     dialog.dataset.openedAt = Date.now().toString();
     dialog.showModal();
   };
@@ -190,6 +199,16 @@ import { log } from "./logger.js";
         "#158186", // Teal
         "#aa19ce", // Purple
       ],
+      names: [
+        "Royal blue",
+        "Red-orange",
+        "Magenta",
+        "Violet",
+        "Grass green",
+        "Amber",
+        "Teal",
+        "Purple",
+      ],
     },
     pastel: {
       label: "Pastel",
@@ -202,6 +221,16 @@ import { log } from "./logger.js";
         "#e9cf87", // Butter
         "#86e6d3", // Mint
         "#d4b3fc", // Lilac
+      ],
+      names: [
+        "Sky",
+        "Apricot",
+        "Pink",
+        "Periwinkle",
+        "Leaf green",
+        "Butter",
+        "Mint",
+        "Lilac",
       ],
     },
     vintage: {
@@ -216,6 +245,16 @@ import { log } from "./logger.js";
         "#77b1b0", // Dusty teal
         "#a475af", // Plum
       ],
+      names: [
+        "Denim",
+        "Terracotta",
+        "Dusty rose",
+        "Mauve",
+        "Sage",
+        "Mustard",
+        "Dusty teal",
+        "Plum",
+      ],
     },
     nautical: {
       label: "Nautical",
@@ -229,6 +268,16 @@ import { log } from "./logger.js";
         "#115e5e", // Deep sea
         "#453065", // Twilight
       ],
+      names: [
+        "Navy",
+        "Red lead",
+        "Signal red",
+        "Storm grey",
+        "Kelp",
+        "Brass",
+        "Deep sea",
+        "Twilight",
+      ],
     },
     vaporwave: {
       label: "Vaporwave",
@@ -241,6 +290,16 @@ import { log } from "./logger.js";
         "#fda573", // Sunset orange
         "#05ffa1", // Mint
         "#b967ff", // Purple
+      ],
+      names: [
+        "Cyan",
+        "Coral",
+        "Hot pink",
+        "Periwinkle",
+        "Lemon",
+        "Sunset orange",
+        "Mint",
+        "Purple",
       ],
     },
     colorblind: {
@@ -256,6 +315,16 @@ import { log } from "./logger.js";
         "#d4db4c", // Citron
         "#349984", // Teal
         "#9b72ef", // Violet
+      ],
+      names: [
+        "Sky",
+        "Caramel",
+        "Salmon",
+        "Periwinkle",
+        "Mint",
+        "Citron",
+        "Teal",
+        "Violet",
       ],
     },
   };
@@ -276,13 +345,114 @@ import { log } from "./logger.js";
     return [...getSwatches()].sort((a, b) => hueOf(a.hex) - hueOf(b.hex));
   };
 
-  // Swatches ({ id, class, hex }) for the active palette
-  const getSwatches = () =>
-    (palettes[state.settings.palette] || palettes.bold).colors.map(
-      (hex, id) => ({ id, class: `card-color-${id}`, hex }),
-    );
+  // Swatches ({ id, class, hex, name }) for the active palette
+  const getSwatches = () => {
+    const active = palettes[state.settings.palette] || palettes.bold;
+    return active.colors.map((hex, id) => ({
+      id,
+      class: `card-color-${id}`,
+      hex,
+      name: active.names?.[id] || `Color ${id + 1}`,
+    }));
+  };
 
-  // Apply "light", "dark", or "system" theme classes to the root element
+  // Helper: Convert HSL (0-360, 0-100, 0-100) to #rrggbb
+  const hslToHex = (h, s, l) => {
+    const hue = ((Number(h) % 360) + 360) % 360;
+    const sat = s / 100;
+    const lig = l / 100;
+    const k = (n) => (n + hue / 30) % 12;
+    const a = sat * Math.min(lig, 1 - lig);
+    const f = (n) =>
+      Math.round(
+        255 * (lig - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))),
+      );
+    return (
+      "#" +
+      [f(0), f(8), f(4)].map((v) => v.toString(16).padStart(2, "0")).join("")
+    );
+  };
+
+  // Helpers: WCAG relative luminance and contrast ratio for #rrggbb colors
+  const relativeLuminance = (hex) => {
+    const channel = (i) => {
+      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
+  };
+  const contrastRatio = (a, b) => {
+    const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+
+  // Helper: Mix a #rrggbb color toward another by t (0-1)
+  const mixHex = (hex, toward, t) =>
+    "#" +
+    [1, 3, 5]
+      .map((i) => {
+        const from = parseInt(hex.slice(i, i + 2), 16);
+        const to = parseInt(toward.slice(i, i + 2), 16);
+        return Math.round(from + (to - from) * t).toString(16).padStart(2, "0");
+      })
+      .join("");
+
+  // Helper: Black or white text, whichever contrasts more with a #rrggbb background
+  const getReadableTextColor = (hex) => {
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) return "#ffffff";
+    const whiteContrast = contrastRatio(hex, "#ffffff");
+    // Prefer white whenever it passes WCAG AA (4.5:1). White only gains contrast
+    // under the card header's dark overlay, while black loses it, so a color
+    // where black barely wins on the body could still fail in the header.
+    if (whiteContrast >= 4.5) return "#ffffff";
+    // Otherwise (light custom colors) use pure black, which beats near-black.
+    return whiteContrast >= contrastRatio(hex, "#000000") ? "#ffffff" : "#000000";
+  };
+
+  // Update --theme-hue plus readable accent ink and button-fill text tokens across
+  // all light and dark surfaces so every hue (0-360) meets WCAG AA (4.5:1).
+  const applyAccentTokens = (hue) => {
+    const root = document.documentElement;
+    root.style.setProperty("--theme-hue", hue);
+    const accLight = hslToHex(hue, 94, 60);
+    const accDark = hslToHex(hue, 92, 65);
+    const lightSurfaces = [
+      "#ffffff",
+      "#f2f3f7",
+      "#e9ebee",
+      mixHex("#e9ebee", accLight, 0.1),
+      mixHex("#ffffff", accLight, 0.1),
+    ];
+    let inkLight = "#000000";
+    for (let t = 0; t < 1; t += 0.02) {
+      const candidate = mixHex(accLight, "#000000", t);
+      if (lightSurfaces.every((s) => contrastRatio(candidate, s) >= 4.6)) {
+        inkLight = candidate;
+        break;
+      }
+    }
+    const darkSurfaces = [
+      "#0d0e11",
+      "#16171d",
+      "#21232c",
+      mixHex("#21232c", accDark, 0.15),
+      mixHex("#16171d", accDark, 0.15),
+    ];
+    let inkDark = "#ffffff";
+    for (let t = 0; t < 1; t += 0.02) {
+      const candidate = mixHex(accDark, "#ffffff", t);
+      if (darkSurfaces.every((s) => contrastRatio(candidate, s) >= 4.6)) {
+        inkDark = candidate;
+        break;
+      }
+    }
+    root.style.setProperty("--accent-ink-light", inkLight);
+    root.style.setProperty("--accent-ink-dark", inkDark);
+    root.style.setProperty("--accent-on-fill-light", getReadableTextColor(accLight));
+    root.style.setProperty("--accent-on-fill-dark", getReadableTextColor(accDark));
+  };
+
+  // Apply "light", "dark", or "system" theme classes and browser theme-color meta
   const applyTheme = (theme) => {
     const isDark =
       theme === "dark" ||
@@ -290,6 +460,10 @@ import { log } from "./logger.js";
         window.matchMedia("(prefers-color-scheme: dark)").matches);
     document.documentElement.classList.toggle("dark-mode", isDark);
     document.documentElement.classList.toggle("light-mode", !isDark);
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) {
+      themeMeta.setAttribute("content", isDark ? "#0d0e11" : "#f2f3f7");
+    }
   };
 
   // ------------------------------------------------------------------------
@@ -328,29 +502,27 @@ import { log } from "./logger.js";
         saveSettings();
       }
       applyTheme(state.settings.theme);
+      applyAccentTokens(state.settings.themeHue);
       localStorage.setItem("counters-layout", state.settings.layout);
       localStorage.setItem("counters-theme", state.settings.theme);
-      document.documentElement.style.setProperty(
-        "--theme-hue",
-        state.settings.themeHue,
-      );
+      localStorage.setItem("counters-theme-hue", String(state.settings.themeHue));
 
       if (state.settings.keepAwake) {
         KeepAwake.keepAwake().catch((err) =>
-          console.warn("KeepAwake failed:", err),
+          log.warn("KeepAwake failed:", err),
         );
       }
 
       if (savedHistory) {
-        state.history = JSON.parse(savedHistory).map((log) => ({
-          ...log,
-          counterLabel: log.counterLabel || "",
+        state.history = JSON.parse(savedHistory).map((entry) => ({
+          ...entry,
+          counterLabel: entry.counterLabel || "",
         }));
       } else {
         state.history = [];
       }
     } catch (e) {
-      console.error("Failed to load local storage state", e);
+      log.error("Failed to load local storage state", e);
     }
   };
 
@@ -372,6 +544,7 @@ import { log } from "./logger.js";
     // Mirrors read synchronously by the pre-load script in index.html to avoid a flash
     localStorage.setItem("counters-layout", state.settings.layout);
     localStorage.setItem("counters-theme", state.settings.theme);
+    localStorage.setItem("counters-theme-hue", String(state.settings.themeHue));
   };
 
   const saveHistory = () => {
@@ -381,9 +554,17 @@ import { log } from "./logger.js";
     });
   };
 
-  // Helper: Format large numbers with commas
+  // Helper: Unique identifier that never collides in synchronous loops or frozen clocks
+  let idSeq = 0;
+  const createId = () =>
+    crypto.randomUUID?.() || `${Date.now()}-${++idSeq}`;
+
+  // Helper: Strip IEEE-754 floating-point drift (e.g. 0.1 + 0.2 -> 0.3)
+  const cleanFloat = (num) => Number(Number(num).toPrecision(12));
+
+  // Helper: Format large numbers with commas and up to 6 decimal places
   const formatNumber = (num) => {
-    return Number(num).toLocaleString("en-US");
+    return Number(num).toLocaleString("en-US", { maximumFractionDigits: 6 });
   };
 
   // Helper: Escape HTML special chars before interpolating user text into HTML
@@ -405,11 +586,7 @@ import { log } from "./logger.js";
   const $$ = (selector) => document.querySelectorAll(selector);
 
   // Helper: Get App Theme Hex Color
-  const getThemeHex = () => {
-    const ctx = document.createElement("canvas").getContext("2d");
-    ctx.fillStyle = `hsl(${state.settings.themeHue || 205}, 94%, 60%)`;
-    return ctx.fillStyle;
-  };
+  const getThemeHex = () => hslToHex(state.settings.themeHue ?? 205, 94, 60);
 
   // Helper: Get Counter Hex Color
   // Colors are either a preset swatch index or a custom "#rrggbb" string
@@ -423,42 +600,6 @@ import { log } from "./logger.js";
     const swatches = getSwatches();
     const presetSwatch = swatches[counter.color] || swatches[0];
     return presetSwatch.hex;
-  };
-
-  // Helpers: WCAG relative luminance and contrast ratio for #rrggbb colors
-  const relativeLuminance = (hex) => {
-    const channel = (i) => {
-      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-    };
-    return 0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5);
-  };
-  const contrastRatio = (a, b) => {
-    const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
-    return (hi + 0.05) / (lo + 0.05);
-  };
-
-  // Helper: Mix a #rrggbb color toward another by t (0-1)
-  const mixHex = (hex, toward, t) =>
-    "#" +
-    [1, 3, 5]
-      .map((i) => {
-        const from = parseInt(hex.slice(i, i + 2), 16);
-        const to = parseInt(toward.slice(i, i + 2), 16);
-        return Math.round(from + (to - from) * t).toString(16).padStart(2, "0");
-      })
-      .join("");
-
-  // Helper: Black or white text, whichever contrasts more with a #rrggbb background
-  const getReadableTextColor = (hex) => {
-    if (!/^#[0-9a-f]{6}$/i.test(hex)) return "#ffffff";
-    const whiteContrast = contrastRatio(hex, "#ffffff");
-    // Prefer white whenever it passes WCAG AA (4.5:1). White only gains contrast
-    // under the card header's dark overlay, while black loses it, so a color
-    // where black barely wins on the body could still fail in the header.
-    if (whiteContrast >= 4.5) return "#ffffff";
-    // Otherwise (light custom colors) use pure black, which beats near-black.
-    return whiteContrast >= contrastRatio(hex, "#000000") ? "#ffffff" : "#000000";
   };
 
   // Helper: Text color for the card label, which sits on the card header's 12%
@@ -506,6 +647,19 @@ import { log } from "./logger.js";
     dialog.style.setProperty("--sheet-ink-light", getInkOnLightTint(hex));
     // Matches the old 60% color, 40% white mix unless that's too dark
     dialog.style.setProperty("--sheet-ink-dark", getInkOnDarkTint(hex, 0.4));
+    // Readable counter ink on --bg-tertiary controls (e.g. calculator quick-adds)
+    dialog.style.setProperty(
+      "--sheet-control-ink-light",
+      /^#[0-9a-f]{6}$/i.test(hex)
+        ? getReadableInk(hex, "#e9ebee", "#000000", 0.15)
+        : "#000000",
+    );
+    dialog.style.setProperty(
+      "--sheet-control-ink-dark",
+      /^#[0-9a-f]{6}$/i.test(hex)
+        ? getReadableInk(hex, "#21232c", "#ffffff", 0.3)
+        : "#ffffff",
+    );
   };
 
   // ------------------------------------------------------------------------
@@ -553,7 +707,7 @@ import { log } from "./logger.js";
       osc.start();
       osc.stop(ctx.currentTime + duration);
     } catch (e) {
-      console.warn("Audio Context failed to play", e);
+      log.warn("Audio Context failed to play", e);
     }
   };
 
@@ -605,7 +759,7 @@ import { log } from "./logger.js";
         await Haptics.impact({ style });
       }
     } catch (err) {
-      console.warn("Haptics failed", err);
+      log.warn("Haptics failed", err);
     }
   };
 
@@ -642,7 +796,7 @@ import { log } from "./logger.js";
 
       noiseSource.start();
     } catch (e) {
-      console.warn("Failed to generate noise source", e);
+      log.warn("Failed to generate noise source", e);
     }
   };
 
@@ -651,15 +805,19 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   let toastTimeout = null;
 
-  // Announce a counter's new value to screen readers via the polite live region.
+  // Announce a message to screen readers via the polite live region.
   // Clear first so repeating the same text is still announced.
-  const announceValue = (counter) => {
+  const announce = (message) => {
     const announcer = $("#sr-announcer");
     if (!announcer) return;
     announcer.textContent = "";
     requestAnimationFrame(() => {
-      announcer.textContent = `${counter.label}: ${formatNumber(counter.value)}`;
+      announcer.textContent = message;
     });
+  };
+
+  const announceValue = (counter) => {
+    announce(`${counter.label}: ${formatNumber(counter.value)}`);
   };
 
   let toastDuration = 2500;
@@ -772,9 +930,8 @@ import { log } from "./logger.js";
     const icon = leaderContainer.querySelector(".leader-icon svg");
 
     if (type === "total") {
-      const totalValue = state.counters.reduce(
-        (sum, item) => sum + item.value,
-        0,
+      const totalValue = cleanFloat(
+        state.counters.reduce((sum, item) => sum + item.value, 0),
       );
       leaderContainer.style.removeProperty("--leader-color");
       leaderContainer.style.removeProperty("--leader-bg");
@@ -1042,6 +1199,7 @@ import { log } from "./logger.js";
     };
 
     listWrapper.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
       const header = e.target.closest(".card-header");
       if (!header) return;
       // Skip if tapping a button inside the header
@@ -1355,11 +1513,17 @@ import { log } from "./logger.js";
     if (state.currentTab === tabId) return;
     state.currentTab = tabId;
 
-    // Update footer button active class
+    // Update footer button active class and roving tabindex
     $$("[data-tab-btn]").forEach((btn) => {
       const isActive = btn.getAttribute("data-tab-btn") === tabId;
       btn.classList.toggle("active", isActive);
       btn.setAttribute("aria-selected", isActive ? "true" : "false");
+      btn.setAttribute("tabindex", isActive ? "0" : "-1");
+    });
+
+    // Keep off-screen panels out of the keyboard Tab order
+    $$(".tab-content").forEach((panel) => {
+      panel.inert = panel.id !== "tab-" + tabId;
     });
 
     // Update Topbar View Title
@@ -1386,7 +1550,10 @@ import { log } from "./logger.js";
     const target = document.getElementById("tab-" + tabId);
     if (slider && target) {
       const scrollTargetX = target.offsetLeft - slider.offsetLeft;
-      slider.scrollTo({ left: scrollTargetX, behavior: "smooth" });
+      slider.scrollTo({
+        left: scrollTargetX,
+        behavior: prefersReducedMotion() ? "instant" : "smooth",
+      });
     }
   };
 
@@ -1539,8 +1706,6 @@ import { log } from "./logger.js";
     const hexColor = getCounterHex(counter);
     const titleEl = $("#calc-dialog-title");
     titleEl.textContent = `${counter.label}: ${formatNumber(counter.value)}`;
-    titleEl.style.setProperty("--pill-bg", `${hexColor}15`);
-    titleEl.style.setProperty("--pill-border", `${hexColor}40`);
     const input = $("#calc-number-input");
     input.value = "";
     updateCalcDisplayDOM();
@@ -1594,7 +1759,7 @@ import { log } from "./logger.js";
       const oldValue = counter.value;
       const signedDelta =
         state.calcPendingOperation === "plus" ? amount : -amount;
-      counter.value += signedDelta;
+      counter.value = cleanFloat(counter.value + signedDelta);
       saveCounters();
 
       const label =
@@ -1733,7 +1898,9 @@ import { log } from "./logger.js";
           fill: "backwards",
         },
       )
-      .finished.catch(() => {})
+      .finished.catch(() => {
+        /* ignore */
+      })
       .finally(() => ghost.remove());
   };
 
@@ -1872,6 +2039,11 @@ import { log } from "./logger.js";
       dialog.close();
       if (state.counters.length === 0) return;
 
+      if (state.autoSortTimeout) {
+        clearTimeout(state.autoSortTimeout);
+        state.autoSortTimeout = null;
+      }
+
       // FIRST: Capture current positions for FLIP animation
       const firstPositions = cardPositions();
 
@@ -1971,6 +2143,10 @@ import { log } from "./logger.js";
       dialog.close();
       if (state.counters.length === 0) return;
       showConfirmDialog("Are you sure you want to delete all counters?", () => {
+        if (state.autoSortTimeout) {
+          clearTimeout(state.autoSortTimeout);
+          state.autoSortTimeout = null;
+        }
         // Cards tumble out in a cascade (capped so long lists don't drag on)
         // while the empty state rises in behind the last one
         const cards = [...$$(".counter-card")];
@@ -2046,6 +2222,63 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   // 13. Edit / Add counter Panel Logic
   // ------------------------------------------------------------------------
+  const setActiveEditSwatch = (activeSwatch) => {
+    $$(".palette-swatch").forEach((s) => {
+      const isActive = s === activeSwatch;
+      s.classList.toggle("active", isActive);
+      if (s.tagName === "BUTTON") {
+        s.setAttribute("aria-pressed", isActive ? "true" : "false");
+      }
+    });
+  };
+
+  // Render preset swatches as accessible buttons in the active palette's hue order
+  const renderEditPaletteSwatches = () => {
+    const paletteContainer = $("#edit-palette-container");
+    if (!paletteContainer) return;
+    paletteContainer.innerHTML =
+      getSwatchesInDisplayOrder()
+        .map(
+          (swatch) => `
+          <button type="button" class="palette-swatch ${swatch.class}" data-color-id="${swatch.id}" aria-label="${swatch.name}" aria-pressed="false" style="background-color: ${swatch.hex}"></button>
+        `,
+        )
+        .join("") +
+      `
+          <div class="palette-swatch custom-color-picker" data-color-id="custom">
+            <svg aria-hidden="true" class="custom-color-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />
+            </svg>
+            <input type="color" id="edit-custom-color" aria-label="Custom color picker">
+          </div>
+        `;
+  };
+
+  // Update Move up / Move down visibility and disabled states for non-drag reordering (#23)
+  const syncEditReorderControls = () => {
+    const row = $("#edit-reorder-row");
+    const upBtn = $("#edit-btn-move-up");
+    const downBtn = $("#edit-btn-move-down");
+    if (!row || !upBtn || !downBtn) return;
+
+    if (state.settings.autoSort || state.counters.length < 2) {
+      row.hidden = true;
+      return;
+    }
+
+    const idx = state.counters.findIndex(
+      (c) => c.id === state.activeCounterIdForEdit,
+    );
+    if (idx === -1) {
+      row.hidden = true;
+      return;
+    }
+
+    row.hidden = false;
+    upBtn.disabled = idx === 0;
+    downBtn.disabled = idx === state.counters.length - 1;
+  };
+
   const setupEditCounterDialog = () => {
     const dialog = $("#edit-counter-dialog");
     const form = $("#edit-counter-form");
@@ -2086,59 +2319,82 @@ import { log } from "./logger.js";
     // Compile Palette Grid circular swatches
     const paletteContainer = $("#edit-palette-container");
     if (paletteContainer) {
-      paletteContainer.innerHTML =
-        getSwatchesInDisplayOrder()
-          .map((swatch) => {
-            return `
-          <div class="palette-swatch ${swatch.class}" data-color-id="${swatch.id}" style="background-color: ${swatch.hex}"></div>
-        `;
-          })
-          .join("") +
-        `
-          <div class="palette-swatch custom-color-picker" data-color-id="custom">
-            <svg class="custom-color-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-              <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />
-            </svg>
-            <input type="color" id="edit-custom-color" aria-label="Custom color picker">
-          </div>
-        `;
+      renderEditPaletteSwatches();
 
       // Swatch Click bind
       paletteContainer.addEventListener("click", (e) => {
         const swatch = e.target.closest(".palette-swatch");
         if (!swatch) return;
 
-        $$(".palette-swatch").forEach((s) => s.classList.remove("active"));
-        swatch.classList.add("active");
+        setActiveEditSwatch(swatch);
 
         // Dynamically update sheet theme color
         const colorId = swatch.getAttribute("data-color-id");
         if (colorId === "custom") {
           const customInput = $("#edit-custom-color");
-          if (customInput)
-            setSheetTheme(dialog, customInput.value);
+          if (customInput) setSheetTheme(dialog, customInput.value);
         } else {
           const swatches = getSwatches();
-          const swatchData = swatches[parseInt(colorId)] || swatches[0];
+          const swatchData = swatches[parseInt(colorId, 10)] || swatches[0];
           setSheetTheme(dialog, swatchData.hex);
         }
 
         playClickSound();
       });
 
-      const customColorInput = $("#edit-custom-color");
-      if (customColorInput) {
-        customColorInput.addEventListener("input", (e) => {
-          const swatch = e.target.closest(".palette-swatch");
-          if (swatch) {
-            swatch.style.backgroundColor = e.target.value;
-            $$(".palette-swatch").forEach((s) => s.classList.remove("active"));
-            swatch.classList.add("active");
-            setSheetTheme(dialog, e.target.value);
-          }
-        });
-      }
+      paletteContainer.addEventListener("input", (e) => {
+        if (e.target.id !== "edit-custom-color") return;
+        const swatch = e.target.closest(".palette-swatch");
+        if (swatch) {
+          swatch.style.backgroundColor = e.target.value;
+          setActiveEditSwatch(swatch);
+          setSheetTheme(dialog, e.target.value);
+        }
+      });
     }
+
+    // Non-drag counter reordering (#23)
+    const moveActiveCounter = (delta) => {
+      if (state.settings.autoSort) return;
+      const fromIdx = state.counters.findIndex(
+        (c) => c.id === state.activeCounterIdForEdit,
+      );
+      const toIdx = fromIdx + delta;
+      if (fromIdx === -1 || toIdx < 0 || toIdx >= state.counters.length) return;
+
+      const wasFocusedOnUp = document.activeElement?.id === "edit-btn-move-up";
+      const wasFocusedOnDown =
+        document.activeElement?.id === "edit-btn-move-down";
+
+      const firstPositions = cardPositions();
+      const [movedCounter] = state.counters.splice(fromIdx, 1);
+      state.counters.splice(toIdx, 0, movedCounter);
+      saveCounters();
+      renderCountersList();
+      flipCardsFrom(firstPositions);
+      syncEditReorderControls();
+
+      // If keyboard focus was on a move button that just hit the end and became
+      // disabled, keep focus in the pair by shifting to the opposite button.
+      if (wasFocusedOnUp && $("#edit-btn-move-up")?.disabled) {
+        $("#edit-btn-move-down")?.focus();
+      } else if (wasFocusedOnDown && $("#edit-btn-move-down")?.disabled) {
+        $("#edit-btn-move-up")?.focus();
+      }
+
+      announce(
+        `${movedCounter.label} moved to position ${toIdx + 1} of ${state.counters.length}`,
+      );
+      playHaptic(ImpactStyle.Light);
+      playClickSound(500, 650, 0.06, 0.04);
+    };
+
+    $("#edit-btn-move-up")?.addEventListener("click", () =>
+      moveActiveCounter(-1),
+    );
+    $("#edit-btn-move-down")?.addEventListener("click", () =>
+      moveActiveCounter(1),
+    );
 
     // Set by the "Reset to N" button just before it submits the form
     let resetRequested = false;
@@ -2155,19 +2411,23 @@ import { log } from "./logger.js";
         if (dataColorId === "custom") {
           colorId = $("#edit-custom-color").value;
         } else {
-          colorId = parseInt(dataColorId);
+          colorId = parseInt(dataColorId, 10);
         }
       }
 
       const label = $("#edit-label").value.trim();
-      const increment = parseFloat($("#edit-increment").value || "1");
-      const resetValue = parseFloat($("#edit-reset-val").value || "0");
+      const increment = cleanFloat(
+        parseFloat($("#edit-increment").value || "1"),
+      );
+      const resetValue = cleanFloat(
+        parseFloat($("#edit-reset-val").value || "0"),
+      );
       // "Reset to N" saves the other edits too, with the value set to N
       const isReset = resetRequested;
       resetRequested = false;
       const value = isReset
         ? resetValue
-        : parseFloat($("#edit-value-input-details").value || "0");
+        : cleanFloat(parseFloat($("#edit-value-input-details").value || "0"));
 
       // Edit existing counter
       const counter = state.counters.find(
@@ -2311,15 +2571,27 @@ import { log } from "./logger.js";
   const setupEditValueDialog = () => {
     const dialog = $("#edit-value-dialog");
     const form = $("#edit-value-form");
+    const input = $("#edit-value-input");
 
     if (!dialog || !form) return;
+
+    if (input) {
+      input.addEventListener("focus", () => {
+        const valueAtFocus = input.value;
+        setTimeout(() => {
+          if (document.activeElement === input && input.value === valueAtFocus) {
+            input.select();
+          }
+        }, 50);
+      });
+    }
 
     form.addEventListener("submit", (e) => {
       e.preventDefault();
 
       const newValueStr = $("#edit-value-input").value;
       if (newValueStr === "") return;
-      const newValue = parseFloat(newValueStr);
+      const newValue = cleanFloat(parseFloat(newValueStr));
 
       const counter = state.counters.find(
         (c) => c.id === state.activeCounterIdForEdit,
@@ -2389,7 +2661,7 @@ import { log } from "./logger.js";
         : labelChoices[Math.floor(Math.random() * labelChoices.length)];
 
     const newCounter = {
-      id: Date.now().toString(),
+      id: createId(),
       label,
       autoNamed: true, // still on its automatic name; the edit dialog selects it for renaming
       value: 0,
@@ -2432,6 +2704,7 @@ import { log } from "./logger.js";
     $("#edit-increment").value = counter.increment;
     $("#edit-reset-val").value = counter.resetValue;
     updateResetButtonLabel();
+    syncEditReorderControls();
 
     // Set palette swatch selected
     const isCustom = isCustomColor(counter.color);
@@ -2439,12 +2712,18 @@ import { log } from "./logger.js";
     const swatches = getSwatches();
     $$(".palette-swatch").forEach((swatch) => {
       const colorId = swatch.getAttribute("data-color-id");
-      swatch.classList.toggle(
-        "active",
-        isCustom ? colorId === "custom" : parseInt(colorId) === counter.color,
-      );
+      const isSelected = isCustom
+        ? colorId === "custom"
+        : parseInt(colorId, 10) === counter.color;
+      swatch.classList.toggle("active", isSelected);
+      if (swatch.tagName === "BUTTON") {
+        swatch.setAttribute("aria-pressed", isSelected ? "true" : "false");
+      }
       // Preset swatches follow the active palette
-      if (swatches[colorId]) swatch.style.backgroundColor = swatches[colorId].hex;
+      if (swatches[colorId]) {
+        swatch.style.backgroundColor = swatches[colorId].hex;
+        swatch.setAttribute("aria-label", swatches[colorId].name);
+      }
       if (colorId === "custom") {
         // Show the counter's custom color, or start the picker at the app theme color
         const customHex = isCustom ? counter.color : getThemeHex();
@@ -2550,11 +2829,11 @@ import { log } from "./logger.js";
         saveSettings();
         if (state.settings.keepAwake) {
           KeepAwake.keepAwake().catch((err) =>
-            console.warn("KeepAwake enable failed:", err),
+            log.warn("KeepAwake enable failed:", err),
           );
         } else {
           KeepAwake.allowSleep().catch((err) =>
-            console.warn("KeepAwake disable failed:", err),
+            log.warn("KeepAwake disable failed:", err),
           );
         }
         playClickSound();
@@ -2565,11 +2844,11 @@ import { log } from "./logger.js";
     const hueSlider = $("#setting-theme-hue");
     if (hueSlider) {
       hueSlider.addEventListener("input", (e) => {
-        const val = e.target.value;
-        document.documentElement.style.setProperty("--theme-hue", val);
+        applyAccentTokens(e.target.value);
       });
       hueSlider.addEventListener("change", (e) => {
         state.settings.themeHue = parseInt(e.target.value, 10);
+        applyAccentTokens(state.settings.themeHue);
         saveSettings();
         playClickSound();
       });
@@ -2580,6 +2859,7 @@ import { log } from "./logger.js";
       state.settings.palette = e.target.value;
       saveSettings();
       renderPaletteSetting();
+      renderEditPaletteSwatches();
       renderCountersList();
       playClickSound();
     });
@@ -2598,10 +2878,9 @@ import { log } from "./logger.js";
       const feedback = $("#quick-add-feedback");
       const tokens = input.value.split(",").map((t) => t.trim());
       const nonEmpty = tokens.filter((t) => t !== "");
-      // Strict positive integers: parseInt would silently mangle "2.5" -> 2
-      // or accept "7abc" -> 7, so require digits only.
+      // Positive integers or decimals: reject partial strings like "7abc" or "2."
       const invalid = nonEmpty.filter(
-        (t) => !/^\d+$/.test(t) || parseInt(t, 10) <= 0,
+        (t) => !/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(t) || parseFloat(t) <= 0,
       );
 
       if (invalid.length > 0) {
@@ -2624,7 +2903,7 @@ import { log } from "./logger.js";
         feedback.hidden = true;
       }
 
-      const valid = nonEmpty.map((t) => parseInt(t, 10));
+      const valid = nonEmpty.map((t) => parseFloat(t));
       if (valid.length > 0) {
         state.settings.quickAddValues = valid;
         saveSettings();
@@ -2709,7 +2988,7 @@ import { log } from "./logger.js";
     }
 
     const log = {
-      id: Date.now().toString(),
+      id: createId(),
       counterLabel: counter.label || counter.name || "Unknown",
       color: counter.color,
       actionLabel: actionLabel,
@@ -2771,13 +3050,30 @@ import { log } from "./logger.js";
       }
     });
 
-    // Bottom Nav clicks
+    // Bottom Nav clicks and WAI-ARIA tablist keyboard navigation
     $$("[data-tab-btn]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const tab = btn.getAttribute("data-tab-btn");
         if (tab === state.currentTab) return;
         switchTab(tab);
       });
+    });
+
+    $(".app-nav")?.addEventListener("keydown", (e) => {
+      if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(e.key)) return;
+      const tabs = ["counters", "dice", "timer"];
+      const idx = tabs.indexOf(state.currentTab);
+      if (idx === -1) return;
+      e.preventDefault();
+      let nextIdx = idx;
+      if (e.key === "ArrowRight") nextIdx = (idx + 1) % tabs.length;
+      else if (e.key === "ArrowLeft")
+        nextIdx = (idx - 1 + tabs.length) % tabs.length;
+      else if (e.key === "Home") nextIdx = 0;
+      else if (e.key === "End") nextIdx = tabs.length - 1;
+      const nextTab = tabs[nextIdx];
+      switchTab(nextTab);
+      $(`[data-tab-btn="${nextTab}"]`)?.focus();
     });
 
     // Native scroll observer for Swipe detection & real-time header/nav synchronization
@@ -2861,17 +3157,12 @@ import { log } from "./logger.js";
       emptyPlaceholder.addEventListener("click", () => {
         addNewCounterStreamlined();
       });
-      emptyPlaceholder.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          addNewCounterStreamlined();
-        }
-      });
     }
 
     const listWrapper = $("#counters-list-wrapper");
     if (listWrapper) {
       listWrapper.addEventListener("pointerdown", (e) => {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
         const valueBody = e.target.closest(".card-value-body");
         if (!valueBody) return;
 
@@ -2892,6 +3183,10 @@ import { log } from "./logger.js";
             );
             if (counter) {
               state.activeCounterIdForEdit = valuePressCounterId;
+              const titleEl = $("#edit-value-title");
+              if (titleEl) {
+                titleEl.textContent = `Edit ${counter.label} value`;
+              }
               const valueInput = $("#edit-value-input");
               if (valueInput) {
                 valueInput.value = counter.value;
@@ -2902,8 +3197,13 @@ import { log } from "./logger.js";
                 setSheetTheme(dialog, hexColor);
                 setTimeout(() => {
                   openDialog(dialog);
+                  if (valueInput) {
+                    valueInput.focus();
+                    valueInput.select();
+                  }
                 }, 50);
                 playClickSound();
+                playHaptic(ImpactStyle.Medium);
               }
             }
           }
@@ -2973,12 +3273,12 @@ import { log } from "./logger.js";
 
         const oldValue = counter.value;
         const step = counter.increment || 1;
-        counter.value += isPlus ? step : -step;
+        counter.value = cleanFloat(counter.value + (isPlus ? step : -step));
         announceValue(counter);
         saveCounters();
         addHistoryLog(
           counter,
-          `${isPlus ? "+" : "−"}${formatNumber(counter.increment)}`,
+          `${isPlus ? "+" : "−"}${formatNumber(step)}`,
           oldValue,
           counter.value,
         );
@@ -3069,6 +3369,12 @@ import { log } from "./logger.js";
     // The dice behind the result on screen, e.g. "2d6" (null before a roll)
     let rolledDice = null;
 
+    const syncDiceStepperButtons = () => {
+      if (btnDiceMinus) btnDiceMinus.disabled = currentDiceCount <= 1;
+      if (btnDicePlus) btnDicePlus.disabled = currentDiceCount >= 20;
+    };
+    syncDiceStepperButtons();
+
     const updateRollButtonLabel = () => {
       const dice = `${currentDiceCount}d${currentDiceType}`;
       if (btnRollAction) {
@@ -3083,8 +3389,11 @@ import { log } from "./logger.js";
       typeButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
           playHaptic(ImpactStyle.Light);
-          typeButtons.forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
+          typeButtons.forEach((b) => {
+            const isActive = b === btn;
+            b.classList.toggle("active", isActive);
+            b.setAttribute("aria-pressed", isActive ? "true" : "false");
+          });
           currentDiceType = parseInt(btn.getAttribute("data-type")) || 6;
           updateRollButtonLabel();
           playClickSound(650, 500, 0.05, 0.04);
@@ -3100,6 +3409,7 @@ import { log } from "./logger.js";
           if (diceCountDisplay) {
             diceCountDisplay.textContent = currentDiceCount;
           }
+          syncDiceStepperButtons();
           updateRollButtonLabel();
           playClickSound(550, 450, 0.05, 0.04);
         }
@@ -3114,6 +3424,7 @@ import { log } from "./logger.js";
           if (diceCountDisplay) {
             diceCountDisplay.textContent = currentDiceCount;
           }
+          syncDiceStepperButtons();
           updateRollButtonLabel();
           playClickSound(650, 750, 0.05, 0.04);
         }
@@ -3155,6 +3466,7 @@ import { log } from "./logger.js";
           diceResultTotal.classList.add("animate-pop");
           rolledDice = `${currentDiceCount}d${currentDiceType}`;
           diceResultCard.classList.add("rolled");
+          announce(`Rolled ${rolledDice}: ${total}`);
 
           if (currentDiceCount > 1) {
             diceResultBreakdown.textContent = `(${rolls.join(" + ")})`;
@@ -3328,7 +3640,6 @@ import { log } from "./logger.js";
         clearInterval(timerInterval);
         updateTimerDisplay();
         playResetSound();
-        playHaptic(ImpactStyle.Medium);
       });
     }
 
@@ -3380,6 +3691,7 @@ import { log } from "./logger.js";
       let isDragging = false;
 
       header.addEventListener("pointerdown", (e) => {
+        if (e.pointerType === "mouse" && e.button !== 0) return;
         // Skip trigger on buttons or interactive inputs
         if (
           e.target.closest("button") ||
@@ -3425,13 +3737,23 @@ import { log } from "./logger.js";
           }
         }
 
-        // If dragged down past threshold (100px), close with a premium native slide transition
+        // If dragged down past threshold (100px), close via the dialog's exit transition
         if (currentY > 100) {
-          dialog.style.transform = "translate(-50%, 100%)";
-          setTimeout(() => {
-            dialog.close();
+          if (prefersReducedMotion()) {
+            // Keep the released offset while fading out so it doesn't snap up first
+            dialog.addEventListener(
+              "close",
+              () => {
+                setTimeout(() => {
+                  if (!dialog.open) dialog.style.transform = "";
+                }, 160);
+              },
+              { once: true },
+            );
+          } else {
             dialog.style.transform = "";
-          }, 300);
+          }
+          dialog.close();
           playClickSound(450, 350, 0.05, 0.03); // light close sound
         } else {
           // Snap back smoothly
@@ -3482,7 +3804,7 @@ import { log } from "./logger.js";
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && state.settings.keepAwake) {
         KeepAwake.keepAwake().catch((err) =>
-          console.warn("KeepAwake failed on resume:", err),
+          log.warn("KeepAwake failed on resume:", err),
         );
       }
     });
@@ -3495,6 +3817,7 @@ import { log } from "./logger.js";
       }
       await loadStateFromStorage();
       document.documentElement.setAttribute("data-layout", state.settings.layout);
+      renderEditPaletteSwatches();
       populateCalculatorQuickAdds();
       renderCountersList();
       renderHistory();

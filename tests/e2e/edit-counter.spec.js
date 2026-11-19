@@ -59,3 +59,16 @@ test('logs value edits separately from detail edits', async ({ page }) => {
     .poll(async () => (await stored(page, 'counters-history')).map((h) => h.actionLabel))
     .toEqual(['Edited value', 'Edited details']);
 });
+
+test('supports fractional increments below 1 without floating-point drift', async ({ page }) => {
+  await openEdit(page, 'a');
+  await page.locator('#edit-value-input-details').fill('0.1');
+  await page.locator('#edit-increment').fill('0.2');
+  await page.locator('#edit-btn-save').click();
+  await expect(page.locator('#edit-counter-dialog')).toBeHidden();
+
+  const alpha = card(page, 'a');
+  await alpha.locator('.card-direct-zone-plus').click();
+  await expect(valueOf(alpha)).toHaveText('0.3');
+  expect((await stored(page, 'counters-list'))[0].value).toBe(0.3);
+});

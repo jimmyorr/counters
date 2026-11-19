@@ -43,7 +43,7 @@
   --text-primary: #191b22;
   --text-secondary: #697082;
   --text-tertiary: #9da3b4;
-  --text-danger: #d32f2f;
+  --text-danger: #c62828;
   --text-button-secondary: #4a5060;
   --border-light: rgba(0, 0, 0, 0.08);
   --border-strong: rgba(0, 0, 0, 0.15);
@@ -51,6 +51,8 @@
   --modal-backdrop: rgba(0, 0, 0, 0.35);
   --overlay-bg: rgba(255, 255, 255, 0.96);
   --accent-color: hsl(var(--theme-hue), 94%, 60%);
+  --accent-ink: var(--accent-ink-light, #226595);
+  --accent-on-fill: var(--accent-on-fill-light, #000000);
   --accent-light: hsla(var(--theme-hue), 94%, 60%, 0.1);
   --glass-bg: rgba(242, 243, 247, 0.75);
 }
@@ -73,6 +75,8 @@
   --modal-backdrop: rgba(0, 0, 0, 0.55);
   --overlay-bg: rgba(22, 23, 29, 0.96);
   --accent-color: hsl(var(--theme-hue), 92%, 65%);
+  --accent-ink: var(--accent-ink-dark, #54b3f8);
+  --accent-on-fill: var(--accent-on-fill-dark, #000000);
   --accent-light: hsla(var(--theme-hue), 92%, 65%, 0.15);
   --glass-bg: rgba(13, 14, 17, 0.75);
 }
@@ -266,7 +270,7 @@ body > .app-nav {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--leader-color, var(--accent-color));
+  color: var(--leader-color, var(--accent-ink));
 }
 
 .dark-mode .header-left {
@@ -276,7 +280,7 @@ body > .app-nav {
 
 .dark-mode .leader-icon {
   /* Dark counter colors vanish on the dark header, so lighten them */
-  color: var(--leader-ink-dark, var(--leader-color, var(--accent-color)));
+  color: var(--leader-ink-dark, var(--leader-color, var(--accent-ink)));
 }
 
 .light-mode .header-left {
@@ -286,7 +290,7 @@ body > .app-nav {
 
 .light-mode .leader-icon {
   /* Pale counter colors vanish on the pill's light tint, so darken them */
-  color: var(--leader-ink-light, var(--leader-color, var(--accent-color)));
+  color: var(--leader-ink-light, var(--leader-color, var(--accent-ink)));
 }
 
 /* Truncate the leader name inside the pill with an ellipsis instead of
@@ -741,20 +745,6 @@ html[data-layout="grid"] .card-direct-zone-plus {
   }
 }
 
-.empty-state h2 {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-}
-
-.empty-state p {
-  font-size: 14px;
-  margin-bottom: 24px;
-  max-width: 280px;
-  line-height: 1.5;
-}
-
 .empty-state-text-btn {
   font-size: 16px;
   color: var(--text-secondary);
@@ -772,7 +762,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 /* Buttons */
 .primary-btn {
   background-color: var(--accent-color);
-  color: #000000;
+  color: var(--accent-on-fill, #000000);
   border: none;
   font-family: var(--font-primary);
   font-weight: 600;
@@ -858,20 +848,6 @@ html[data-layout="grid"] .card-direct-zone-plus {
   100% { transform: scale(1); }
 }
 
-.placeholder-container h2 {
-  font-size: 22px;
-  color: var(--text-primary);
-  margin-bottom: 12px;
-  font-weight: 700;
-}
-
-.placeholder-container p {
-  font-size: 14px;
-  line-height: 1.5;
-  max-width: 300px;
-  margin-bottom: 30px;
-}
-
 /* --------------------------------------------------------------------------
    6. Redesigned Interactive Dice Roller
    -------------------------------------------------------------------------- */
@@ -890,14 +866,6 @@ html[data-layout="grid"] .card-direct-zone-plus {
 
 .dice-container .placeholder-icon {
   margin-bottom: 0;
-}
-
-.dice-container h2 {
-  font-size: 24px;
-  color: var(--text-primary);
-  margin: 0;
-  font-weight: 700;
-  font-family: var(--font-secondary);
 }
 
 .dice-type-row {
@@ -943,7 +911,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 .dice-type-btn.active {
   background-color: var(--accent-color);
   border-color: transparent;
-  color: #000000;
+  color: var(--accent-on-fill, #000000);
   box-shadow: 0 4px 14px var(--accent-light);
 }
 
@@ -980,12 +948,18 @@ html[data-layout="grid"] .card-direct-zone-plus {
   .stepper-btn:hover {
     background-color: var(--bg-tertiary);
     border-color: var(--accent-color);
-    color: var(--accent-color);
+    color: var(--accent-ink);
   }
 }
 
 .stepper-btn:active {
   transform: scale(0.9);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .stepper-value {
@@ -1079,10 +1053,11 @@ html[data-layout="grid"] .card-direct-zone-plus {
 }
 
 .timer-tick {
-  font-family: monospace;
+  font-family: var(--font-primary);
+  font-variant-numeric: tabular-nums;
   font-size: 36px;
   font-weight: 700;
-  color: var(--accent-color);
+  color: var(--accent-ink);
 }
 
 .timer-increment-row {
@@ -1177,6 +1152,12 @@ html[data-layout="grid"] .card-direct-zone-plus {
   gap: 16px;
   padding: 12px 0;
   border-bottom: 1px solid var(--border-light);
+}
+
+.settings-row-stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 /* Controls keep their natural size; the text column wraps in whatever space
@@ -1277,7 +1258,7 @@ input:checked + .slider-round {
 
 input:checked + .slider-round:before {
   transform: translateX(22px);
-  background-color: #000000;
+  background-color: var(--accent-on-fill, #000000);
 }
 
 /* Fix focus ring on visually hidden switch input */
@@ -1425,7 +1406,7 @@ input:checked + .slider-round:before {
 }
 
 .app-store-link {
-  color: var(--accent-color);
+  color: var(--accent-ink);
   text-decoration: none;
   font-weight: 500;
   transition: opacity var(--trans-fast);
@@ -1495,7 +1476,7 @@ input:checked + .slider-round:before {
 
 /* Nav Item States */
 .nav-item.active {
-  color: var(--accent-color);
+  color: var(--accent-ink);
 }
 
 .nav-item.active .nav-icon {
@@ -1586,6 +1567,25 @@ dialog[open].closing::backdrop {
 }
 
 /* Dynamic Sheet Theme Overrides */
+.light-mode .bottom-sheet-dialog {
+  --sheet-control-ink: var(--sheet-control-ink-light, var(--accent-ink));
+}
+
+.dark-mode .bottom-sheet-dialog {
+  --sheet-control-ink: var(--sheet-control-ink-dark, var(--accent-ink));
+}
+
+.confirm-sheet-dialog,
+.dark-mode .confirm-sheet-dialog {
+  --sheet-theme: #f85c5c;
+  --sheet-text: #000000;
+}
+
+.light-mode .confirm-sheet-dialog {
+  --sheet-theme: #c62828;
+  --sheet-text: #ffffff;
+}
+
 .bottom-sheet-dialog .primary-btn {
   background-color: var(--sheet-theme, var(--accent-color));
   color: var(--sheet-text, #ffffff);
@@ -1664,8 +1664,8 @@ dialog[open].bottom-sheet-dialog.closing {
   font-size: 14px;
   font-weight: 600;
   color: var(--sheet-theme, var(--text-primary));
-  background-color: var(--pill-bg, var(--bg-tertiary));
-  border: 1px solid var(--pill-border, var(--border-light));
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
   border-radius: 20px;
   padding: 5px 14px;
   text-align: center;
@@ -1754,7 +1754,32 @@ dialog[open].bottom-sheet-dialog.closing {
 .bottom-sheet-body {
   overflow-y: auto;
   padding: 16px;
-  background-color: rgba(var(--bg-primary), 0.3);
+}
+
+.compact-sheet-body {
+  padding-top: 10px;
+}
+
+.confirm-dialog-message {
+  margin-bottom: 24px;
+  color: var(--text-secondary);
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.dialog-action-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.edit-value-form {
+  width: 100%;
+}
+
+.edit-value-group {
+  margin-bottom: 20px;
 }
 
 /* --------------------------------------------------------------------------
@@ -1783,7 +1808,7 @@ dialog[open].bottom-sheet-dialog.closing {
 .quick-add-grid > button {
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-light);
-  color: var(--accent-color);
+  color: var(--sheet-control-ink, var(--accent-ink));
   font-family: var(--font-primary);
   font-size: 16px;
   font-weight: 600;
@@ -1796,8 +1821,8 @@ dialog[open].bottom-sheet-dialog.closing {
 
 @media (hover: hover) {
   .quick-add-grid > button:hover {
-    background-color: var(--accent-light);
-    border-color: var(--accent-color);
+    background-color: color-mix(in srgb, var(--sheet-theme, var(--accent-color)) 12%, transparent);
+    border-color: var(--sheet-control-ink, var(--accent-color));
   }
 }
 
@@ -1816,6 +1841,13 @@ dialog[open].bottom-sheet-dialog.closing {
 }
 
 #calc-btn-submit {
+  font-size: 15px;
+  font-weight: 600;
+  padding: 0 14px;
+  border-radius: 12px;
+  white-space: nowrap;
+  height: 100%;
+  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -1847,7 +1879,7 @@ dialog[open].bottom-sheet-dialog.closing {
 
 .op-btn.active {
   background-color: var(--accent-color);
-  color: #000000;
+  color: var(--accent-on-fill, #000000);
   font-weight: 600;
 }
 
@@ -1864,7 +1896,7 @@ dialog[open].bottom-sheet-dialog.closing {
 .math-op-indicator {
   font-size: 20px;
   font-weight: 600;
-  color: var(--accent-color);
+  color: var(--sheet-control-ink, var(--accent-ink));
   margin-right: 10px;
 }
 
@@ -1898,7 +1930,7 @@ input[type="number"]::-webkit-inner-spin-button {
 .edit-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* Tighter header so the whole sheet fits above the keyboard on small phones
@@ -1941,10 +1973,15 @@ input[type="number"]::-webkit-inner-spin-button {
 
 :root.keyboard-open #edit-counter-dialog .edit-form {
   flex: 1;
+  gap: 8px;
 }
 
 :root.keyboard-open #edit-counter-dialog .edit-form > .form-group {
   flex: none;
+}
+
+:root.keyboard-open #edit-counter-dialog .form-input {
+  padding: 9px 14px;
 }
 
 :root.keyboard-open #edit-counter-dialog .sheet-action-row {
@@ -1971,6 +2008,8 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .palette-swatch {
+  padding: 0;
+  background: none;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -2043,6 +2082,10 @@ input[type="number"]::-webkit-inner-spin-button {
   letter-spacing: 0.2px;
 }
 
+.form-row .form-group label {
+  white-space: nowrap;
+}
+
 .form-input {
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
@@ -2069,6 +2112,50 @@ input[type="number"]::-webkit-inner-spin-button {
   font-size: 11px;
   color: var(--text-tertiary);
   margin-top: 2px;
+}
+
+.edit-reorder-row {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-reorder-row[hidden] {
+  display: none;
+}
+
+.reorder-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: var(--bg-tertiary);
+  color: var(--text-button-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-family: var(--font-primary);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+@media (hover: hover) {
+  .reorder-btn:hover:not(:disabled) {
+    border-color: var(--sheet-control-ink, var(--accent-color));
+    color: var(--text-primary);
+  }
+}
+
+.reorder-btn:active:not(:disabled) {
+  transform: scale(0.97);
+  background-color: var(--bg-secondary);
+}
+
+.reorder-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .sheet-action-row {
@@ -2172,6 +2259,20 @@ dialog[open].options-menu-dialog.closing {
   gap: 20px;
 }
 
+.main-menu-body {
+  padding-top: 8px;
+}
+
+.main-menu-stack {
+  gap: 8px;
+}
+
+.menu-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 4px 0;
+}
+
 .options-group {
   display: flex;
   flex-direction: column;
@@ -2221,7 +2322,7 @@ dialog[open].options-menu-dialog.closing {
 
 .toggle-btn.active {
   background-color: var(--accent-light);
-  color: var(--accent-color);
+  color: var(--accent-ink);
   font-weight: 600;
 }
 
@@ -2263,9 +2364,22 @@ dialog[open].options-menu-dialog.closing {
 
 .select-row-btn.active {
   background-color: var(--accent-light);
-  border-color: var(--accent-color);
-  color: var(--accent-color);
+  border-color: var(--accent-ink);
+  color: var(--accent-ink);
   font-weight: 600;
+}
+
+.select-row-btn.danger-row-btn {
+  color: var(--text-danger);
+  border-color: color-mix(in srgb, var(--text-danger) 30%, transparent);
+}
+
+@media (hover: hover) {
+  .select-row-btn.danger-row-btn:hover {
+    border-color: var(--text-danger);
+    color: var(--text-danger);
+    background-color: color-mix(in srgb, var(--text-danger) 8%, transparent);
+  }
 }
 
 /* Custom switch lists inside option modals */
@@ -2345,7 +2459,7 @@ dialog[open].options-menu-dialog.closing {
 .history-event {
   font-size: 12.5px;
   font-weight: 500;
-  color: var(--accent-color);
+  color: var(--accent-ink);
 }
 
 .history-progression {
@@ -2420,7 +2534,7 @@ dialog[open].options-menu-dialog.closing {
   font-family: var(--font-secondary);
   font-size: 13px;
   font-weight: 700;
-  color: var(--accent-color);
+  color: var(--accent-ink);
   cursor: pointer;
   white-space: nowrap;
 }

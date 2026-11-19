@@ -1,4 +1,4 @@
-# Project Context
+# Project context
 
 ## Architecture
 
@@ -16,7 +16,7 @@ Application state is held inside the global `state` object in `app.js`. It track
 - `settings`: An object holding user preferences (layout, topBarContent, autoSort, soundEnabled, hapticsEnabled, quickAddValues, theme, themeHue, keepAwake, palette).
 - `history`: An array of transaction objects tracking time, counterLabel, actionLabel, and progression diffs.
 
-Whenever state is mutated, it is simultaneously flushed to Capacitor `Preferences` using keys prefixed with `counters-` (`counters-list`, `counters-settings`, `counters-history`), with `counters-theme` and `counters-layout` mirrored to `localStorage` so the pre-load script in `index.html` can apply them synchronously before first paint. On application boot, the state is re-hydrated from Capacitor `Preferences`.
+Whenever state is mutated, it is simultaneously flushed to Capacitor `Preferences` using keys prefixed with `counters-` (`counters-list`, `counters-settings`, `counters-history`), with `counters-theme`, `counters-layout`, and `counters-theme-hue` mirrored to `localStorage` so the pre-load script in `index.html` can apply them synchronously before first paint. On application boot, the state is re-hydrated from Capacitor `Preferences`.
 
 ## Development rules
 
