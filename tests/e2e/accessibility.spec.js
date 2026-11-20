@@ -122,27 +122,50 @@ test.describe('color contrast', () => {
           return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
         });
 
+      const badgeFill = page.locator('#dice-shake-icon .accent-badge-fill');
+      const badgePip = page.locator('#dice-shake-icon .accent-badge-pip').first();
+
       for (const hue of [0, 60, 120, 180, 205, 240, 258, 275, 300]) {
         await page.locator('#setting-theme-hue').evaluate((el, h) => {
           el.value = String(h);
           el.dispatchEvent(new Event('input', { bubbles: true }));
           document.getAnimations().forEach((a) => a.finish());
         }, hue);
-        expect(await contrast(page.locator('.nav-item.active .nav-text')), `${theme} nav hue ${hue}`).toBeGreaterThanOrEqual(4.5);
+        const boundaryProp = (await badgeFill.evaluate((el) => getComputedStyle(el).stroke)) === 'none' ? 'fill' : 'stroke';
+        expect(await contrast(page.locator('.nav-item.active')), `${theme} nav icon hue ${hue}`).toBeGreaterThanOrEqual(3);
+        expect(await contrast(page.locator('.nav-item.active .nav-text')), `${theme} nav text hue ${hue}`).toBeGreaterThanOrEqual(4.5);
         expect(await contrast(page.locator('#btn-roll-action')), `${theme} primary btn hue ${hue}`).toBeGreaterThanOrEqual(4.5);
         expect(await contrast(page.locator('#dice-result-card'), 'borderTopColor'), `${theme} rolled border hue ${hue}`).toBeGreaterThanOrEqual(3);
-        expect(await contrast(page.locator('#dice-shake-icon .accent-badge-fill'), 'stroke'), `${theme} die rim hue ${hue}`).toBeGreaterThanOrEqual(3);
-        expect(await pipVsDie(), `${theme} die pips hue ${hue}`).toBeGreaterThanOrEqual(4.5);
+        expect(await contrast(badgeFill, boundaryProp), `${theme} die boundary hue ${hue}`).toBeGreaterThanOrEqual(3);
+        expect(await pipVsDie(), `${theme} die pips hue ${hue}`).toBeGreaterThanOrEqual(3);
+
+        if (theme === 'light' && [0, 205, 240, 258, 275, 300].includes(hue)) {
+          await expect(badgePip, `white pips hue ${hue}`).toHaveCSS('fill', 'rgb(255, 255, 255)');
+          await expect(badgeFill, `rimless badge hue ${hue}`).toHaveCSS('stroke', 'none');
+          const fillRgb = await badgeFill.evaluate((el) => getComputedStyle(el).fill);
+          await expect(page.locator('.nav-item.active'), `matching nav icon hue ${hue}`).toHaveCSS('color', fillRgb);
+        }
+        if (theme === 'light' && [205, 240, 258, 275].includes(hue)) {
+          await expect(page.locator('#btn-roll-action'), `white button text hue ${hue}`).toHaveCSS('color', 'rgb(255, 255, 255)');
+        }
       }
 
-      // Check outlined timer icon at pale yellow hue (60) as well
+      // Check outlined timer icon and 36px bold readout across red (0), default blue (205), and pale yellow (60)
       await page.locator('[data-tab-btn="timer"]').click();
-      await page.locator('#setting-theme-hue').evaluate((el) => {
-        el.value = '60';
-        el.dispatchEvent(new Event('input', { bubbles: true }));
-        document.getAnimations().forEach((a) => a.finish());
-      });
-      expect(await contrast(page.locator('#timer-shake-icon')), `${theme} timer icon hue 60`).toBeGreaterThanOrEqual(3);
+      for (const timerHue of [0, 205, 60]) {
+        await page.locator('#setting-theme-hue').evaluate((el, h) => {
+          el.value = String(h);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          document.getAnimations().forEach((a) => a.finish());
+        }, timerHue);
+        expect(await contrast(page.locator('#timer-shake-icon')), `${theme} timer icon hue ${timerHue}`).toBeGreaterThanOrEqual(3);
+        expect(await contrast(page.locator('#placeholder-stopwatch-display')), `${theme} timer readout hue ${timerHue}`).toBeGreaterThanOrEqual(3);
+        if (theme === 'light' && [0, 205].includes(timerHue)) {
+          const btnBg = await page.locator('#btn-timer-placeholder-start').evaluate((el) => getComputedStyle(el).backgroundColor);
+          await expect(page.locator('#timer-shake-icon'), `matching timer icon hue ${timerHue}`).toHaveCSS('color', btnBg);
+          await expect(page.locator('#placeholder-stopwatch-display'), `matching timer readout hue ${timerHue}`).toHaveCSS('color', btnBg);
+        }
+      }
 
       await page.locator('#btn-open-options').click();
       await page.locator('#menu-btn-open-display-options').click();

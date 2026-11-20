@@ -50,10 +50,18 @@
   --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   --modal-backdrop: rgba(0, 0, 0, 0.35);
   --overlay-bg: rgba(255, 255, 255, 0.96);
-  --accent-color: hsl(var(--theme-hue), 94%, 60%);
-  --accent-ink: var(--accent-ink-light, #226595);
-  --accent-graphic: var(--accent-graphic-light, #078eed);
-  --accent-on-fill: var(--accent-on-fill-light, #000000);
+  --accent-color: var(--accent-fill-light, #0672be);
+  --accent-ink: var(--accent-ink-light, #0564a8);
+  --accent-graphic: var(--accent-graphic-light, #0786e1);
+  --accent-large-text: var(--accent-large-text-light, #0672be);
+  --accent-nav-icon: var(--accent-nav-icon-light, #0672be);
+  --accent-nav-text: var(--accent-nav-text-light, #0672be);
+  --accent-badge-rim: var(--accent-badge-rim-light, none);
+  --accent-badge-radius: var(--accent-badge-radius-light, 11.25px);
+  --accent-badge-mark: var(--accent-badge-mark-light, #ffffff);
+  --accent-badge-pip: var(--accent-badge-mark-light, #ffffff);
+  --accent-fill-border: var(--accent-fill-border-light, transparent);
+  --accent-on-fill: var(--accent-on-fill-light, #ffffff);
   --accent-light: hsla(var(--theme-hue), 94%, 60%, 0.1);
   --glass-bg: rgba(242, 243, 247, 0.75);
 }
@@ -78,6 +86,14 @@
   --accent-color: hsl(var(--theme-hue), 92%, 65%);
   --accent-ink: var(--accent-ink-dark, #54b3f8);
   --accent-graphic: var(--accent-graphic-dark, #54b3f8);
+  --accent-large-text: var(--accent-large-text-dark, #54b3f8);
+  --accent-nav-icon: var(--accent-nav-icon-dark, #54b3f8);
+  --accent-nav-text: var(--accent-nav-text-dark, #54b3f8);
+  --accent-badge-rim: var(--accent-badge-rim-dark, none);
+  --accent-badge-radius: var(--accent-badge-radius-dark, 11.25px);
+  --accent-badge-mark: var(--bg-secondary);
+  --accent-badge-pip: var(--bg-primary);
+  --accent-fill-border: transparent;
   --accent-on-fill: var(--accent-on-fill-dark, #000000);
   --accent-light: hsla(var(--theme-hue), 92%, 65%, 0.15);
   --glass-bg: rgba(13, 14, 17, 0.75);
@@ -813,7 +829,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 }
 
 .light-mode .primary-btn:not(.bottom-sheet-dialog .primary-btn) {
-  border-color: color-mix(in srgb, var(--accent-graphic) 40%, transparent);
+  border-color: var(--accent-fill-border, transparent);
 }
 
 @media (hover: hover) {
@@ -871,7 +887,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 }
 
 .placeholder-icon {
-  color: var(--accent-graphic);
+  color: var(--accent-nav-icon);
   margin-bottom: 24px;
 }
 
@@ -887,16 +903,20 @@ html[data-layout="grid"] .card-direct-zone-plus {
 
 .accent-badge-fill {
   fill: var(--accent-color);
-  stroke: var(--accent-graphic);
+  stroke: var(--accent-badge-rim, none);
   stroke-width: 0.75;
 }
 
+.accent-badge-circle {
+  r: var(--accent-badge-radius, 11.25px);
+}
+
 .accent-badge-pip {
-  fill: var(--accent-on-fill, #000000);
+  fill: var(--accent-badge-pip, #ffffff);
 }
 
 .accent-badge-mark {
-  stroke: var(--accent-on-fill, #000000);
+  stroke: var(--accent-badge-mark, #ffffff);
 }
 
 .placeholder-icon.pop {
@@ -977,7 +997,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 }
 
 .light-mode .dice-type-btn.active {
-  border-color: color-mix(in srgb, var(--accent-graphic) 40%, transparent);
+  border-color: var(--accent-fill-border, transparent);
 }
 
 .dice-stepper-row {
@@ -1122,7 +1142,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
   font-variant-numeric: tabular-nums;
   font-size: 36px;
   font-weight: 700;
-  color: var(--accent-ink);
+  color: var(--accent-large-text);
 }
 
 .timer-increment-row {
@@ -1632,7 +1652,12 @@ input:checked + .slider-round:before {
 
 /* Nav Item States */
 .nav-item.active {
-  color: var(--accent-ink);
+  color: var(--accent-nav-icon);
+}
+
+.nav-item.active .nav-text {
+  color: var(--accent-nav-text);
+  font-weight: 600;
 }
 
 .nav-item.active .nav-icon {
