@@ -16,9 +16,9 @@ const browserLaunchUse = process.env.CHROME_PATH
 
 export default defineConfig({
   testDir: './tests/e2e',
-  fullyParallel: true,
-  // Half the default, so a run doesn't swamp the machine and time out
-  workers: 4,
+  fullyParallel: false,
+  // Single worker so runs stay cool on laptops and don't contend for CPU/GPU
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: 'list',
