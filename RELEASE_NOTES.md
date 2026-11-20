@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.1.30
+
+* **Settings & touch:** Segmented theme picker, palette preview cards, sheet flick-to-dismiss physics, smoother drag-reordering, selection haptics, and native status-bar/back support.
+* **Visuals & contrast:** Subtle leader-tinted ambient glow and WCAG AA contrast across all theme hues, palettes, and custom colors.
+* **Accessibility & polish:** Keyboard tab navigation, reorder buttons in the edit sheet, cleaner decimal math, and Open Graph metadata.
+
 ## 0.1.29
 
 * **Settings:** Added a link to the iOS App Store for web visitors.

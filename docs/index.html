@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script>window.__APP_VERSION__ = "0.1.29";
-window.__COMMIT_HASH__ = "b82d592";
+    <script>window.__APP_VERSION__ = "0.1.30";
+window.__COMMIT_HASH__ = "afe37c9";
 window.__IS_DIRTY__ = false;</script>
 
     <meta charset="UTF-8" />
@@ -82,39 +82,35 @@ window.__IS_DIRTY__ = false;</script>
         const savedTheme = localStorage.getItem("counters-theme") || "system";
         const root = document.documentElement;
 
-        const applyTheme = (theme) => {
-          if (theme === "dark") {
-            root.classList.add("dark-mode");
-            root.classList.remove("light-mode");
-          } else if (theme === "light") {
-            root.classList.add("light-mode");
-            root.classList.remove("dark-mode");
-          } else {
-            // System preference
-            const systemIsDark = window.matchMedia(
-              "(prefers-color-scheme: dark)",
-            ).matches;
-            if (systemIsDark) {
-              root.classList.add("dark-mode");
-              root.classList.remove("light-mode");
-            } else {
-              root.classList.add("light-mode");
-              root.classList.remove("dark-mode");
-            }
-          }
-        };
+        const isDark =
+          savedTheme === "dark" ||
+          (savedTheme !== "light" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
+        root.classList.toggle("dark-mode", isDark);
+        root.classList.toggle("light-mode", !isDark);
 
-        applyTheme(savedTheme);
+        const themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (themeMeta) {
+          themeMeta.setAttribute("content", isDark ? "#0d0e11" : "#f2f3f7");
+        }
+
+        const savedHue = localStorage.getItem("counters-theme-hue");
+        if (savedHue !== null && /^\d+$/.test(savedHue)) {
+          root.style.setProperty("--theme-hue", savedHue);
+        }
 
         // Load and apply grid layout option beforehand to prevent shifting
         const savedLayout = localStorage.getItem("counters-layout") || "list";
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-a1tqCX47.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-B9RDP01D.css">
+    <script type="module" crossorigin src="./assets/index-DpgszUXW.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CFEIN2BK.css">
   <link rel="manifest" href="./manifest.webmanifest"></head>
   <body>
+    <!-- Subtle ambient background gradient influenced by the current leader -->
+    <div id="ambient-backdrop" class="ambient-backdrop" aria-hidden="true"></div>
+
     <!-- App Header -->
     <header class="app-header">
       <button
@@ -183,8 +179,8 @@ window.__IS_DIRTY__ = false;</script>
         <button
           class="header-btn"
           id="btn-open-options"
-          title="Display options"
-          aria-label="Open options"
+          title="Menu"
+          aria-label="Open menu"
         >
           <svg
             aria-hidden="true"
@@ -211,6 +207,7 @@ window.__IS_DIRTY__ = false;</script>
           id="tab-counters"
           data-view="counters"
           role="tabpanel"
+          aria-labelledby="tab-btn-counters"
         >
           <!-- Scrollable Counters Container -->
           <div class="counters-container" id="counters-list-wrapper">
@@ -227,24 +224,20 @@ window.__IS_DIRTY__ = false;</script>
               <div class="placeholder-icon">
                 <svg
                   aria-hidden="true"
+                  class="accent-badge-svg"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
                   width="64"
                   height="64"
-                  fill="currentColor"
                 >
-                  <defs>
-                    <mask id="plus-mask">
-                      <rect width="24" height="24" fill="white" />
-                      <path
-                        d="M12 6v12M6 12h12"
-                        stroke="black"
-                        stroke-width="2.625"
-                        stroke-linecap="round"
-                      />
-                    </mask>
-                  </defs>
-                  <circle cx="12" cy="12" r="11.25" mask="url(#plus-mask)" />
+                  <circle cx="12" cy="12" r="11.25" class="accent-badge-fill accent-badge-circle" />
+                  <path
+                    d="M12 6.25v11.5M6.25 12h11.5"
+                    class="accent-badge-mark"
+                    stroke-width="2.55"
+                    stroke-linecap="round"
+                    fill="none"
+                  />
                 </svg>
               </div>
               <div class="empty-state-text-btn">Add a counter</div>
@@ -258,32 +251,44 @@ window.__IS_DIRTY__ = false;</script>
           id="tab-dice"
           data-view="dice"
           role="tabpanel"
+          aria-labelledby="tab-btn-dice"
+          inert
         >
           <div class="dice-container">
             <!-- Static/Animated Dice Icon -->
             <div class="placeholder-icon shake-animation" id="dice-shake-icon">
               <svg
                 aria-hidden="true"
+                class="accent-badge-svg"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 width="64"
                 height="64"
-                fill="currentColor"
               >
-                <path
-                  d="M19 3H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2V5c0-1.103-.897-2-2-2zm-7 10c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5-.672 1.5-1.5 1.5zM7 9c-.828 0-1.5-.672-1.5-1.5S6.172 6 7 6s1.5.672 1.5 1.5S7.828 9 7 9zm0 9c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5S7.828 18 7 18zm10 0c-.828 0-1.5-.672-1.5-1.5s.672-1.5 1.5-1.5 1.5.672 1.5 1.5-.672 1.5-1.5 1.5zm0-9c-.828 0-1.5-.672-1.5-1.5S16.172 6 17 6s1.5.672 1.5 1.5S17.828 9 17 9z"
+                <rect
+                  x="3"
+                  y="3"
+                  width="18"
+                  height="18"
+                  rx="2.5"
+                  class="accent-badge-fill"
                 />
+                <circle cx="12" cy="12" r="1.5" class="accent-badge-pip" />
+                <circle cx="7.5" cy="7.5" r="1.5" class="accent-badge-pip" />
+                <circle cx="7.5" cy="16.5" r="1.5" class="accent-badge-pip" />
+                <circle cx="16.5" cy="7.5" r="1.5" class="accent-badge-pip" />
+                <circle cx="16.5" cy="16.5" r="1.5" class="accent-badge-pip" />
               </svg>
             </div>
 
             <!-- Component A: Dice Type Selector -->
             <div class="dice-type-row" id="dice-type-selector">
-              <button class="dice-type-btn" data-type="4">d4</button>
-              <button class="dice-type-btn active" data-type="6">d6</button>
-              <button class="dice-type-btn" data-type="8">d8</button>
-              <button class="dice-type-btn" data-type="10">d10</button>
-              <button class="dice-type-btn" data-type="12">d12</button>
-              <button class="dice-type-btn" data-type="20">d20</button>
+              <button class="dice-type-btn" data-type="4" aria-pressed="false">d4</button>
+              <button class="dice-type-btn active" data-type="6" aria-pressed="true">d6</button>
+              <button class="dice-type-btn" data-type="8" aria-pressed="false">d8</button>
+              <button class="dice-type-btn" data-type="10" aria-pressed="false">d10</button>
+              <button class="dice-type-btn" data-type="12" aria-pressed="false">d12</button>
+              <button class="dice-type-btn" data-type="20" aria-pressed="false">d20</button>
             </div>
 
             <!-- Component B: Dice Count Stepper -->
@@ -292,6 +297,7 @@ window.__IS_DIRTY__ = false;</script>
                 class="stepper-btn"
                 id="btn-dice-minus"
                 aria-label="Decrease dice count"
+                disabled
               >
                 −
               </button>
@@ -324,12 +330,14 @@ window.__IS_DIRTY__ = false;</script>
           </div>
         </section>
 
-        <!-- Tab 3: Timer View Placeholder -->
+        <!-- Tab 3: Timer View -->
         <section
           class="tab-content"
           id="tab-timer"
           data-view="timer"
           role="tabpanel"
+          aria-labelledby="tab-btn-timer"
+          inert
         >
           <div class="placeholder-container">
             <div class="placeholder-icon shake-animation" id="timer-shake-icon">
@@ -353,9 +361,9 @@ window.__IS_DIRTY__ = false;</script>
               >
             </div>
             <div class="timer-increment-row">
-              <button class="timer-inc-btn" data-secs="10">[+10s]</button>
-              <button class="timer-inc-btn" data-secs="30">[+30s]</button>
-              <button class="timer-inc-btn" data-secs="60">[+60s]</button>
+              <button class="timer-inc-btn" data-secs="10" aria-label="Add 10 seconds">+10s</button>
+              <button class="timer-inc-btn" data-secs="30" aria-label="Add 30 seconds">+30s</button>
+              <button class="timer-inc-btn" data-secs="60" aria-label="Add 60 seconds">+60s</button>
             </div>
             <div class="timer-controls">
               <button class="primary-btn" id="btn-timer-placeholder-start">
@@ -371,13 +379,16 @@ window.__IS_DIRTY__ = false;</script>
     </main>
 
     <!-- Bottom Navigation Bar -->
-    <nav class="app-nav" role="tablist">
+    <nav class="app-nav" role="tablist" aria-label="Views">
       <button
         class="nav-item active"
+        id="tab-btn-counters"
         data-tab-btn="counters"
+        aria-controls="tab-counters"
         aria-label="Counters list"
         role="tab"
         aria-selected="true"
+        tabindex="0"
       >
         <span class="nav-icon">
           <svg
@@ -405,10 +416,13 @@ window.__IS_DIRTY__ = false;</script>
 
       <button
         class="nav-item"
+        id="tab-btn-dice"
         data-tab-btn="dice"
+        aria-controls="tab-dice"
         aria-label="Dice"
         role="tab"
         aria-selected="false"
+        tabindex="-1"
       >
         <span class="nav-icon">
           <svg
@@ -427,10 +441,13 @@ window.__IS_DIRTY__ = false;</script>
 
       <button
         class="nav-item"
+        id="tab-btn-timer"
         data-tab-btn="timer"
+        aria-controls="tab-timer"
         aria-label="Timer"
         role="tab"
         aria-selected="false"
+        tabindex="-1"
       >
         <span class="nav-icon">
           <svg
@@ -520,15 +537,6 @@ window.__IS_DIRTY__ = false;</script>
               type="submit"
               class="primary-btn"
               id="calc-btn-submit"
-              style="
-                font-size: 15px;
-                font-weight: 600;
-                padding: 0 14px;
-                border-radius: 12px;
-                white-space: nowrap;
-                height: 100%;
-                margin: 0;
-              "
             >
               Apply
             </button>
@@ -621,9 +629,7 @@ window.__IS_DIRTY__ = false;</script>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="edit-value-input-details" style="white-space: nowrap"
-                >Value</label
-              >
+              <label for="edit-value-input-details">Value</label>
               <input
                 type="number"
                 inputmode="decimal"
@@ -636,9 +642,7 @@ window.__IS_DIRTY__ = false;</script>
               <span class="field-hint">Current</span>
             </div>
             <div class="form-group">
-              <label for="edit-increment" style="white-space: nowrap"
-                >Increment</label
-              >
+              <label for="edit-increment">Increment</label>
               <input
                 type="number"
                 inputmode="decimal"
@@ -646,15 +650,13 @@ window.__IS_DIRTY__ = false;</script>
                 id="edit-increment"
                 class="form-input"
                 required
-                min="1"
+                min="0.0001"
                 placeholder="1"
               />
               <span class="field-hint">On edge</span>
             </div>
             <div class="form-group">
-              <label for="edit-reset-val" style="white-space: nowrap"
-                >Reset</label
-              >
+              <label for="edit-reset-val">Reset</label>
               <input
                 type="number"
                 inputmode="decimal"
@@ -666,6 +668,47 @@ window.__IS_DIRTY__ = false;</script>
               />
               <span class="field-hint">On reset</span>
             </div>
+          </div>
+
+          <div class="edit-reorder-row" id="edit-reorder-row" hidden>
+            <button
+              type="button"
+              class="reorder-btn"
+              id="edit-btn-move-up"
+            >
+              <svg
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="currentColor"
+              >
+                <path
+                  d="M13 7.828V20h-2V7.828l-5.364 5.364-1.414-1.414L12 4l7.778 7.778-1.414 1.414L13 7.828z"
+                />
+              </svg>
+              <span>Move up</span>
+            </button>
+            <button
+              type="button"
+              class="reorder-btn"
+              id="edit-btn-move-down"
+            >
+              <svg
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                fill="currentColor"
+              >
+                <path
+                  d="M11 16.172V4h2v12.172l5.364-5.364 1.414 1.414L12 20l-7.778-7.778 1.414-1.414L11 16.172z"
+                />
+              </svg>
+              <span>Move down</span>
+            </button>
           </div>
 
           <div class="sheet-action-row">
@@ -714,8 +757,8 @@ window.__IS_DIRTY__ = false;</script>
           </svg>
         </button>
       </div>
-      <div class="options-dialog-body" style="padding-top: 8px">
-        <div class="selection-stack" style="gap: 8px">
+      <div class="options-dialog-body main-menu-body">
+        <div class="selection-stack main-menu-stack">
           <button class="select-row-btn" id="menu-btn-open-settings">
             <svg
               aria-hidden="true"
@@ -748,9 +791,7 @@ window.__IS_DIRTY__ = false;</script>
             <span>Display options</span>
           </button>
 
-          <div
-            style="height: 1px; background: var(--border-light); margin: 4px 0"
-          ></div>
+          <div class="menu-divider"></div>
 
           <button class="select-row-btn" id="menu-btn-shuffle-counters">
             <svg
@@ -801,9 +842,8 @@ window.__IS_DIRTY__ = false;</script>
           </button>
 
           <button
-            class="select-row-btn"
+            class="select-row-btn danger-row-btn"
             id="menu-btn-delete-all"
-            style="color: #f85c5c; border-color: rgba(248, 92, 92, 0.3)"
           >
             <svg
               aria-hidden="true"
@@ -865,38 +905,58 @@ window.__IS_DIRTY__ = false;</script>
               <div class="settings-info">
                 <span class="setting-title">Theme</span>
               </div>
-              <select
-                class="settings-select"
-                id="setting-theme"
+              <div
+                class="segmented-control"
+                id="setting-theme-group"
+                role="radiogroup"
                 aria-label="Theme"
               >
-                <option value="system">System</option>
-                <option value="dark">Dark</option>
-                <option value="light">Light</option>
-              </select>
+                <button
+                  type="button"
+                  class="segment-btn active"
+                  role="radio"
+                  aria-checked="true"
+                  data-theme-opt="system"
+                >
+                  System
+                </button>
+                <button
+                  type="button"
+                  class="segment-btn"
+                  role="radio"
+                  aria-checked="false"
+                  data-theme-opt="dark"
+                >
+                  Dark
+                </button>
+                <button
+                  type="button"
+                  class="segment-btn"
+                  role="radio"
+                  aria-checked="false"
+                  data-theme-opt="light"
+                >
+                  Light
+                </button>
+              </div>
             </div>
 
             <!-- Palette selector: preset counter colors -->
-            <div class="settings-row">
+            <div class="settings-row settings-row-stacked">
               <div class="settings-info">
                 <span class="setting-title">Palette</span>
-                <span
-                  class="palette-preview"
-                  id="setting-palette-preview"
-                  aria-hidden="true"
-                ></span>
               </div>
-              <select
-                class="settings-select"
-                id="setting-palette"
+              <div
+                class="palette-picker-grid"
+                id="setting-palette-group"
+                role="radiogroup"
                 aria-label="Palette"
-              ></select>
+              >
+                <!-- Palette option cards injected dynamically by JavaScript -->
+              </div>
             </div>
 
-            <div
-              class="settings-row"
-              style="flex-direction: column; align-items: flex-start; gap: 8px"
-            >
+            <div class="settings-row settings-row-stacked">
               <div class="settings-info">
                 <span class="setting-title">Theme color</span>
               </div>
@@ -985,7 +1045,7 @@ window.__IS_DIRTY__ = false;</script>
             <span id="about-app-version">Counters v0.0.3</span>
             <span id="about-app-store-container" class="app-store-container">
               <span class="app-store-separator" aria-hidden="true">&bull;</span>
-              <a href="https://apps.apple.com/us/app/counters-minimalist-tracker/id6778014900" class="app-store-link" target="_blank" rel="noopener noreferrer">Get the App</a>
+              <a id="about-app-store-link" href="https://apps.apple.com/us/app/counters-minimalist-tracker/id6778014900" class="app-store-link" target="_blank" rel="noopener noreferrer">Get the app</a>
             </span>
           </div>
         </div>
@@ -1146,26 +1206,16 @@ window.__IS_DIRTY__ = false;</script>
     <dialog
       id="confirm-dialog"
       aria-labelledby="confirm-dialog-title"
-      class="bottom-sheet-dialog"
-      style="--sheet-theme: #f85c5c"
+      class="bottom-sheet-dialog confirm-sheet-dialog"
       autofocus
     >
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
         <h2 class="sheet-title" id="confirm-dialog-title">Confirm action</h2>
       </div>
-      <div class="bottom-sheet-body" style="padding-top: 10px">
-        <p
-          id="confirm-dialog-message"
-          style="
-            margin-bottom: 24px;
-            color: var(--text-secondary);
-            text-align: center;
-            font-size: 15px;
-            line-height: 1.5;
-          "
-        ></p>
-        <div style="display: flex; gap: 12px; width: 100%">
+      <div class="bottom-sheet-body compact-sheet-body">
+        <p id="confirm-dialog-message" class="confirm-dialog-message"></p>
+        <div class="dialog-action-row">
           <button class="secondary-btn full-width" id="confirm-btn-cancel">
             Cancel
           </button>
@@ -1264,15 +1314,36 @@ window.__IS_DIRTY__ = false;</script>
       <div class="bottom-sheet-header">
         <div class="drag-handle"></div>
         <h2 class="sheet-title" id="edit-value-title">Edit value</h2>
+        <div class="header-actions">
+          <button
+            class="sheet-close-btn"
+            commandfor="edit-value-dialog"
+            command="close"
+            aria-label="Close value editor"
+          >
+            <svg
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="currentColor"
+            >
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
-      <div class="bottom-sheet-body" style="padding-top: 10px">
+      <div class="bottom-sheet-body compact-sheet-body">
         <form
           id="edit-value-form"
+          class="edit-value-form"
           method="dialog"
           autocomplete="off"
-          style="width: 100%"
         >
-          <div class="form-group" style="margin-bottom: 20px">
+          <div class="form-group edit-value-group">
             <input
               type="number"
               inputmode="decimal"
@@ -1281,10 +1352,10 @@ window.__IS_DIRTY__ = false;</script>
               class="form-input"
               required
               placeholder="Value"
-              style="width: 100%; box-sizing: border-box"
+              aria-label="Value"
             />
           </div>
-          <div style="display: flex; gap: 12px; width: 100%">
+          <div class="dialog-action-row">
             <button
               type="button"
               class="secondary-btn full-width"
