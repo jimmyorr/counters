@@ -5,6 +5,7 @@ const openSettings = async (page) => {
   await page.locator('#btn-open-options').click();
   await page.locator('#menu-btn-open-settings').click();
   await expect(page.locator('#settings-dialog')).toBeVisible();
+  await page.evaluate(() => document.getAnimations().forEach((a) => a.finish()));
 };
 
 test.describe('bottom sheet physics', () => {
