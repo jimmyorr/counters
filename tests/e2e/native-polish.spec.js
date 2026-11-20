@@ -195,6 +195,30 @@ test.describe('native back navigation and radiogroup controls', () => {
     await expect(page.locator('[data-tab-btn="counters"]')).toHaveAttribute('aria-selected', 'true');
   });
 
+  test('back closes the most recently opened dialog even when it comes earlier in the page', async ({ page }) => {
+    // #confirm-dialog sits before #history-dialog in the markup, so picking the
+    // last open dialog in document order would close History underneath
+    await seed(page, {
+      counters: [counter('a', 'Alpha', 5)],
+      history: [{ id: 'h1', counterLabel: 'Alpha', color: 0, actionLabel: '+1', time: Date.now() }],
+    });
+    await page.goto('/');
+
+    await page.locator('#btn-open-history').click();
+    await expect(page.locator('#history-dialog')).toBeVisible();
+    await page.locator('#history-btn-clear').click();
+    await expect(page.locator('#confirm-dialog')).toBeVisible();
+
+    await page.evaluate(() => document.dispatchEvent(new CustomEvent('counters:back')));
+    await expect(page.locator('#confirm-dialog')).toBeHidden();
+    await expect(page.locator('#history-dialog')).toBeVisible();
+    // Backing out of the confirm must not clear anything
+    await expect(page.locator('#history-items-wrapper > *')).not.toHaveCount(0);
+
+    await page.evaluate(() => document.dispatchEvent(new CustomEvent('counters:back')));
+    await expect(page.locator('#history-dialog')).toBeHidden();
+  });
+
   test('theme segmented control and palette grid support arrow-key radiogroup navigation', async ({ page }) => {
     await page.goto('/');
     await openSettings(page);

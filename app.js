@@ -116,6 +116,8 @@ import { log } from "./logger.js";
 
   // Central helper to track when dialogs are opened.
   // This is used to prevent synthetic 'click' events from instantly closing them.
+  // openSeq orders stacked dialogs so Back closes the topmost one.
+  let dialogOpenSeq = 0;
   const openDialog = (dialog) => {
     // Reopened while still playing its exit (below): finish closing first
     if (dialog.closeTimer) {
@@ -126,6 +128,7 @@ import { log } from "./logger.js";
     }
     dialog.style.transform = "";
     dialog.dataset.openedAt = Date.now().toString();
+    dialog.dataset.openSeq = String(++dialogOpenSeq);
     dialog.showModal();
   };
 
@@ -4283,9 +4286,11 @@ import { log } from "./logger.js";
   // Android / native hardware Back navigation: close topmost open dialog first,
   // then return from Dice/Timer to Counters, before letting the OS exit
   const handleBackNavigation = ({ canGoBack = false } = {}) => {
-    const openDialogs = [...document.querySelectorAll("dialog[open]")].filter(
-      (d) => !d.classList.contains("closing"),
-    );
+    // Topmost is the one opened last, not the last in the markup: the confirm
+    // sheet comes before History in index.html but opens on top of it
+    const openDialogs = [...document.querySelectorAll("dialog[open]")]
+      .filter((d) => !d.classList.contains("closing"))
+      .sort((a, b) => Number(a.dataset.openSeq || 0) - Number(b.dataset.openSeq || 0));
     if (openDialogs.length > 0) {
       openDialogs[openDialogs.length - 1].close();
       return true;
