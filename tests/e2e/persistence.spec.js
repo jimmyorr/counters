@@ -19,7 +19,7 @@ test('stores the theme with the other settings', async ({ page }) => {
   await page.goto('/');
   await page.locator('#btn-open-options').click();
   await page.locator('#menu-btn-open-settings').click();
-  await page.locator('#setting-theme').selectOption('dark');
+  await page.locator('#setting-theme-group [data-theme-opt="dark"]').click();
 
   const settings = JSON.parse(await stored(page, 'counters-settings'));
   expect(settings.theme).toBe('dark');
@@ -46,7 +46,7 @@ test('adopts a theme saved by older versions', async ({ page }) => {
     .toBe('light');
   await page.locator('#btn-open-options').click();
   await page.locator('#menu-btn-open-settings').click();
-  await expect(page.locator('#setting-theme')).toHaveValue('light');
+  await expect(page.locator('#setting-theme-group [data-theme-opt="light"]')).toHaveAttribute('aria-checked', 'true');
 });
 
 test('two tabs do not overwrite each other', async ({ page, context }) => {

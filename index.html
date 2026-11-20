@@ -900,32 +900,55 @@
               <div class="settings-info">
                 <span class="setting-title">Theme</span>
               </div>
-              <select
-                class="settings-select"
-                id="setting-theme"
+              <div
+                class="segmented-control"
+                id="setting-theme-group"
+                role="radiogroup"
                 aria-label="Theme"
               >
-                <option value="system">System</option>
-                <option value="dark">Dark</option>
-                <option value="light">Light</option>
-              </select>
+                <button
+                  type="button"
+                  class="segment-btn active"
+                  role="radio"
+                  aria-checked="true"
+                  data-theme-opt="system"
+                >
+                  System
+                </button>
+                <button
+                  type="button"
+                  class="segment-btn"
+                  role="radio"
+                  aria-checked="false"
+                  data-theme-opt="dark"
+                >
+                  Dark
+                </button>
+                <button
+                  type="button"
+                  class="segment-btn"
+                  role="radio"
+                  aria-checked="false"
+                  data-theme-opt="light"
+                >
+                  Light
+                </button>
+              </div>
             </div>
 
             <!-- Palette selector: preset counter colors -->
-            <div class="settings-row">
+            <div class="settings-row settings-row-stacked">
               <div class="settings-info">
                 <span class="setting-title">Palette</span>
-                <span
-                  class="palette-preview"
-                  id="setting-palette-preview"
-                  aria-hidden="true"
-                ></span>
               </div>
-              <select
-                class="settings-select"
-                id="setting-palette"
+              <div
+                class="palette-picker-grid"
+                id="setting-palette-group"
+                role="radiogroup"
                 aria-label="Palette"
-              ></select>
+              >
+                <!-- Palette option cards injected dynamically by JavaScript -->
+              </div>
             </div>
 
             <div class="settings-row settings-row-stacked">

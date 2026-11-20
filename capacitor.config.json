@@ -2,10 +2,16 @@
   "appId": "com.cowneck.counters",
   "appName": "Counters",
   "webDir": "docs",
+  "backgroundColor": "#0d0e11",
   "plugins": {
     "Keyboard": {
       "resize": "native",
       "resizeOnFullScreen": true
+    },
+    "StatusBar": {
+      "overlaysWebView": true,
+      "style": "DARK",
+      "backgroundColor": "#00000000"
     }
   }
 }

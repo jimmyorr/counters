@@ -13,6 +13,8 @@ import {
   NotificationType,
 } from "@capacitor/haptics";
 import { Capacitor } from "@capacitor/core";
+import { App as CapApp } from "@capacitor/app";
+import { StatusBar, Style as StatusBarStyle } from "@capacitor/status-bar";
 import { Keyboard } from "@capacitor/keyboard";
 import confetti from "canvas-confetti";
 import { FirebaseAnalytics } from "@capacitor-firebase/analytics";
@@ -332,18 +334,28 @@ import { log } from "./logger.js";
   // Slots keep a counter's color family across palettes (slot 0 is bluish in
   // every palette, and so on), so slot order isn't rainbow order. Pickers show
   // swatches sorted by hue instead, with near-greys last.
-  const getSwatchesInDisplayOrder = () => {
-    const hueOf = (hex) => {
-      const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      if (max - min < 0.08) return 999; // near-grey: sort last
-      const d = max - min;
-      const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
-      return (h * 60 + 360) % 360;
-    };
-    return [...getSwatches()].sort((a, b) => hueOf(a.hex) - hueOf(b.hex));
+  const hueOf = (hex) => {
+    const [r, g, b] = [1, 3, 5].map(
+      (i) => parseInt(hex.slice(i, i + 2), 16) / 255,
+    );
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    if (max - min < 0.08) return 999; // near-grey: sort last
+    const d = max - min;
+    const h =
+      max === r
+        ? ((g - b) / d) % 6
+        : max === g
+          ? (b - r) / d + 2
+          : (r - g) / d + 4;
+    return (h * 60 + 360) % 360;
   };
+
+  const sortColorsByHue = (hexes) =>
+    [...hexes].sort((a, b) => hueOf(a) - hueOf(b));
+
+  const getSwatchesInDisplayOrder = () =>
+    [...getSwatches()].sort((a, b) => hueOf(a.hex) - hueOf(b.hex));
 
   // Swatches ({ id, class, hex, name }) for the active palette
   const getSwatches = () => {
@@ -591,6 +603,18 @@ import { log } from "./logger.js";
     const themeMeta = document.querySelector('meta[name="theme-color"]');
     if (themeMeta) {
       themeMeta.setAttribute("content", isDark ? "#0d0e11" : "#f2f3f7");
+    }
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setStyle({
+        style: isDark ? StatusBarStyle.Dark : StatusBarStyle.Light,
+      }).catch((err) => log.warn("StatusBar setStyle failed:", err));
+      if (Capacitor.getPlatform() === "android") {
+        StatusBar.setBackgroundColor({
+          color: isDark ? "#0d0e11" : "#f2f3f7",
+        }).catch(() => {
+          /* ignored on Android 15+ edge-to-edge */
+        });
+      }
     }
     if (ambientInitialized) {
       updateAmbientBackdrop(currentAmbientLeaderHex, { immediate: true });
@@ -891,6 +915,17 @@ import { log } from "./logger.js";
       }
     } catch (err) {
       log.warn("Haptics failed", err);
+    }
+  };
+
+  const playSelectionHaptic = async () => {
+    if (!state.settings.hapticsEnabled || !Capacitor.isNativePlatform()) return;
+    try {
+      await Haptics.selectionStart();
+      await Haptics.selectionChanged();
+      await Haptics.selectionEnd();
+    } catch (err) {
+      log.warn("Selection haptic failed", err);
     }
   };
 
@@ -1285,9 +1320,12 @@ import { log } from "./logger.js";
     const createGhost = (sourceCard, offsetX, offsetY) => {
       const rect = sourceCard.getBoundingClientRect();
       const ghost = sourceCard.cloneNode(true);
+      ghost.removeAttribute("data-counter-id");
+      ghost.setAttribute("aria-hidden", "true");
       ghost.classList.add("drag-ghost");
       ghost.style.width = `${rect.width}px`;
       ghost.style.height = `${rect.height}px`;
+      ghost.style.viewTransitionName = "none";
       ghost.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0) rotate(1.5deg) scale(1.03)`;
       document.body.appendChild(ghost);
       return { ghost, offsetX, offsetY };
@@ -1476,8 +1514,47 @@ import { log } from "./logger.js";
       );
 
       const before = getDropTarget(e.clientX, e.clientY);
-      movePlaceholder(dragState.placeholder, before);
+      if (before !== dragState.placeholder.nextElementSibling) {
+        const prevPositions = cardPositions();
+        movePlaceholder(dragState.placeholder, before);
+        flipCardsFrom(prevPositions, { durationMs: 240 });
+        playSelectionHaptic();
+      }
     });
+
+    const settleGhostIntoCard = (ghost, counterId) => {
+      const droppedCard = listWrapper.querySelector(
+        `.counter-card[data-counter-id="${counterId}"]`,
+      );
+      if (droppedCard && !prefersReducedMotion()) {
+        const targetRect = droppedCard.getBoundingClientRect();
+        const fromTransform = ghost.style.transform;
+        droppedCard.style.opacity = "0";
+        ghost
+          .animate(
+            [
+              { transform: fromTransform },
+              {
+                transform: `translate3d(${targetRect.left}px, ${targetRect.top}px, 0) rotate(0deg) scale(1)`,
+              },
+            ],
+            {
+              duration: 170,
+              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+              fill: "forwards",
+            },
+          )
+          .finished.catch(() => {
+            /* ignore */
+          })
+          .finally(() => {
+            droppedCard.style.opacity = "";
+            ghost.remove();
+          });
+      } else {
+        ghost.remove();
+      }
+    };
 
     const endDrag = (e) => {
       cancelHoldsFor(e.pointerId);
@@ -1490,22 +1567,21 @@ import { log } from "./logger.js";
       const tabsSlider = $("#tabs-slider");
       if (tabsSlider) tabsSlider.style.overflowX = "";
 
-      // Clean up ghost and dragging state
-      ghost.remove();
       card.classList.remove("dragging");
 
       if (!moved) {
-        // Treat no-movement as a cancelled drag — just remove placeholder
+        // Treat no-movement as a cancelled drag — just remove ghost & placeholder
+        ghost.remove();
         placeholder.remove();
         const counterId = card.getAttribute("data-counter-id");
-        
+
         // A hold that never moved is a tap. With pointer capture the native
         // click lands on the list rather than the card, so open the editor
         // here and swallow that click.
         if (target && target.closest(".card-header")) {
           openEditCounterDetails(counterId);
         }
-        
+
         return;
       }
 
@@ -1523,7 +1599,10 @@ import { log } from "./logger.js";
       // Determine original index to remove from
       const counterId = card.getAttribute("data-counter-id");
       const fromIdx = state.counters.findIndex((c) => c.id === counterId);
-      if (fromIdx === -1) return;
+      if (fromIdx === -1) {
+        ghost.remove();
+        return;
+      }
 
       // Count how many real cards are before the placeholder position to get target index
       let seen = 0;
@@ -1540,16 +1619,14 @@ import { log } from "./logger.js";
       }
       const toIdx = Math.max(0, Math.min(seen, state.counters.length - 1));
 
-      if (fromIdx === toIdx) {
-        renderCountersList();
-        return;
+      if (fromIdx !== toIdx) {
+        const [movedItem] = state.counters.splice(fromIdx, 1);
+        state.counters.splice(toIdx, 0, movedItem);
+        saveCounters();
       }
-
-      // Reorder state array
-      const [moved_item] = state.counters.splice(fromIdx, 1);
-      state.counters.splice(toIdx, 0, moved_item);
-      saveCounters();
       renderCountersList();
+      settleGhostIntoCard(ghost, counterId);
+      playHaptic(ImpactStyle.Light);
       playClickSound(500, 650, 0.06, 0.04);
     };
 
@@ -1646,6 +1723,7 @@ import { log } from "./logger.js";
   const updateTabUI = (tabId) => {
     if (state.currentTab === tabId) return;
     state.currentTab = tabId;
+    playSelectionHaptic();
 
     // Update footer button active class and roving tabindex
     $$("[data-tab-btn]").forEach((btn) => {
@@ -1729,6 +1807,8 @@ import { log } from "./logger.js";
       $("#layout-opt-grid").classList.remove("active");
       saveSettings();
       renderCountersList();
+      playClickSound();
+      playSelectionHaptic();
     });
 
     $("#layout-opt-grid").addEventListener("click", () => {
@@ -1738,6 +1818,8 @@ import { log } from "./logger.js";
       $("#layout-opt-list").classList.remove("active");
       saveSettings();
       renderCountersList();
+      playClickSound();
+      playSelectionHaptic();
     });
 
     // Top Bar content settings options
@@ -1755,6 +1837,8 @@ import { log } from "./logger.js";
         if (state.settings.autoSort) {
           performAutoSortNow();
         }
+        playClickSound();
+        playSelectionHaptic();
       });
     });
 
@@ -1767,6 +1851,8 @@ import { log } from "./logger.js";
       } else {
         renderCountersList();
       }
+      playClickSound();
+      playSelectionHaptic();
     });
   };
 
@@ -1944,44 +2030,47 @@ import { log } from "./logger.js";
   // Each card's on-screen box, by counter id, before a change re-renders them
   const cardPositions = () => {
     const positions = {};
-    $$(".counter-card").forEach((card) => {
-      const id = card.getAttribute("data-counter-id");
-      if (id) positions[id] = card.getBoundingClientRect();
-    });
+    $$("#counters-list-wrapper .counter-card:not(.dragging):not(.drag-ghost)").forEach(
+      (card) => {
+        const id = card.getAttribute("data-counter-id");
+        if (id) positions[id] = card.getBoundingClientRect();
+      },
+    );
     return positions;
   };
 
   // Spring each re-rendered card from where it was (see cardPositions) into
-  // its new place. Shared by shuffle and delete so cards move the same way.
-  const flipCardsFrom = (firstPositions) => {
+  // its new place. Shared by shuffle, drag-reorder, and delete.
+  const flipCardsFrom = (firstPositions, { durationMs = 450 } = {}) => {
     if (prefersReducedMotion()) return;
-    $$(".counter-card").forEach((card) => {
-      const first = firstPositions[card.getAttribute("data-counter-id")];
-      if (!first) return;
-      const last = card.getBoundingClientRect();
-      const deltaX = first.left - last.left;
-      const deltaY = first.top - last.top;
-      if (!deltaX && !deltaY) return;
+    $$("#counters-list-wrapper .counter-card:not(.dragging):not(.drag-ghost)").forEach(
+      (card) => {
+        const first = firstPositions[card.getAttribute("data-counter-id")];
+        if (!first) return;
+        const last = card.getBoundingClientRect();
+        const deltaX = first.left - last.left;
+        const deltaY = first.top - last.top;
+        if (!deltaX && !deltaY) return;
 
-      // INVERT: move the card back to its old position instantly
-      card.style.transition = "none";
-      card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-      card.style.zIndex = "10";
+        // INVERT: move the card back to its old position instantly
+        card.style.transition = "none";
+        card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+        card.style.zIndex = "10";
 
-      // PLAY: animate to its new position
-      requestAnimationFrame(() => {
-        void card.offsetWidth; // Force reflow
-        card.style.transition =
-          "transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)";
-        card.style.transform = "translate(0, 0)";
+        // PLAY: animate to its new position
+        requestAnimationFrame(() => {
+          void card.offsetWidth; // Force reflow
+          card.style.transition = `transform ${durationMs}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
+          card.style.transform = "translate(0, 0)";
 
-        setTimeout(() => {
-          card.style.zIndex = "";
-          card.style.transition = "";
-          card.style.transform = "";
-        }, 450);
-      });
-    });
+          setTimeout(() => {
+            card.style.zIndex = "";
+            card.style.transition = "";
+            card.style.transform = "";
+          }, durationMs);
+        });
+      },
+    );
   };
 
   // Tumble a copy of a card off screen in front of everything, so the card
@@ -2474,6 +2563,7 @@ import { log } from "./logger.js";
         }
 
         playClickSound();
+        playSelectionHaptic();
       });
 
       paletteContainer.addEventListener("input", (e) => {
@@ -2812,6 +2902,7 @@ import { log } from "./logger.js";
     renderCountersList();
     triggerAutoSortWithDebounce();
     playSuccessSound();
+    playHaptic(ImpactStyle.Light);
   };
 
   // Open Edit Dialog wrapper for editing counter details
@@ -2890,19 +2981,43 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   // 14. Settings Dialog Data Binder
   // ------------------------------------------------------------------------
-  // Fill the palette select from the palettes map and preview the chosen palette
+  const syncThemeSetting = () => {
+    const activeTheme = state.settings.theme || "system";
+    $$("#setting-theme-group [data-theme-opt]").forEach((btn) => {
+      const isActive = btn.getAttribute("data-theme-opt") === activeTheme;
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-checked", isActive ? "true" : "false");
+      btn.setAttribute("tabindex", isActive ? "0" : "-1");
+    });
+  };
+
+  // Render the 2-column palette picker cards with live rainbow-sorted swatch previews
   const renderPaletteSetting = () => {
-    const select = $("#setting-palette");
-    const preview = $("#setting-palette-preview");
-    if (!select || !preview) return;
-    if (!select.options.length) {
-      select.innerHTML = Object.entries(palettes)
-        .map(([key, { label }]) => `<option value="${key}">${label}</option>`)
-        .join("");
-    }
-    select.value = palettes[state.settings.palette] ? state.settings.palette : "bold";
-    preview.innerHTML = getSwatchesInDisplayOrder()
-      .map(({ hex }) => `<span style="background-color: ${hex}"></span>`)
+    const group = $("#setting-palette-group");
+    if (!group) return;
+    const activeKey = palettes[state.settings.palette]
+      ? state.settings.palette
+      : "bold";
+    group.innerHTML = Object.entries(palettes)
+      .map(([key, { label, colors }]) => {
+        const isActive = key === activeKey;
+        const sorted = sortColorsByHue(colors);
+        return `
+          <button
+            type="button"
+            class="palette-option-card${isActive ? " active" : ""}"
+            role="radio"
+            aria-checked="${isActive ? "true" : "false"}"
+            tabindex="${isActive ? "0" : "-1"}"
+            data-palette-opt="${key}"
+          >
+            <span class="palette-option-name">${label}</span>
+            <span class="palette-preview"${isActive ? ' id="setting-palette-preview"' : ""} aria-hidden="true">${sorted
+              .map((hex) => `<span style="background-color: ${hex}"></span>`)
+              .join("")}</span>
+          </button>
+        `;
+      })
       .join("");
   };
 
@@ -2918,7 +3033,7 @@ import { log } from "./logger.js";
     }
     const keepAwakeEl = $("#setting-keep-awake");
     if (keepAwakeEl) keepAwakeEl.checked = state.settings.keepAwake;
-    $("#setting-theme").value = state.settings.theme || "system";
+    syncThemeSetting();
     renderPaletteSetting();
     const quickAddInput = $("#setting-quick-add-values");
     if (quickAddInput) {
@@ -2942,6 +3057,7 @@ import { log } from "./logger.js";
       state.settings.soundEnabled = e.target.checked;
       saveSettings();
       playClickSound();
+      playSelectionHaptic();
     });
 
     // Haptic Toggle
@@ -2971,14 +3087,22 @@ import { log } from "./logger.js";
           );
         }
         playClickSound();
+        playSelectionHaptic();
       });
     }
 
-    // Theme Hue Slider
+    // Theme Hue Slider with 15-degree haptic detents
     const hueSlider = $("#setting-theme-hue");
     if (hueSlider) {
+      let lastDetent = Math.round((state.settings.themeHue ?? 205) / 15);
       hueSlider.addEventListener("input", (e) => {
-        applyAccentTokens(e.target.value);
+        const hue = Number(e.target.value);
+        applyAccentTokens(hue);
+        const detent = Math.round(hue / 15);
+        if (detent !== lastDetent) {
+          lastDetent = detent;
+          playSelectionHaptic();
+        }
       });
       hueSlider.addEventListener("change", (e) => {
         state.settings.themeHue = parseInt(e.target.value, 10);
@@ -2988,23 +3112,78 @@ import { log } from "./logger.js";
       });
     }
 
-    // Palette selector
-    $("#setting-palette").addEventListener("change", (e) => {
-      state.settings.palette = e.target.value;
+    const selectPalette = (key, { focus = false } = {}) => {
+      if (!palettes[key] || state.settings.palette === key) return;
+      state.settings.palette = key;
       saveSettings();
       renderPaletteSetting();
       renderEditPaletteSwatches();
       renderCountersList();
       playClickSound();
-    });
+      playSelectionHaptic();
+      if (focus) {
+        $(`#setting-palette-group [data-palette-opt="${key}"]`)?.focus();
+      }
+    };
 
-    // Theme selector
-    $("#setting-theme").addEventListener("change", (e) => {
-      state.settings.theme = e.target.value;
+    // Palette card grid (click + radiogroup arrow keys)
+    const paletteGroup = $("#setting-palette-group");
+    if (paletteGroup) {
+      renderPaletteSetting();
+      paletteGroup.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-palette-opt]");
+        if (!btn) return;
+        selectPalette(btn.getAttribute("data-palette-opt"));
+      });
+      paletteGroup.addEventListener("keydown", (e) => {
+        if (!["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"].includes(e.key))
+          return;
+        e.preventDefault();
+        const keys = Object.keys(palettes);
+        const cur = palettes[state.settings.palette]
+          ? state.settings.palette
+          : "bold";
+        const idx = keys.indexOf(cur);
+        const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : -1;
+        const nextKey = keys[(idx + step + keys.length) % keys.length];
+        selectPalette(nextKey, { focus: true });
+      });
+    }
+
+    const selectTheme = (theme, { focus = false } = {}) => {
+      if (!["system", "dark", "light"].includes(theme)) return;
+      if (state.settings.theme === theme) return;
+      state.settings.theme = theme;
       saveSettings();
-      applyTheme(state.settings.theme);
+      applyTheme(theme);
+      syncThemeSetting();
       playClickSound();
-    });
+      playSelectionHaptic();
+      if (focus) {
+        $(`#setting-theme-group [data-theme-opt="${theme}"]`)?.focus();
+      }
+    };
+
+    // Theme segmented control (click + radiogroup arrow keys)
+    const themeGroup = $("#setting-theme-group");
+    if (themeGroup) {
+      syncThemeSetting();
+      themeGroup.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-theme-opt]");
+        if (!btn) return;
+        selectTheme(btn.getAttribute("data-theme-opt"));
+      });
+      themeGroup.addEventListener("keydown", (e) => {
+        if (!["ArrowRight", "ArrowDown", "ArrowLeft", "ArrowUp"].includes(e.key))
+          return;
+        e.preventDefault();
+        const opts = ["system", "dark", "light"];
+        const idx = opts.indexOf(state.settings.theme || "system");
+        const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : -1;
+        const nextOpt = opts[(idx + step + opts.length) % opts.length];
+        selectTheme(nextOpt, { focus: true });
+      });
+    }
 
     // Quick Add Calculator custom items
     $("#setting-quick-add-values").addEventListener("input", (e) => {
@@ -3813,29 +3992,106 @@ import { log } from "./logger.js";
   };
 
   // ------------------------------------------------------------------------
-  // 18b. Sheet Swipe/Drag to Dismiss Logic
+  // 18b. Sheet Swipe/Drag to Dismiss Logic (velocity flick + rubber-banding)
   // ------------------------------------------------------------------------
   const setupBottomSheetDragging = () => {
     $$(".bottom-sheet-dialog").forEach((dialog) => {
       const header = dialog.querySelector(".bottom-sheet-header");
+      const body = dialog.querySelector(".bottom-sheet-body");
       if (!header) return;
 
+      let startX = 0;
       let startY = 0;
       let currentY = 0;
+      let lastY = 0;
+      let lastTime = 0;
+      let velocityY = 0;
       let isDragging = false;
+      let captureEl = null;
+      let bodyPullCandidate = false;
+      let activePointerId = null;
+
+      const dismissSheet = () => {
+        if (prefersReducedMotion()) {
+          // Keep the released offset while fading out so it doesn't snap up first
+          dialog.addEventListener(
+            "close",
+            () => {
+              setTimeout(() => {
+                if (!dialog.open) dialog.style.transform = "";
+              }, 160);
+            },
+            { once: true },
+          );
+        } else {
+          dialog.style.transform = "";
+        }
+        dialog.close();
+        playClickSound(450, 350, 0.05, 0.03); // light close sound
+      };
+
+      const applySheetOffset = (deltaY, now) => {
+        if (lastTime > 0) {
+          const dt = Math.max(1, now - lastTime);
+          const instVel = (deltaY - (lastY - startY)) / dt;
+          velocityY = velocityY * 0.4 + instVel * 0.6;
+        }
+        lastY = startY + deltaY;
+        lastTime = now;
+
+        if (deltaY > 0) {
+          currentY = deltaY;
+          dialog.style.transform = `translate(-50%, ${deltaY}px)`;
+        } else if (deltaY < 0 && !prefersReducedMotion()) {
+          // Damped upward rubber-band resistance so sheets feel physically weighted
+          const damped = -Math.min(18, Math.pow(-deltaY, 0.7) * 1.4);
+          currentY = damped;
+          dialog.style.transform = `translate(-50%, ${damped.toFixed(1)}px)`;
+        } else {
+          currentY = 0;
+          dialog.style.transform = "";
+        }
+      };
+
+      const endDragging = (e) => {
+        bodyPullCandidate = false;
+        if (!isDragging) return;
+        isDragging = false;
+        dialog.classList.remove("dragging");
+
+        if (captureEl && e && e.pointerId !== undefined) {
+          try {
+            captureEl.releasePointerCapture(e.pointerId);
+          } catch {
+            /* ignore */
+          }
+        }
+        captureEl = null;
+        activePointerId = null;
+
+        // Dismiss if pulled past 100px OR flicked briskly downward
+        if (currentY > 100 || (currentY > 28 && velocityY > 0.55)) {
+          dismissSheet();
+        } else {
+          // Snap back smoothly
+          dialog.style.transform = "";
+        }
+        currentY = 0;
+        velocityY = 0;
+      };
 
       header.addEventListener("pointerdown", (e) => {
         if (e.pointerType === "mouse" && e.button !== 0) return;
-        // Skip trigger on buttons or interactive inputs
-        if (
-          e.target.closest("button") ||
-          e.target.closest("input") ||
-          e.target.closest("select")
-        )
-          return;
+        if (e.target.closest("button, input, select, textarea, a")) return;
 
+        startX = e.clientX;
         startY = e.clientY;
+        lastY = e.clientY;
+        lastTime = e.timeStamp || performance.now();
+        velocityY = 0;
         isDragging = true;
+        captureEl = header;
+        activePointerId = e.pointerId;
         dialog.classList.add("dragging");
         try {
           header.setPointerCapture(e.pointerId);
@@ -3845,60 +4101,96 @@ import { log } from "./logger.js";
       });
 
       header.addEventListener("pointermove", (e) => {
-        if (!isDragging) return;
-
-        const deltaY = e.clientY - startY;
-        // Only allow downward dragging
-        if (deltaY > 0) {
-          currentY = deltaY;
-          dialog.style.transform = `translate(-50%, ${deltaY}px)`;
-        } else {
-          currentY = 0;
-          dialog.style.transform = "";
-        }
+        if (!isDragging || captureEl !== header) return;
+        applySheetOffset(e.clientY - startY, e.timeStamp || performance.now());
       });
-
-      const endDragging = (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        dialog.classList.remove("dragging");
-
-        if (e && e.pointerId) {
-          try {
-            header.releasePointerCapture(e.pointerId);
-          } catch {
-            /* ignore */
-          }
-        }
-
-        // If dragged down past threshold (100px), close via the dialog's exit transition
-        if (currentY > 100) {
-          if (prefersReducedMotion()) {
-            // Keep the released offset while fading out so it doesn't snap up first
-            dialog.addEventListener(
-              "close",
-              () => {
-                setTimeout(() => {
-                  if (!dialog.open) dialog.style.transform = "";
-                }, 160);
-              },
-              { once: true },
-            );
-          } else {
-            dialog.style.transform = "";
-          }
-          dialog.close();
-          playClickSound(450, 350, 0.05, 0.03); // light close sound
-        } else {
-          // Snap back smoothly
-          dialog.style.transform = "";
-        }
-        currentY = 0;
-      };
 
       header.addEventListener("pointerup", endDragging);
       header.addEventListener("pointercancel", endDragging);
+
+      // Allow pulling down from the sheet body when scrolled to the very top
+      if (body) {
+        body.addEventListener("pointerdown", (e) => {
+          if (e.pointerType === "mouse" && e.button !== 0) return;
+          if (
+            e.target.closest(
+              "button, input, select, textarea, a, label, .palette-swatch, .hue-slider",
+            )
+          )
+            return;
+          if (body.scrollTop > 0) return;
+
+          bodyPullCandidate = true;
+          activePointerId = e.pointerId;
+          startX = e.clientX;
+          startY = e.clientY;
+          lastY = e.clientY;
+          lastTime = e.timeStamp || performance.now();
+          velocityY = 0;
+        });
+
+        body.addEventListener("pointermove", (e) => {
+          if (e.pointerId !== activePointerId) return;
+          if (bodyPullCandidate && !isDragging) {
+            if (body.scrollTop > 0) {
+              bodyPullCandidate = false;
+              return;
+            }
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+              bodyPullCandidate = false;
+              return;
+            }
+            if (dy > 10) {
+              bodyPullCandidate = false;
+              isDragging = true;
+              captureEl = body;
+              startY = e.clientY;
+              lastY = e.clientY;
+              lastTime = e.timeStamp || performance.now();
+              dialog.classList.add("dragging");
+              try {
+                body.setPointerCapture(e.pointerId);
+              } catch {
+                /* ignore */
+              }
+            }
+            return;
+          }
+          if (!isDragging || captureEl !== body) return;
+          if (e.cancelable) e.preventDefault();
+          applySheetOffset(e.clientY - startY, e.timeStamp || performance.now());
+        });
+
+        body.addEventListener("pointerup", endDragging);
+        body.addEventListener("pointercancel", endDragging);
+      }
     });
+  };
+
+  // Android / native hardware Back navigation: close topmost open dialog first,
+  // then return from Dice/Timer to Counters, before letting the OS exit
+  const handleBackNavigation = ({ canGoBack = false } = {}) => {
+    const openDialogs = [...document.querySelectorAll("dialog[open]")].filter(
+      (d) => !d.classList.contains("closing"),
+    );
+    if (openDialogs.length > 0) {
+      openDialogs[openDialogs.length - 1].close();
+      return true;
+    }
+    if (state.currentTab !== "counters") {
+      switchTab("counters");
+      return true;
+    }
+    if (Capacitor.isNativePlatform()) {
+      if (canGoBack) {
+        window.history.back();
+      } else {
+        CapApp.exitApp();
+      }
+    }
+    return false;
   };
 
   // ------------------------------------------------------------------------
@@ -3934,6 +4226,15 @@ import { log } from "./logger.js";
     setupBottomSheetDragging();
     setupCardDragDrop();
 
+    if (Capacitor.isNativePlatform()) {
+      CapApp.addListener("backButton", handleBackNavigation).catch((err) =>
+        log.warn("Back button listener failed:", err),
+      );
+    }
+    document.addEventListener("counters:back", () => {
+      handleBackNavigation();
+    });
+
     // Re-apply keep awake when app comes to foreground
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible" && state.settings.keepAwake) {
@@ -3951,6 +4252,8 @@ import { log } from "./logger.js";
       }
       await loadStateFromStorage();
       document.documentElement.setAttribute("data-layout", state.settings.layout);
+      syncThemeSetting();
+      renderPaletteSetting();
       renderEditPaletteSwatches();
       populateCalculatorQuickAdds();
       renderCountersList();

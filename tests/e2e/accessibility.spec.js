@@ -86,7 +86,9 @@ test.describe('color contrast', () => {
     await page.goto('/');
     await page.locator('#btn-open-options').click();
     await page.locator('#menu-btn-open-settings').click();
-    const options = await page.locator('#setting-palette option').evaluateAll((els) => els.map((o) => o.value));
+    const options = await page
+      .locator('#setting-palette-group [data-palette-opt]')
+      .evaluateAll((els) => els.map((b) => b.dataset.paletteOpt));
     expect(options).toEqual(PALETTES);
   });
 
@@ -146,6 +148,15 @@ test.describe('color contrast', () => {
       await page.locator('#menu-btn-open-display-options').click();
       await expect(page.locator('#layout-opt-list')).toBeVisible();
       expect(await contrast(page.locator('#layout-opt-list'))).toBeGreaterThanOrEqual(4.5);
+      await page.keyboard.press('Escape');
+
+      await page.locator('#btn-open-options').click();
+      await page.locator('#menu-btn-open-settings').click();
+      await expect(page.locator('#settings-dialog')).toBeVisible();
+      await page.evaluate(() => document.getAnimations().forEach((a) => a.finish()));
+      expect(await contrast(page.locator('#setting-theme-group .segment-btn.active')), `${theme} active segment hue 60`).toBeGreaterThanOrEqual(4.5);
+      expect(await contrast(page.locator('#setting-palette-group .palette-option-card.active .palette-option-name')), `${theme} active palette text hue 60`).toBeGreaterThanOrEqual(4.5);
+      expect(await contrast(page.locator('#setting-palette-group .palette-option-card.active'), 'borderTopColor'), `${theme} active palette border hue 60`).toBeGreaterThanOrEqual(3);
     });
 
     test(`${theme}: destructive menu and confirm buttons meet 4.5:1`, async ({ page }) => {

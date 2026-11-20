@@ -18,8 +18,8 @@ test('switching palettes recolors preset counters but not custom ones', async ({
   expect(await cardColor(page, 'a')).toBe('rgb(10, 84, 221)'); // bold royal blue
 
   await openSettings(page);
-  await expect(page.locator('#setting-palette')).toHaveValue('bold');
-  await page.locator('#setting-palette').selectOption('pastel');
+  await expect(page.locator('#setting-palette-group [data-palette-opt="bold"]')).toHaveAttribute('aria-checked', 'true');
+  await page.locator('#setting-palette-group [data-palette-opt="pastel"]').click();
 
   await expect.poll(() => cardColor(page, 'a')).toBe('rgb(147, 221, 250)'); // pastel sky
   expect(await cardColor(page, 'c')).toBe('rgb(18, 52, 86)');
@@ -28,14 +28,15 @@ test('switching palettes recolors preset counters but not custom ones', async ({
   expect((await stored(page, 'counters-list'))[0].color).toBe(0);
 });
 
-test('the setting previews the chosen palette', async ({ page }) => {
+test('the setting previews every palette and marks the chosen one', async ({ page }) => {
   await page.goto('/');
   await openSettings(page);
+  await expect(page.locator('#setting-palette-group [data-palette-opt]')).toHaveCount(6);
   const dots = page.locator('#setting-palette-preview span');
   await expect(dots).toHaveCount(8);
   // Rainbow display order starts with the red-orange/apricot slot
   await expect(dots.first()).toHaveCSS('background-color', 'rgb(199, 53, 17)');
-  await page.locator('#setting-palette').selectOption('pastel');
+  await page.locator('#setting-palette-group [data-palette-opt="pastel"]').click();
   await expect(dots.first()).toHaveCSS('background-color', 'rgb(253, 195, 153)');
 });
 

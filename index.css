@@ -156,6 +156,7 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow: hidden;
 }
 
@@ -465,6 +466,10 @@ html[data-layout="grid"] .counter-card {
   }
 }
 
+.counter-card:not(.dragging):has(.card-direct-zone:active, .card-value-body:active) {
+  transform: scale(0.985);
+}
+
 /* Card Header elements */
 .card-header {
   position: relative;
@@ -475,8 +480,13 @@ html[data-layout="grid"] .counter-card {
   padding: 0 12px;
   cursor: pointer;
   background-color: rgba(0, 0, 0, 0.12);
+  transition: background-color var(--trans-fast);
   z-index: 5;
   touch-action: none;
+}
+
+.card-header:active {
+  background-color: rgba(0, 0, 0, 0.22);
 }
 
 .card-header:focus-visible {
@@ -517,7 +527,7 @@ html[data-layout="grid"] .counter-card {
 .drag-placeholder {
   border-radius: 16px;
   background-color: rgba(255, 255, 255, 0.05);
-  border: 2px dashed var(--accent-color);
+  border: 2px dashed var(--accent-graphic);
   opacity: 0.5;
   pointer-events: none;
   flex-shrink: 0;
@@ -682,7 +692,8 @@ html[data-layout="grid"] .card-direct-zone-plus {
 }
 
 .card-direct-zone:active {
-  background-color: rgba(255, 255, 255, 0.15);
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.18);
 }
 
 /* Cleaner, pill-like focus rings for card zones */
@@ -1215,9 +1226,10 @@ html[data-layout="grid"] .card-direct-zone-plus {
 }
 
 /* Controls keep their natural size; the text column wraps in whatever space
-   is left, so help text can never run under a dropdown or switch */
+   is left, so help text can never run under a control or switch */
 .settings-row > select,
-.settings-row > .switch-toggle {
+.settings-row > .switch-toggle,
+.settings-row > .segmented-control {
   flex: 0 0 auto;
 }
 
@@ -1250,18 +1262,108 @@ html[data-layout="grid"] .card-direct-zone-plus {
   line-height: 1.4;
 }
 
-/* Palette setting: dots previewing the chosen palette.
-   All 8 fit on one row when space allows; wraps only when needed. */
+/* Native-style segmented control (Theme: System | Dark | Light) */
+.segmented-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+}
+
+.segment-btn {
+  appearance: none;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-primary);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition:
+    background-color var(--trans-fast),
+    color var(--trans-fast),
+    transform var(--trans-fast),
+    box-shadow var(--trans-fast);
+}
+
+.segment-btn:active {
+  transform: scale(0.95);
+}
+
+.segment-btn.active {
+  background-color: var(--bg-secondary);
+  color: var(--accent-ink);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16);
+}
+
+/* Palette setting: 2-column grid of tappable palette cards with live swatch dots */
+.palette-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.palette-option-card {
+  appearance: none;
+  background-color: var(--bg-tertiary);
+  border: 1.5px solid var(--border-light);
+  border-radius: 12px;
+  padding: 9px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    background-color var(--trans-fast),
+    border-color var(--trans-fast),
+    transform var(--trans-fast);
+}
+
+@media (hover: hover) {
+  .palette-option-card:hover {
+    border-color: var(--accent-graphic);
+  }
+}
+
+.palette-option-card:active {
+  transform: scale(0.97);
+}
+
+.palette-option-card.active {
+  background-color: var(--accent-light);
+  border-color: var(--accent-ink);
+}
+
+.palette-option-name {
+  font-family: var(--font-primary);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.palette-option-card.active .palette-option-name {
+  color: var(--accent-ink);
+}
+
 .palette-preview {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 4px;
+  gap: 3.5px;
 }
 
 .palette-preview span {
-  width: 14px;
-  height: 14px;
+  width: 9.5px;
+  height: 9.5px;
+  flex: 0 0 auto;
   border-radius: 50%;
   box-shadow: inset 0 0 0 1px rgba(128, 128, 128, 0.25);
 }
@@ -1613,6 +1715,7 @@ dialog[open].closing::backdrop {
   display: flex;
   flex-direction: column;
   max-height: 92vh;
+  max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 8px));
   padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   transition-property: transform, display, overlay;
   transition-duration: 0.4s;
@@ -2374,6 +2477,10 @@ dialog[open].options-menu-dialog.closing {
   transition: all var(--trans-fast);
 }
 
+.toggle-btn:active {
+  transform: scale(0.96);
+}
+
 .toggle-btn.active {
   background-color: var(--accent-light);
   color: var(--accent-ink);
@@ -2406,14 +2513,16 @@ dialog[open].options-menu-dialog.closing {
 
 @media (hover: hover) {
   .select-row-btn:hover {
-    border-color: var(--accent-color);
+    border-color: var(--accent-graphic);
     color: var(--text-primary);
   }
 }
 
 .select-row-btn:active {
   transform: scale(0.97);
-  background-color: var(--bg-secondary);
+  background-color: var(--accent-light);
+  border-color: var(--accent-graphic);
+  color: var(--text-primary);
 }
 
 .select-row-btn.active {
