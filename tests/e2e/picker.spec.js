@@ -61,7 +61,7 @@ test.describe('Picker tab', () => {
     await expect(promptTitle(page)).toHaveText('Place fingers to choose');
   });
 
-  test('two or more fingers get unique colors and pick one winner after 3 seconds', async ({ page }) => {
+  test('two or more fingers get unique colors and geometric shapes, then pick one winner after 3 seconds', async ({ page }) => {
     await dispatchPointer(page, 'pointerdown', 1, 80, 120);
     await dispatchPointer(page, 'pointerdown', 2, 200, 120);
     await dispatchPointer(page, 'pointerdown', 3, 140, 240);
@@ -70,38 +70,64 @@ test.describe('Picker tab', () => {
     await expect(promptEl(page)).toHaveClass(/hidden/);
 
     const colors = await circles(page).evaluateAll((els) => els.map((el) => el.dataset.color));
+    const shapes = await circles(page).evaluateAll((els) => els.map((el) => el.dataset.shape));
     expect(new Set(colors).size).toBe(3);
+    expect(new Set(shapes).size).toBe(3);
+    await expect(page.locator('#picker-circles .picker-shape')).toHaveCount(3);
 
-    // Just before 3s: all 3 circles still present
+    // Just before 3s: all 3 shapes still present
     await page.clock.runFor(2900);
     await expect(circles(page)).toHaveCount(3);
     await expect(winnerCircle(page)).toHaveCount(0);
 
-    // At 3s: all but one vanish and the winner is highlighted
-    await page.clock.runFor(200);
+    // At 3s: staggered explosions start — 1st defeated pointer explodes immediately
+    await page.clock.runFor(120);
+    await expect(circles(page)).toHaveCount(2);
+    await expect(page.locator('#picker-particles .picker-particle')).toHaveCount(14);
+    await expect(winnerCircle(page)).toHaveCount(0);
+
+    // 140ms later: 2nd defeated pointer explodes
+    await page.clock.runFor(140);
+    await expect(circles(page)).toHaveCount(1);
+    await expect(winnerCircle(page)).toHaveCount(0);
+
+    // 140ms after last explosion: winner reveal fires with background color flood
+    await page.clock.runFor(160);
     await expect(circles(page)).toHaveCount(1);
     await expect(winnerCircle(page)).toHaveCount(1);
     await expect(page.locator('#picker-status')).toHaveText('Player selected');
+
+    const winnerColor = await winnerCircle(page).getAttribute('data-color');
+    const winnerBg = page.locator('#picker-winner-bg');
+    await expect(winnerBg).toHaveClass(/active/);
+    await expect(winnerBg).toHaveCSS('--winner-bg', winnerColor);
   });
 
-  test('adding a finger mid-countdown resets the 3-second timer', async ({ page }) => {
+  test('adding a finger mid-countdown resets the 3-second timer and rotation speed', async ({ page }) => {
     await dispatchPointer(page, 'pointerdown', 1, 80, 120);
     await dispatchPointer(page, 'pointerdown', 2, 200, 120);
 
     await page.clock.runFor(2000);
     await expect(circles(page)).toHaveCount(2);
 
-    // 3rd finger resets the 3s countdown
+    const speedBeforeReset = Number(await page.locator('#picker-stage').getAttribute('data-rotation-speed'));
+    expect(speedBeforeReset).toBeGreaterThan(300);
+
+    // 3rd finger resets both the 3s countdown and rotation speed back to base (35 deg/s)
     await dispatchPointer(page, 'pointerdown', 3, 140, 240);
     await expect(circles(page)).toHaveCount(3);
+    const speedAfterReset = Number(await page.locator('#picker-stage').getAttribute('data-rotation-speed'));
+    expect(speedAfterReset).toBeLessThanOrEqual(40);
 
-    // 2s after the 3rd finger (4s total) — still counting
+    // 2s after the 3rd finger (4s total) — still counting, and speed has accelerated again
     await page.clock.runFor(2000);
     await expect(circles(page)).toHaveCount(3);
     await expect(winnerCircle(page)).toHaveCount(0);
+    const speedMidRamp = Number(await page.locator('#picker-stage').getAttribute('data-rotation-speed'));
+    expect(speedMidRamp).toBeGreaterThan(300);
 
-    // 1.1s later (3.1s after 3rd finger) — winner selected
-    await page.clock.runFor(1100);
+    // 1.4s later (past 3s + 2x140ms stagger) — winner selected
+    await page.clock.runFor(1400);
     await expect(circles(page)).toHaveCount(1);
     await expect(winnerCircle(page)).toHaveCount(1);
   });
@@ -144,26 +170,31 @@ test.describe('Picker tab', () => {
   test('winner stays highlighted until all fingers lift, then resets for a new round', async ({ page }) => {
     await dispatchPointer(page, 'pointerdown', 1, 80, 120);
     await dispatchPointer(page, 'pointerdown', 2, 200, 120);
-    await page.clock.runFor(3100);
+    await page.clock.runFor(3300);
 
     await expect(winnerCircle(page)).toHaveCount(1);
+    const winnerColor = await winnerCircle(page).getAttribute('data-color');
+    await expect(page.locator('#picker-winner-bg')).toHaveClass(/active/);
     const winningId = Number(await winnerCircle(page).getAttribute('data-pointer-id'));
     const otherId = winningId === 1 ? 2 : 1;
 
-    // Even if the winner lifts first, the highlight stays until all fingers lift
+    // Even if the winner lifts first, the highlight and background stay until all fingers lift
     await dispatchPointer(page, 'pointerup', winningId, 80, 120);
     await expect(winnerCircle(page)).toHaveCount(1);
+    await expect(page.locator('#picker-winner-bg')).toHaveClass(/active/);
 
-    // Lifting the remaining finger resets cleanly to idle
+    // Lifting the remaining finger animates the background out (keeps --winner-bg for transition)
     await dispatchPointer(page, 'pointerup', otherId, 200, 120);
     await expect(circles(page)).toHaveCount(0);
+    await expect(page.locator('#picker-winner-bg')).not.toHaveClass(/active/);
+    await expect(page.locator('#picker-winner-bg')).toHaveCSS('--winner-bg', winnerColor);
     await expect(promptTitle(page)).toHaveText('Place fingers to choose');
 
     // Ready for a brand new round immediately
     await dispatchPointer(page, 'pointerdown', 10, 90, 150);
     await dispatchPointer(page, 'pointerdown', 11, 210, 150);
     await expect(circles(page)).toHaveCount(2);
-    await page.clock.runFor(3100);
+    await page.clock.runFor(3300);
     await expect(winnerCircle(page)).toHaveCount(1);
   });
 
@@ -200,6 +231,66 @@ test.describe('Picker tab', () => {
     await expect(page.locator('[data-tab-btn="picker"]')).toHaveAttribute('aria-selected', 'true');
     await expect(circles(page)).toHaveCount(2);
   });
+
+  test('triggers minor vibration on touch and major vibration on winner reveal', async ({ page }) => {
+    await page.evaluate(() => {
+      window.__vibrateCalls = [];
+      navigator.vibrate = (pattern) => {
+        window.__vibrateCalls.push(pattern);
+        return true;
+      };
+    });
+
+    await dispatchPointer(page, 'pointerdown', 1, 80, 120);
+    await dispatchPointer(page, 'pointerdown', 2, 200, 120);
+    expect(await page.evaluate(() => window.__vibrateCalls)).toEqual([15, 15]);
+
+    await page.clock.runFor(3300);
+    await expect(winnerCircle(page)).toHaveCount(1);
+    expect(await page.evaluate(() => window.__vibrateCalls)).toEqual([15, 15, [40, 30, 80]]);
+  });
+});
+
+test('Picker respects hapticsEnabled: false', async ({ page }) => {
+  await seed(page, { settings: { hapticsEnabled: false } });
+  await page.clock.install({ time: T0 });
+  await page.goto('/');
+  await page.locator('[data-tab-btn="picker"]').click();
+  await expect(page.locator('#picker-stage')).toBeInViewport({ ratio: 0.99 });
+  await page.clock.pauseAt(new Date(T0.getTime() + 60_000));
+
+  await page.evaluate(() => {
+    window.__vibrateCalls = [];
+    navigator.vibrate = (pattern) => {
+      window.__vibrateCalls.push(pattern);
+      return true;
+    };
+  });
+
+  await dispatchPointer(page, 'pointerdown', 1, 80, 120);
+  await dispatchPointer(page, 'pointerdown', 2, 200, 120);
+  await page.clock.runFor(3300);
+  await expect(winnerCircle(page)).toHaveCount(1);
+  expect(await page.evaluate(() => window.__vibrateCalls)).toEqual([]);
+});
+
+test('Picker with reduced motion skips rotation and particle explosions', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.clock.install({ time: T0 });
+  await page.goto('/');
+  await page.locator('[data-tab-btn="picker"]').click();
+  await expect(page.locator('#picker-stage')).toBeInViewport({ ratio: 0.99 });
+  await page.clock.pauseAt(new Date(T0.getTime() + 60_000));
+
+  await dispatchPointer(page, 'pointerdown', 1, 80, 120);
+  await dispatchPointer(page, 'pointerdown', 2, 200, 120);
+  await page.clock.runFor(1500);
+  await expect(page.locator('#picker-stage')).not.toHaveAttribute('data-rotation-speed');
+
+  await page.clock.runFor(1600);
+  await expect(winnerCircle(page)).toHaveCount(1);
+  await expect(page.locator('#picker-particles .picker-particle')).toHaveCount(0);
+  await expect(page.locator('#picker-winner-bg')).toHaveClass(/active/);
 });
 
 test('Picker uses colors from the active app palette', async ({ page }) => {

@@ -1641,7 +1641,29 @@ input:checked + .slider-round:before {
   overflow: hidden;
 }
 
+.picker-winner-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-color: var(--winner-bg, transparent);
+  clip-path: circle(0px at var(--winner-x, 50%) var(--winner-y, 50%));
+  opacity: 0;
+  transition:
+    clip-path 260ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 240ms ease-out;
+}
+
+.picker-winner-bg.active {
+  clip-path: circle(150vmax at var(--winner-x, 50%) var(--winner-y, 50%));
+  opacity: 1;
+  transition:
+    clip-path 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 160ms ease-out;
+}
+
 .picker-prompt {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1649,12 +1671,19 @@ input:checked + .slider-round:before {
   text-align: center;
   padding: 24px;
   pointer-events: none;
-  transition: opacity var(--trans-fast);
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 260ms ease-out,
+    visibility 0ms linear 0ms;
 }
 
 .picker-prompt.hidden {
   opacity: 0;
   visibility: hidden;
+  transition:
+    opacity 150ms ease-out,
+    visibility 0ms linear 150ms;
 }
 
 .picker-prompt-icon {
@@ -1679,41 +1708,99 @@ input:checked + .slider-round:before {
 .picker-circles {
   position: absolute;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
 }
 
 .picker-circle {
-  --picker-circle-size: 108px;
+  --picker-circle-size: 112px;
   position: absolute;
   top: 0;
   left: 0;
   width: var(--picker-circle-size);
   height: var(--picker-circle-size);
-  border-radius: 50%;
-  border: 6px solid var(--circle-color);
-  background-color: color-mix(in srgb, var(--circle-color) 28%, transparent);
-  box-shadow: 0 4px 18px color-mix(in srgb, var(--circle-color) 35%, transparent);
   transform: translate3d(calc(var(--x, 0px) - 50%), calc(var(--y, 0px) - 50%), 0);
   will-change: transform;
   pointer-events: none;
-  transition:
-    background-color var(--trans-fast),
-    box-shadow var(--trans-fast);
 }
 
-.picker-circle.is-winner {
-  background-color: var(--circle-color);
-  box-shadow:
-    0 0 0 10px color-mix(in srgb, var(--circle-color) 32%, transparent),
-    0 8px 28px color-mix(in srgb, var(--circle-color) 55%, transparent);
-  transform: translate3d(calc(var(--x, 0px) - 50%), calc(var(--y, 0px) - 50%), 0)
-    scale(1.18);
+.picker-shape {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  transform: rotate(var(--rot, 0deg));
+  transform-origin: center;
+  will-change: transform;
+  filter: drop-shadow(0 4px 14px color-mix(in srgb, var(--circle-color) 40%, transparent));
+  transition:
+    filter var(--trans-fast);
+}
+
+.picker-shape-path {
+  fill: color-mix(in srgb, var(--circle-color) 28%, transparent);
+  stroke: var(--circle-color);
+  stroke-width: 6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  transition:
+    fill var(--trans-fast),
+    stroke var(--trans-fast),
+    stroke-width var(--trans-fast);
+}
+
+.picker-circle.is-winner .picker-shape {
+  transform: rotate(var(--rot, 0deg)) scale(1.22);
+  filter: drop-shadow(0 6px 22px color-mix(in srgb, var(--winner-ink, #ffffff) 45%, transparent));
+}
+
+.picker-circle.is-winner .picker-shape-path {
+  fill: color-mix(in srgb, var(--winner-ink, #ffffff) 22%, transparent);
+  stroke: var(--winner-ink, #ffffff);
+  stroke-width: 7.5;
+}
+
+.picker-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.picker-particle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--particle-size, 18px);
+  height: var(--particle-size, 18px);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.picker-particle svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.picker-particle path,
+.picker-particle polygon,
+.picker-particle rect {
+  fill: var(--particle-color);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .picker-prompt,
-  .picker-circle {
+  .picker-winner-bg,
+  .picker-shape,
+  .picker-shape-path {
     transition: none;
+  }
+
+  .picker-winner-bg.active {
+    clip-path: none;
   }
 }
 
