@@ -180,6 +180,26 @@ test.describe('Picker tab', () => {
     await expect(winnerCircle(page)).toHaveCount(0);
     await expect(promptTitle(page)).toHaveText('Place fingers to choose');
   });
+
+  test('single-finger horizontal swipe flips back to the adjacent Timer tab', async ({ page }) => {
+    await dispatchPointer(page, 'pointerdown', 1, 80, 160);
+    await expect(circles(page)).toHaveCount(1);
+
+    await dispatchPointer(page, 'pointermove', 1, 170, 165);
+    await expect(page.locator('[data-tab-btn="timer"]')).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#app-view-title')).toHaveText('Timer');
+    await expect(circles(page)).toHaveCount(0);
+  });
+
+  test('horizontal drag with two fingers stays on the Picker tab', async ({ page }) => {
+    await dispatchPointer(page, 'pointerdown', 1, 80, 160);
+    await dispatchPointer(page, 'pointerdown', 2, 200, 160);
+    await expect(circles(page)).toHaveCount(2);
+
+    await dispatchPointer(page, 'pointermove', 1, 190, 165);
+    await expect(page.locator('[data-tab-btn="picker"]')).toHaveAttribute('aria-selected', 'true');
+    await expect(circles(page)).toHaveCount(2);
+  });
 });
 
 test('Picker uses colors from the active app palette', async ({ page }) => {

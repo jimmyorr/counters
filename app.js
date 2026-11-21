@@ -4419,10 +4419,15 @@ import { log } from "./logger.js";
 
     const PICKER_COUNTDOWN_MS = 3000;
     const PICKER_MIN_FINGERS = 2;
+    const SWIPE_TRIGGER_PX = 64;
+    const SWIPE_FLICK_PX = 36;
+    const SWIPE_FLICK_VELOCITY = 0.3; // px/ms
+    const SWIPE_AXIS_RATIO = 1.5;
 
     let phase = "idle"; // 'idle' | 'waiting' | 'counting' | 'selected'
     const touches = new Map(); // pointerId -> { x, y, color, slot, el }
     const heldPointers = new Set(); // pointerIds still down during 'selected'
+    let swipeCandidate = null; // { pointerId, startX, startY, startTime }
     let roundColorOrder = [];
     let fallbackColorIndex = 0;
     let countdownTimer = null;
@@ -4535,10 +4540,38 @@ import { log } from "./logger.js";
       touches.forEach((entry) => entry.el.remove());
       touches.clear();
       heldPointers.clear();
+      swipeCandidate = null;
       phase = "idle";
       setSliderLocked(false);
       if (statusEl) statusEl.textContent = "";
       updatePrompt();
+    };
+
+    const trySingleFingerSwipe = (e, isRelease = false) => {
+      if (!swipeCandidate || swipeCandidate.pointerId !== e.pointerId) return false;
+      if (phase !== "waiting" || touches.size !== 1) {
+        swipeCandidate = null;
+        return false;
+      }
+      const dx = e.clientX - swipeCandidate.startX;
+      const dy = e.clientY - swipeCandidate.startY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      if (absX <= absY * SWIPE_AXIS_RATIO) return false;
+
+      const pickerIdx = TABS.indexOf("picker");
+      const targetTab = dx > 0 ? TABS[pickerIdx - 1] : TABS[pickerIdx + 1];
+      if (!targetTab) return false;
+
+      const elapsed = Math.max(1, performance.now() - swipeCandidate.startTime);
+      const isDragSwipe = absX >= SWIPE_TRIGGER_PX;
+      const isFlickSwipe =
+        isRelease && absX >= SWIPE_FLICK_PX && absX / elapsed >= SWIPE_FLICK_VELOCITY;
+      if (!isDragSwipe && !isFlickSwipe) return false;
+
+      resetPicker();
+      switchTab(targetTab);
+      return true;
     };
 
     const addPickerTouch = (e) => {
@@ -4553,7 +4586,8 @@ import { log } from "./logger.js";
         /* ignore */
       }
 
-      if (phase === "idle") {
+      const wasIdle = phase === "idle";
+      if (wasIdle) {
         shuffleRoundColors();
         setSliderLocked(true);
       }
@@ -4571,15 +4605,25 @@ import { log } from "./logger.js";
       touches.set(e.pointerId, entry);
 
       if (touches.size >= PICKER_MIN_FINGERS) {
+        swipeCandidate = null;
         phase = "counting";
         schedulePickerSelection();
       } else {
         phase = "waiting";
+        if (wasIdle) {
+          swipeCandidate = {
+            pointerId: e.pointerId,
+            startX: e.clientX,
+            startY: e.clientY,
+            startTime: performance.now(),
+          };
+        }
       }
       updatePrompt();
     };
 
     const movePickerTouch = (e) => {
+      if (trySingleFingerSwipe(e, false)) return;
       const entry = touches.get(e.pointerId);
       if (!entry) return;
       positionCircle(entry, e.clientX, e.clientY);
@@ -4595,10 +4639,15 @@ import { log } from "./logger.js";
         return;
       }
 
+      if (e.type === "pointerup" && trySingleFingerSwipe(e, true)) return;
+
       const entry = touches.get(e.pointerId);
       if (!entry) return;
       entry.el.remove();
       touches.delete(e.pointerId);
+      if (swipeCandidate?.pointerId === e.pointerId) {
+        swipeCandidate = null;
+      }
 
       if (touches.size >= PICKER_MIN_FINGERS) {
         phase = "counting";
