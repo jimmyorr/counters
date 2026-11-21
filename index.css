@@ -622,7 +622,7 @@ html[data-layout="grid"] .counter-card {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-width: 56px;
   max-width: calc(100% - 96px);
   padding: 0 8px;
