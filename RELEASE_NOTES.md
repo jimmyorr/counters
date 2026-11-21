@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.2.0
+
+* **Counters:** Widened the score tap target on counter cards so opening the calculator is easier without hitting − or +.
+* **Dialogs:** Back now closes the topmost open sheet when a confirmation dialog sits over History.
+* **Security:** Updated build dependencies.
+
 ## 0.1.30
 
 * **Settings & touch:** Segmented theme picker, palette preview cards, sheet flick-to-dismiss physics, smoother drag-reordering, selection haptics, and native status-bar/back support.
