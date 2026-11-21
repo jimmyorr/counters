@@ -242,6 +242,25 @@ body > .app-nav {
   transform: translateX(-50%);
 }
 
+/* Freeze the background shell behind open modal sheets and software keyboards
+   so native/Android WebView keyboard resizing never smooshes or shifts cards
+   visible through the blurred dialog backdrop */
+:root.viewport-locked .ambient-backdrop {
+  bottom: auto;
+  height: var(--locked-app-height);
+}
+
+:root.viewport-locked .app-main {
+  bottom: auto;
+  height: var(--locked-main-height);
+}
+
+:root.viewport-locked .app-nav {
+  bottom: auto;
+  top: var(--locked-nav-top);
+  height: var(--locked-nav-height);
+}
+
 /* Scrollbars styling */
 @supports (scrollbar-color: auto) {
   * {
@@ -436,7 +455,6 @@ body > .app-nav {
   flex-direction: column;
   gap: 12px;
   height: 100%;
-  transition: all var(--trans-normal);
 }
 
 
@@ -482,7 +500,7 @@ html[data-layout="grid"] .counter-card {
   }
 }
 
-.counter-card:not(.dragging):has(.card-direct-zone:active, .card-value-body:active) {
+:root:not(.viewport-locked) .counter-card:not(.dragging):has(.card-direct-zone:active, .card-value-body:active) {
   transform: scale(0.985);
 }
 
@@ -2134,16 +2152,22 @@ input[type="number"]::-webkit-inner-spin-button {
   top: 12px;
 }
 
+/* Lift any bottom sheet above the software keyboard on iOS Safari (--vv-bottom)
+   and drop home-indicator bottom padding while the keyboard covers it */
+:root.keyboard-open .bottom-sheet-dialog {
+  bottom: var(--vv-bottom, 0px);
+  max-height: calc(var(--vv-height, 100dvh) - env(safe-area-inset-top, 0px) - 8px);
+  padding-bottom: 0;
+}
+
 /* With the software keyboard up (see syncKeyboardState in app.js), fill the
    visible space above it: from just below the status bar down to the top of
    the keyboard, with the buttons pinned to the bottom and any spare room
    above them. The body still scrolls if a keyboard leaves less room than
    the form needs. */
 :root.keyboard-open #edit-counter-dialog {
-  bottom: var(--vv-bottom, 0px);
   height: calc(var(--vv-height, 100dvh) - env(safe-area-inset-top, 0px) - 8px);
   max-height: none;
-  padding-bottom: 0; /* the keyboard covers the home indicator */
 }
 
 :root.keyboard-open #edit-counter-dialog .bottom-sheet-body {

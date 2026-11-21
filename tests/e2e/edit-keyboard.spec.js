@@ -28,12 +28,12 @@ const geometry = (page) =>
 // Skip the sheet's slide-up so measurements see its final position
 test.use({ reducedMotion: 'reduce' });
 
-test.beforeEach(async ({ page }) => {
-  await seed(page, { counters: [counter('a', 'Alpha')] });
-});
-
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 375, height: 667 } });
+
+  test.beforeEach(async ({ page }) => {
+    await seed(page, { counters: [counter('a', 'Alpha')] });
+  });
 
   test('fills the space above the keyboard without scrolling', async ({ page }) => {
     await page.goto('/');
@@ -101,8 +101,67 @@ test.describe('on a phone', () => {
   });
 });
 
+test.describe('background stability behind keyboard sheets', () => {
+  test.use({ viewport: { width: 393, height: 852 } });
+
+  test('keeps background counter cards completely still behind blurred dialogs when the keyboard opens', async ({ page }) => {
+    await seed(page, {
+      counters: [
+        counter('d', 'Daddy', 12, { color: 0 }),
+        counter('m', 'Mommy', 7, { color: 7 }),
+        counter('mi', 'Miles', 8, { color: 6 }),
+        counter('o', 'Oliver', 11, { color: 5 }),
+      ],
+    });
+    await page.goto('/');
+
+    const cardRects = () =>
+      page.locator('#counters-list-wrapper .counter-card').evaluateAll((els) =>
+        els.map((el) => {
+          const r = el.getBoundingClientRect();
+          return { id: el.dataset.counterId, top: Math.round(r.top), height: Math.round(r.height) };
+        }),
+      );
+
+    const before = await cardRects();
+    expect(before).toHaveLength(4);
+    expect(before[0].height).toBeGreaterThan(140);
+
+    // Long-press Mommy's value body to open #edit-value-dialog and shrink viewport for numeric keypad
+    const mommyBody = await card(page, 'm').locator('.card-value-body').boundingBox();
+    await page.mouse.move(mommyBody.x + mommyBody.width / 2, mommyBody.y + mommyBody.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(560);
+    await page.mouse.up();
+    await expect(page.locator('#edit-value-dialog')).toBeVisible();
+    await expect(page.locator('#edit-value-input')).toBeFocused();
+
+    await page.setViewportSize({ width: 393, height: 852 - 290 });
+    await expect(page.locator('html')).toHaveClass(/keyboard-open/);
+    await expect(page.locator('html')).toHaveClass(/viewport-locked/);
+
+    // Cards behind the frosted backdrop must not smoosh or move upward
+    expect(await cardRects()).toEqual(before);
+
+    // Tapping Save in #edit-value-dialog works in a single tap without closing keyboard first,
+    // and keeps background cards locked while the keyboard is still sliding closed
+    await page.locator('#edit-value-dialog button[type="submit"]').click();
+    await expect(page.locator('#edit-value-dialog')).toBeHidden();
+    expect(await cardRects()).toEqual(before);
+
+    // Once the native keyboard finishes restoring the WebView height, lock releases seamlessly
+    await page.setViewportSize({ width: 393, height: 852 });
+    await expect(page.locator('html')).not.toHaveClass(/viewport-locked/);
+    expect(await cardRects()).toEqual(before);
+  });
+});
+
 test.describe('on desktop', () => {
   test.use({ viewport: { width: 1200, height: 900 }, isMobile: false, hasTouch: false });
+
+  test.beforeEach(async ({ page }) => {
+    await seed(page, { counters: [counter('a', 'Alpha')] });
+  });
 
   test('a shorter window is not mistaken for a keyboard', async ({ page }) => {
     await page.goto('/');

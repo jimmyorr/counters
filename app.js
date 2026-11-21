@@ -60,10 +60,91 @@ import { log } from "./logger.js";
   const prefersReducedMotion = () =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Track the software keyboard so the edit sheet can fill the space above it
-  // (issue #37). Sets .keyboard-open on <html> plus --vv-height (visible
-  // height) and --vv-bottom (how far the visible area's bottom sits above the
-  // layout viewport's). Each platform shows the keyboard differently:
+  // Freeze the background shell (.ambient-backdrop, .app-main, .app-nav) at its
+  // pre-dialog pixel dimensions while any modal sheet or software keyboard is
+  // active. On native iOS/Android ("resize": "native") and Android Chrome
+  // (interactive-widget=resizes-content), opening the keyboard shrinks the
+  // WebView height (and drops safe-area-inset-bottom to 0), which would
+  // otherwise smoosh flex-stretched counter cards upward behind the blurred
+  // dialog backdrop.
+  let lockedViewportWidth = 0;
+  let lockedWindowHeight = 0;
+  let unlockViewportTimer = null;
+
+  const snapshotBackgroundViewport = () => {
+    const root = document.documentElement;
+    const appMain = document.querySelector(".app-main");
+    const appNav = document.querySelector(".app-nav");
+    if (!appMain || !appNav) return;
+    lockedViewportWidth = window.innerWidth;
+    lockedWindowHeight = window.innerHeight;
+    root.style.setProperty("--locked-app-height", `${window.innerHeight}px`);
+    root.style.setProperty("--locked-main-height", `${appMain.offsetHeight}px`);
+    root.style.setProperty("--locked-nav-top", `${appNav.offsetTop}px`);
+    root.style.setProperty("--locked-nav-height", `${appNav.offsetHeight}px`);
+  };
+
+  const lockBackgroundViewport = () => {
+    if (unlockViewportTimer) {
+      clearTimeout(unlockViewportTimer);
+      unlockViewportTimer = null;
+    }
+    const root = document.documentElement;
+    if (!root.classList.contains("viewport-locked")) {
+      snapshotBackgroundViewport();
+      root.classList.add("viewport-locked");
+    }
+  };
+
+  const unlockBackgroundViewportNow = () => {
+    if (unlockViewportTimer) {
+      clearTimeout(unlockViewportTimer);
+      unlockViewportTimer = null;
+    }
+    const root = document.documentElement;
+    root.classList.remove("viewport-locked");
+    root.style.removeProperty("--locked-app-height");
+    root.style.removeProperty("--locked-main-height");
+    root.style.removeProperty("--locked-nav-top");
+    root.style.removeProperty("--locked-nav-height");
+  };
+
+  const tryReleaseBackgroundViewport = () => {
+    const root = document.documentElement;
+    if (!root.classList.contains("viewport-locked")) return;
+    // Stay locked while any dialog is open (including WebKit's .closing exit)
+    if (document.querySelector("dialog[open]")) return;
+    const typing = document.activeElement?.matches("input, textarea") ?? false;
+    if (typing) return;
+
+    const vv = window.visualViewport;
+    const heightRestored =
+      window.innerHeight >= lockedWindowHeight - 2 &&
+      (!vv || Math.abs(vv.height - lockedWindowHeight) <= 2);
+
+    if (heightRestored) {
+      unlockBackgroundViewportNow();
+      return;
+    }
+
+    // Native keyboard is still animating closed; wait for the WebView to finish
+    // expanding back to lockedWindowHeight, with a fallback if the window was
+    // genuinely resized smaller.
+    if (!unlockViewportTimer) {
+      unlockViewportTimer = setTimeout(() => {
+        unlockViewportTimer = null;
+        if (!document.querySelector("dialog[open]")) {
+          unlockBackgroundViewportNow();
+        }
+      }, 500);
+    }
+  };
+
+  // Track the software keyboard so bottom sheets sit cleanly above it and the
+  // edit sheet fills the space above it (issue #37). Sets .keyboard-open on
+  // <html> plus --vv-height (visible height) and --vv-bottom (how far the
+  // visible area's bottom sits above the layout viewport's). Each platform
+  // shows the keyboard differently:
   //  - Native apps: the Keyboard plugin shrinks the whole web view, so the
   //    window itself gets shorter and --vv-bottom stays 0.
   //  - iOS Safari: only the visual viewport shrinks (and may scroll), so the
@@ -76,6 +157,12 @@ import { log } from "./logger.js";
   const syncKeyboardState = () => {
     const vv = window.visualViewport;
     if (!vv) return;
+    if (
+      document.querySelector("dialog[open]") &&
+      (window.scrollY !== 0 || window.scrollX !== 0)
+    ) {
+      window.scrollTo(0, 0);
+    }
     // Rotation or a window resize starts a new baseline
     if (window.innerWidth !== viewportWidth) {
       viewportWidth = window.innerWidth;
@@ -99,12 +186,37 @@ import { log } from "./logger.js";
       root.style.removeProperty("--vv-height");
       root.style.removeProperty("--vv-bottom");
     }
+
+    if (
+      root.classList.contains("viewport-locked") &&
+      window.innerWidth !== lockedViewportWidth &&
+      !keyboardOpen
+    ) {
+      root.classList.remove("viewport-locked");
+      snapshotBackgroundViewport();
+      if (document.querySelector("dialog[open]")) {
+        root.classList.add("viewport-locked");
+      } else {
+        unlockBackgroundViewportNow();
+      }
+    } else if (root.classList.contains("viewport-locked")) {
+      tryReleaseBackgroundViewport();
+    }
   };
   window.visualViewport?.addEventListener("resize", syncKeyboardState);
   window.visualViewport?.addEventListener("scroll", syncKeyboardState);
   window.addEventListener("resize", syncKeyboardState);
   // The keyboard can close without a resize reaching us first (e.g. blur)
-  document.addEventListener("focusin", syncKeyboardState);
+  document.addEventListener("focusin", (e) => {
+    if (
+      e.target instanceof Element &&
+      e.target.matches("input, textarea") &&
+      window.matchMedia("(pointer: coarse)").matches
+    ) {
+      lockBackgroundViewport();
+    }
+    syncKeyboardState();
+  });
   document.addEventListener("focusout", () => setTimeout(syncKeyboardState, 0));
   if (Capacitor.getPlatform() === "ios") {
     // The prev/next/done bar costs 44pt above the keyboard; the sheet's Save
@@ -126,6 +238,7 @@ import { log } from "./logger.js";
       HTMLDialogElement.prototype.close.call(dialog);
       dialog.classList.remove("closing");
     }
+    lockBackgroundViewport();
     dialog.style.transform = "";
     dialog.dataset.openedAt = Date.now().toString();
     dialog.dataset.openSeq = String(++dialogOpenSeq);
@@ -150,6 +263,7 @@ import { log } from "./logger.js";
           dialog.closeTimer = null;
           nativeClose.call(dialog, returnValue);
           dialog.classList.remove("closing");
+          tryReleaseBackgroundViewport();
         }, exitMs);
       };
       dialog.addEventListener("cancel", (e) => {
@@ -2046,7 +2160,7 @@ import { log } from "./logger.js";
     setSheetTheme(dialog, hexColor);
 
     openDialog(dialog);
-    input.focus();
+    input.focus({ preventScroll: true });
     playClickSound(600, 700, 0.08, 0.05);
   };
 
@@ -2622,21 +2736,6 @@ import { log } from "./logger.js";
 
     if (!dialog || !form) return;
 
-    // Keep focus in the field when a button or swatch is tapped. Otherwise the
-    // tap blurs the field, the keyboard starts closing and the sheet resizes
-    // mid-tap (see syncKeyboardState), and iOS drops a tap whose target moves:
-    // the first tap on Save only dismissed the keyboard. Focus still leaves
-    // when the sheet closes or the delete confirmation opens.
-    dialog.addEventListener("mousedown", (e) => {
-      const typing = document.activeElement?.matches("input, textarea");
-      const control = e.target.closest(
-        "button, .palette-swatch:not(.custom-color-picker)",
-      );
-      if (typing && control && dialog.contains(document.activeElement)) {
-        e.preventDefault();
-      }
-    });
-
     // Auto-select text on focus/tap for input fields. Deferred so it lands
     // after a tap places the cursor, which would otherwise undo the selection.
     form.querySelectorAll("input").forEach((input) => {
@@ -3084,7 +3183,7 @@ import { log } from "./logger.js";
       // replaces the name even if it starts immediately.
       if (counter.autoNamed) {
         const nameInput = $("#edit-label");
-        nameInput.focus();
+        nameInput.focus({ preventScroll: true });
         nameInput.select();
       }
 
@@ -3344,6 +3443,23 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   const setupDialogBackdrops = () => {
     $$("dialog").forEach((dialog) => {
+      dialog.addEventListener("close", tryReleaseBackgroundViewport);
+
+      // Keep focus in the field when a button or swatch inside a sheet is
+      // tapped while typing. Otherwise mousedown blurs the field, the keyboard
+      // starts closing, the sheet moves mid-tap, and iOS drops the tap.
+      if (dialog.classList.contains("bottom-sheet-dialog")) {
+        dialog.addEventListener("mousedown", (e) => {
+          const typing = document.activeElement?.matches("input, textarea");
+          const control = e.target.closest(
+            "button, .palette-swatch:not(.custom-color-picker)",
+          );
+          if (typing && control && dialog.contains(document.activeElement)) {
+            e.preventDefault();
+          }
+        });
+      }
+
       dialog.addEventListener("click", (event) => {
         if (event.target !== dialog) return;
         const openedAt = parseInt(dialog.dataset.openedAt || "0");
@@ -3625,7 +3741,7 @@ import { log } from "./logger.js";
                 setTimeout(() => {
                   openDialog(dialog);
                   if (valueInput) {
-                    valueInput.focus();
+                    valueInput.focus({ preventScroll: true });
                     valueInput.select();
                   }
                 }, 50);
