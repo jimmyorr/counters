@@ -82,3 +82,13 @@ test('accepts decimal quick-add presets and avoids floating-point drift', async 
   await expect(valueOf(card(page, 'a'))).toHaveText('10.3');
   expect((await stored(page, 'counters-list'))[0].value).toBe(10.3);
 });
+
+test('score hitbox shares width rather than tightly wrapping the number', async ({ page }) => {
+  const cardLocator = card(page, 'a');
+  const cardBox = await cardLocator.boundingBox();
+  const valueBox = await cardLocator.locator('.card-value-body').boundingBox();
+  const displayBox = await cardLocator.locator('.value-display').boundingBox();
+
+  expect(valueBox.width).toBeGreaterThan(displayBox.width + 30);
+  expect(valueBox.width / cardBox.width).toBeGreaterThan(0.25);
+});
