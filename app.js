@@ -4472,43 +4472,48 @@ import { log } from "./logger.js";
   const PICKER_SHAPES = [
     {
       name: "triangle",
-      markup: '<polygon class="picker-shape-path" points="50,10 88,78 12,78" />',
+      markup:
+        '<polygon class="picker-shape-path" points="50.00,6.00 88.11,72.00 11.89,72.00" />',
     },
     {
       name: "square",
-      markup: '<rect class="picker-shape-path" x="15" y="15" width="70" height="70" rx="8" />',
+      markup:
+        '<rect class="picker-shape-path" x="19" y="19" width="62" height="62" rx="7" />',
     },
     {
       name: "diamond",
-      markup: '<polygon class="picker-shape-path" points="50,8 92,50 50,92 8,50" />',
+      markup:
+        '<polygon class="picker-shape-path" points="50,7 77,50 50,93 23,50" />',
     },
     {
       name: "pentagon",
-      markup: '<polygon class="picker-shape-path" points="50,9 89,37 74,84 26,84 11,37" />',
+      markup:
+        '<polygon class="picker-shape-path" points="50.00,7.50 90.42,36.87 74.98,84.38 25.02,84.38 9.58,36.87" />',
     },
     {
       name: "hexagon",
-      markup: '<polygon class="picker-shape-path" points="50,8 86,29 86,71 50,92 14,71 14,29" />',
+      markup:
+        '<polygon class="picker-shape-path" points="50.00,7.50 86.81,28.75 86.81,71.25 50.00,92.50 13.19,71.25 13.19,28.75" />',
     },
     {
       name: "star",
       markup:
-        '<polygon class="picker-shape-path" points="50,8 61,35 90,37 68,56 75,85 50,69 25,85 32,56 10,37 39,35" />',
+        '<polygon class="picker-shape-path" points="50.00,6.00 61.46,34.22 91.85,36.40 68.55,56.03 75.86,85.60 50.00,69.50 24.14,85.60 31.45,56.03 8.15,36.40 38.54,34.22" />',
     },
     {
       name: "octagon",
       markup:
-        '<polygon class="picker-shape-path" points="33,10 67,10 90,33 90,67 67,90 33,90 10,67 10,33" />',
+        '<polygon class="picker-shape-path" points="50.00,7.00 61.86,21.36 80.41,19.59 78.64,38.14 93.00,50.00 78.64,61.86 80.41,80.41 61.86,78.64 50.00,93.00 38.14,78.64 19.59,80.41 21.36,61.86 7.00,50.00 21.36,38.14 19.59,19.59 38.14,21.36" />',
     },
     {
       name: "cross",
       markup:
-        '<path class="picker-shape-path" d="M36,12 H64 V36 H88 V64 H64 V88 H36 V64 H12 V36 H36 Z" />',
+        '<path class="picker-shape-path" d="M36,10 H64 V36 H90 V64 H64 V90 H36 V64 H10 V36 H36 Z" />',
     },
     {
       name: "heart",
       markup:
-        '<path class="picker-shape-path" d="M50,86 C47,83 12,60 12,35 C12,21 23,12 35,12 C43,12 48,17 50,22 C52,17 57,12 65,12 C77,12 88,21 88,35 C88,60 53,83 50,86 Z" />',
+        '<path class="picker-shape-path" d="M50,90.94 C47.15,88.09 13.9,66.25 13.9,42.5 C13.9,29.2 24.35,20.65 35.75,20.65 C43.35,20.65 48.1,25.4 50,30.15 C51.9,25.4 56.65,20.65 64.25,20.65 C75.65,20.65 86.1,29.2 86.1,42.5 C86.1,66.25 52.85,88.09 50,90.94 Z" />',
     },
   ];
 
@@ -4528,8 +4533,9 @@ import { log } from "./logger.js";
     const PICKER_MIN_FINGERS = 2;
     const PICKER_EXPLOSION_STAGGER_MS = 140;
     const PICKER_PARTICLE_COUNT = 14;
-    const ROTATION_MIN_DEG_PER_SEC = 35;
-    const ROTATION_MAX_DEG_PER_SEC = 840;
+    const ROTATION_MIN_DEG_PER_SEC = 36;
+    // Stay below 60Hz/120Hz wagon-wheel stroboscopic harmonics (e.g. 5x14.4°=72° at 864°/s)
+    const ROTATION_MAX_DEG_PER_SEC = 500;
     const ROTATION_SETTLED_DEG_PER_SEC = 24;
     const SWIPE_TRIGGER_PX = 64;
     const SWIPE_FLICK_PX = 36;
@@ -4544,6 +4550,7 @@ import { log } from "./logger.js";
     let roundShapeOrder = [];
     let fallbackColorIndex = 0;
     let fallbackShapeIndex = 0;
+    let nextDirection = 1;
     let countdownTimer = null;
     let countdownStartedAt = null;
     let eliminationTimers = [];
@@ -4609,7 +4616,7 @@ import { log } from "./logger.js";
         const progress = Math.min(1, Math.max(0, (now - countdownStartedAt) / PICKER_COUNTDOWN_MS));
         return (
           ROTATION_MIN_DEG_PER_SEC +
-          (ROTATION_MAX_DEG_PER_SEC - ROTATION_MIN_DEG_PER_SEC) * progress * progress
+          (ROTATION_MAX_DEG_PER_SEC - ROTATION_MIN_DEG_PER_SEC) * Math.pow(progress, 1.25)
         );
       }
       if (phase === "eliminating") return ROTATION_MAX_DEG_PER_SEC;
@@ -4623,7 +4630,7 @@ import { log } from "./logger.js";
         lastRotationTime = null;
         return;
       }
-      const now = Date.now();
+      const now = performance.now();
       const dt = lastRotationTime === null ? 0 : Math.min(0.1, Math.max(0, (now - lastRotationTime) / 1000));
       lastRotationTime = now;
 
@@ -4640,9 +4647,10 @@ import { log } from "./logger.js";
 
     const startRotationLoop = () => {
       if (prefersReducedMotion()) return;
-      stage.dataset.rotationSpeed = getRotationSpeed(Date.now()).toFixed(1);
+      const now = performance.now();
+      stage.dataset.rotationSpeed = getRotationSpeed(now).toFixed(1);
       if (rotationRaf !== null) return;
-      lastRotationTime = Date.now();
+      lastRotationTime = now;
       rotationRaf = requestAnimationFrame(stepRotation);
     };
 
@@ -4671,6 +4679,7 @@ import { log } from "./logger.js";
       roundShapeOrder = shuffleIndices(PICKER_SHAPES.length);
       fallbackColorIndex = 0;
       fallbackShapeIndex = 0;
+      nextDirection = 1;
     };
 
     const allocateColor = () => {
@@ -4845,7 +4854,7 @@ import { log } from "./logger.js";
 
     const schedulePickerSelection = () => {
       clearCountdown();
-      countdownStartedAt = Date.now();
+      countdownStartedAt = performance.now();
       countdownTimer = setTimeout(selectPickerWinner, PICKER_COUNTDOWN_MS);
       if (!prefersReducedMotion()) {
         stage.dataset.rotationSpeed = ROTATION_MIN_DEG_PER_SEC.toFixed(1);
@@ -4932,7 +4941,8 @@ import { log } from "./logger.js";
       el.innerHTML = `<svg class="picker-shape" aria-hidden="true" viewBox="0 0 100 100">${shape.markup}</svg>`;
       circlesLayer.appendChild(el);
 
-      const direction = touches.size % 2 === 0 ? 1 : -1;
+      const direction = nextDirection;
+      nextDirection = -nextDirection;
       const entry = {
         x: 0,
         y: 0,

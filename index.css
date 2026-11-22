@@ -1726,6 +1726,8 @@ input:checked + .slider-round:before {
   transform: translate3d(calc(var(--x, 0px) - 50%), calc(var(--y, 0px) - 50%), 0);
   will-change: transform;
   pointer-events: none;
+  filter: drop-shadow(0 4px 14px color-mix(in srgb, var(--circle-color) 40%, transparent));
+  transition: filter var(--trans-fast);
 }
 
 .picker-shape {
@@ -1734,11 +1736,8 @@ input:checked + .slider-round:before {
   display: block;
   overflow: visible;
   transform: rotate(var(--rot, 0deg));
-  transform-origin: center;
+  transform-origin: 50% 50%;
   will-change: transform;
-  filter: drop-shadow(0 4px 14px color-mix(in srgb, var(--circle-color) 40%, transparent));
-  transition:
-    filter var(--trans-fast);
 }
 
 .picker-shape-path {
@@ -1753,9 +1752,12 @@ input:checked + .slider-round:before {
     stroke-width var(--trans-fast);
 }
 
+.picker-circle.is-winner {
+  filter: drop-shadow(0 6px 22px color-mix(in srgb, var(--winner-ink, #ffffff) 45%, transparent));
+}
+
 .picker-circle.is-winner .picker-shape {
   transform: rotate(var(--rot, 0deg)) scale(1.22);
-  filter: drop-shadow(0 6px 22px color-mix(in srgb, var(--winner-ink, #ffffff) 45%, transparent));
 }
 
 .picker-circle.is-winner .picker-shape-path {
@@ -1798,6 +1800,7 @@ input:checked + .slider-round:before {
 @media (prefers-reduced-motion: reduce) {
   .picker-prompt,
   .picker-winner-bg,
+  .picker-circle,
   .picker-shape,
   .picker-shape-path {
     transition: none;

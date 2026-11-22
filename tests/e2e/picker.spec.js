@@ -318,3 +318,51 @@ test('Picker uses colors from the active app palette', async ({ page }) => {
     expect(pastelColors.has(color)).toBe(true);
   }
 });
+
+test('all 9 Picker shapes stay centered on (50, 50) with stationary drop-shadows and strobe-safe max speed', async ({ page }) => {
+  await page.clock.install({ time: T0 });
+  await page.goto('/');
+  await page.locator('[data-tab-btn="picker"]').click();
+  await expect(page.locator('#picker-stage')).toBeInViewport({ ratio: 0.99 });
+  await page.clock.pauseAt(new Date(T0.getTime() + 60_000));
+
+  for (let i = 1; i <= 9; i++) {
+    await dispatchPointer(page, 'pointerdown', i, 50 + (i % 3) * 90, 90 + Math.floor((i - 1) / 3) * 95);
+  }
+  await expect(circles(page)).toHaveCount(9);
+
+  const metrics = await circles(page).evaluateAll((els) =>
+    els.map((circle) => {
+      const svg = circle.querySelector('.picker-shape');
+      const geom = circle.querySelector('.picker-shape-path');
+      const total = geom.getTotalLength();
+      const samples = 120;
+      let sx = 0;
+      let sy = 0;
+      for (let i = 0; i < samples; i++) {
+        const pt = geom.getPointAtLength((total * i) / samples);
+        sx += pt.x;
+        sy += pt.y;
+      }
+      return {
+        shape: circle.dataset.shape,
+        cx: sx / samples,
+        cy: sy / samples,
+        svgFilter: getComputedStyle(svg).filter,
+        circleFilter: getComputedStyle(circle).filter,
+      };
+    }),
+  );
+
+  expect(new Set(metrics.map((m) => m.shape)).size).toBe(9);
+  for (const m of metrics) {
+    expect(Math.hypot(m.cx - 50, m.cy - 50), `${m.shape} centroid drift`).toBeLessThan(0.5);
+    expect(m.svgFilter, `${m.shape} rotating svg filter`).toBe('none');
+    expect(m.circleFilter, `${m.shape} stationary wrapper filter`).not.toBe('none');
+  }
+
+  await page.clock.runFor(2950);
+  const nearPeakSpeed = Number(await page.locator('#picker-stage').getAttribute('data-rotation-speed'));
+  expect(nearPeakSpeed).toBeGreaterThan(450);
+  expect(nearPeakSpeed).toBeLessThanOrEqual(520);
+});
