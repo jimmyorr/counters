@@ -206,9 +206,11 @@ import { log } from "./logger.js";
   // iOS Home Screen web apps can launch with a layout viewport shorter than the
   // screen (WebKit bug 301994, seen on iOS 26.1+ and 27.2): window.innerHeight
   // comes up ~60px short, so everything anchored to bottom: 0 floats above an
-  // empty band. Measure the shortfall and let the CSS extend the shell into it
-  // via --ios-pwa-gap. Once WebKit fixes this the gap measures 0 and nothing
-  // changes. Skipped while typing, when the keyboard is what shortens things.
+  // empty band that covers the home indicator. WebKit doesn't paint into that
+  // band, so the CSS can't extend into it; instead --ios-pwa-gap lets it drop
+  // the home-indicator padding the band already provides (--safe-bottom).
+  // Once WebKit fixes this the gap measures 0 and nothing changes. Skipped
+  // while typing, when the keyboard is what shortens things.
   const isIosStandalone =
     !Capacitor.isNativePlatform() && window.navigator.standalone === true;
   const syncIosStandaloneGap = () => {

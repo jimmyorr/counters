@@ -1,8 +1,9 @@
 import { test, expect } from './fixtures.js';
 
 // iOS Home Screen web apps can launch with a page ~60px shorter than the
-// screen (WebKit bug 301994). Fake that here: standalone mode, and a screen
-// 59px taller than the window.
+// screen (WebKit bug 301994). WebKit doesn't paint below the page there, so
+// nothing may extend past it. Fake the bug: standalone mode, and a screen 59px
+// taller than the window.
 const GAP = 59;
 const fakeIosStandalone = (page, gap = GAP) =>
   page.addInitScript((gap) => {
@@ -11,35 +12,32 @@ const fakeIosStandalone = (page, gap = GAP) =>
     Object.defineProperty(Screen.prototype, 'width', { get: () => window.innerWidth, configurable: true });
   }, gap);
 
-const navBottom = (page) =>
-  page.locator('.app-nav').evaluate((el) => Math.round(el.getBoundingClientRect().bottom));
+const bottomOf = (locator) =>
+  locator.evaluate((el) => Math.round(el.getBoundingClientRect().bottom));
 
-test('extends the tab bar into the missing space in an iOS Home Screen app', async ({ page }) => {
+test('keeps the tab bar and its labels on the page in an iOS Home Screen app', async ({ page }) => {
   await fakeIosStandalone(page);
   await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('style', /--ios-pwa-gap: 59px/);
   const innerHeight = await page.evaluate(() => window.innerHeight);
-  expect(await navBottom(page)).toBe(innerHeight + GAP);
+  expect(await bottomOf(page.locator('.app-nav'))).toBe(innerHeight);
+  for (const label of await page.locator('.nav-text').all()) {
+    await expect(label).toBeInViewport();
+  }
 
-  // Sheets reach the real bottom of the screen too
   await page.locator('#btn-open-options').click();
   await page.locator('#menu-btn-open-settings').click();
   await expect(page.locator('#settings-dialog')).toBeVisible();
-  await expect
-    .poll(() =>
-      page.locator('#settings-dialog').evaluate((el) => Math.round(el.getBoundingClientRect().bottom)),
-    )
-    .toBe(innerHeight + GAP);
+  await expect.poll(() => bottomOf(page.locator('#settings-dialog'))).toBe(innerHeight);
 });
 
-test('leaves the layout alone outside an iOS Home Screen app', async ({ page }) => {
+test('does not measure a gap outside an iOS Home Screen app', async ({ page }) => {
   await page.goto('/');
-  const innerHeight = await page.evaluate(() => window.innerHeight);
-  expect(await navBottom(page)).toBe(innerHeight);
+  expect(await page.evaluate(() => document.documentElement.style.getPropertyValue('--ios-pwa-gap'))).toBe('');
 });
 
-test('leaves the layout alone once WebKit reports the full height', async ({ page }) => {
+test('measures no gap once WebKit reports the full height', async ({ page }) => {
   await fakeIosStandalone(page, 0);
   await page.goto('/');
-  const innerHeight = await page.evaluate(() => window.innerHeight);
-  expect(await navBottom(page)).toBe(innerHeight);
+  await expect(page.locator('html')).toHaveAttribute('style', /--ios-pwa-gap: 0px/);
 });

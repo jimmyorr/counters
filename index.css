@@ -28,6 +28,11 @@
   /* Layout dimensions */
   --header-height: 64px;
   --nav-height: 68px;
+  /* Home-indicator padding. iOS Home Screen web apps can launch with the page
+     ending above the home indicator (--ios-pwa-gap, see syncIosStandaloneGap
+     in app.js). WebKit doesn't paint below the page there, so don't extend
+     into that space; just drop the padding it already covers. */
+  --safe-bottom: max(0px, env(safe-area-inset-bottom, 0px) - var(--ios-pwa-gap, 0px));
   --max-app-width: 500px;
 
   /* Theme Hue (0-360) Default Blue */
@@ -198,8 +203,6 @@ body {
 .ambient-backdrop {
   position: fixed;
   inset: 0;
-  /* --ios-pwa-gap: see syncIosStandaloneGap in app.js */
-  bottom: calc(-1 * var(--ios-pwa-gap, 0px));
   background-image:
     radial-gradient(
       circle at 14% 14%,
@@ -249,7 +252,7 @@ body > .app-nav {
    visible through the blurred dialog backdrop */
 :root.viewport-locked .ambient-backdrop {
   bottom: auto;
-  height: calc(var(--locked-app-height) + var(--ios-pwa-gap, 0px));
+  height: var(--locked-app-height);
 }
 
 :root.viewport-locked .app-main {
@@ -415,9 +418,7 @@ body > .app-nav {
    -------------------------------------------------------------------------- */
 .app-main {
   top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
-  bottom: calc(
-    var(--nav-height) + env(safe-area-inset-bottom, 0px) - var(--ios-pwa-gap, 0px)
-  );
+  bottom: calc(var(--nav-height) + var(--safe-bottom));
   z-index: 10;
   overflow: hidden;
 }
@@ -1815,8 +1816,8 @@ input:checked + .slider-round:before {
    8. Bottom Navigation Bar Styling
    -------------------------------------------------------------------------- */
 .app-nav {
-  bottom: calc(-1 * var(--ios-pwa-gap, 0px));
-  height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
+  bottom: 0;
+  height: calc(var(--nav-height) + var(--safe-bottom));
   background-color: var(--glass-bg);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
@@ -1824,7 +1825,7 @@ input:checked + .slider-round:before {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   align-items: center;
-  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); /* Notch screen styling */
+  padding: 0 env(safe-area-inset-right, 0px) var(--safe-bottom) env(safe-area-inset-left, 0px); /* Notch screen styling */
   z-index: 100;
 }
 
@@ -1903,7 +1904,6 @@ dialog:not([open]) {
 
 /* Modal Backdrops styling */
 dialog::backdrop {
-  bottom: calc(-1 * var(--ios-pwa-gap, 0px));
   background-color: var(--modal-backdrop);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
@@ -1934,7 +1934,7 @@ dialog[open].closing::backdrop {
 /* Bottom Sheet Slide Up Panels */
 .bottom-sheet-dialog {
   position: fixed;
-  bottom: calc(-1 * var(--ios-pwa-gap, 0px));
+  bottom: 0;
   top: auto;
   left: 50%;
   transform: translate(-50%, 100%);
@@ -1954,7 +1954,7 @@ dialog[open].closing::backdrop {
   flex-direction: column;
   max-height: 92vh;
   max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 8px));
-  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  padding: 0 env(safe-area-inset-right, 0px) var(--safe-bottom) env(safe-area-inset-left, 0px);
   transition-property: transform, display, overlay;
   transition-duration: 0.4s;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -2900,7 +2900,7 @@ dialog[open].options-menu-dialog.closing {
    -------------------------------------------------------------------------- */
 .toast-notification {
   position: fixed;
-  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(84px + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%) translateY(0);
   background-color: var(--bg-tertiary);
