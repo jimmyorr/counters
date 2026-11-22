@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.2.6
+
+* **Settings:** Moved quick-add values onto a single inline row and tightened footer spacing so Settings fits on a single screen without scrolling.
+
 ## 0.2.5
 
 * **Settings:** Added direct App Store and Google Play links for web visitors without browser sniffing.
