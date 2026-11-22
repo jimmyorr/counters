@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.2.4
+
+* **iOS:** Removed the legacy translucent status-bar override and viewport gap workarounds so Home screen installs fill the screen and tint the status bar in light and dark mode.
+* **Updates:** Checked for service worker updates when returning to the foreground so installed web apps pick up new releases sooner.
+
 ## 0.2.3
 
 * **iOS:** Kept the bottom tab bar fully visible inside the page viewport when launched from the Home screen.
