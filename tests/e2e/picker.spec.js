@@ -95,7 +95,7 @@ test.describe('Picker tab', () => {
     await page.clock.runFor(160);
     await expect(circles(page)).toHaveCount(1);
     await expect(winnerCircle(page)).toHaveCount(1);
-    await expect(page.locator('#picker-status')).toHaveText('Player selected');
+    await expect(page.locator('#picker-status')).toHaveText(/^\S+.* (triangle|square|diamond|pentagon|hexagon|star|octagon|cross|heart) selected$/);
 
     const winnerColor = await winnerCircle(page).getAttribute('data-color');
     const winnerBg = page.locator('#picker-winner-bg');

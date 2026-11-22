@@ -1133,24 +1133,38 @@ import { log } from "./logger.js";
     }, 200);
   };
 
-  const supportsHaptics = () =>
-    Capacitor.isNativePlatform() ||
-    (typeof navigator !== "undefined" && typeof navigator.vibrate === "function");
+  // Desktop Chrome/Edge expose navigator.vibrate but have no motor, so on the
+  // web only offer haptics when the primary pointer is a finger
+  const supportsWebVibrate = () =>
+    typeof navigator !== "undefined" &&
+    typeof navigator.vibrate === "function" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(pointer: coarse)").matches;
+
+  const supportsHaptics = () => Capacitor.isNativePlatform() || supportsWebVibrate();
+
+  const webVibrate = (pattern) => {
+    try {
+      navigator.vibrate(pattern);
+    } catch {
+      /* ignore */
+    }
+  };
 
   const playHaptic = async (style = ImpactStyle.Light) => {
     if (!state.settings.hapticsEnabled || !supportsHaptics()) return;
     if (!Capacitor.isNativePlatform()) {
-      const pattern =
-        style === ImpactStyle.Heavy
-          ? [40, 30, 80]
-          : style === ImpactStyle.Medium
-            ? 25
-            : 15;
-      try {
-        navigator.vibrate(pattern);
-      } catch {
-        /* ignore */
+      let pattern = 15;
+      if (style === ImpactStyle.Heavy || style === NotificationType.Error) {
+        pattern = [40, 30, 80];
+      } else if (
+        style === ImpactStyle.Medium ||
+        style === NotificationType.Warning ||
+        style === NotificationType.Success
+      ) {
+        pattern = 25;
       }
+      webVibrate(pattern);
       return;
     }
     try {
@@ -1165,7 +1179,11 @@ import { log } from "./logger.js";
   };
 
   const playSelectionHaptic = async () => {
-    if (!state.settings.hapticsEnabled || !Capacitor.isNativePlatform()) return;
+    if (!state.settings.hapticsEnabled || !supportsHaptics()) return;
+    if (!Capacitor.isNativePlatform()) {
+      webVibrate(8);
+      return;
+    }
     try {
       await Haptics.selectionStart();
       await Haptics.selectionChanged();
@@ -4518,19 +4536,13 @@ import { log } from "./logger.js";
     };
 
     const playPickerHaptic = (level) => {
-      if (!state.settings.hapticsEnabled) return;
-      if (Capacitor.isNativePlatform()) {
-        playHaptic(level === "major" ? ImpactStyle.Heavy : ImpactStyle.Light);
-        return;
-      }
-      if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
-        try {
-          navigator.vibrate(level === "major" ? [40, 30, 80] : 15);
-        } catch {
-          /* ignore */
-        }
-      }
+      playHaptic(level === "major" ? ImpactStyle.Heavy : ImpactStyle.Light);
     };
+
+    // Multi-touch needs a touchscreen; a mouse can only ever place one finger
+    const hasTouchInput = () =>
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(any-pointer: coarse)").matches;
 
     const setSliderLocked = (locked) => {
       if (!tabsSlider) return;
@@ -4615,7 +4627,11 @@ import { log } from "./logger.js";
       if (phase === "idle") {
         promptEl.classList.remove("hidden");
         if (promptTitle) promptTitle.textContent = "Place fingers to choose";
-        if (promptSubtitle) promptSubtitle.textContent = "2 or more players";
+        if (promptSubtitle) {
+          promptSubtitle.textContent = hasTouchInput()
+            ? "2 or more players"
+            : "Needs a touchscreen";
+        }
       } else if (phase === "waiting") {
         promptEl.classList.remove("hidden");
         if (promptTitle) promptTitle.textContent = "Waiting for another player";
@@ -4645,8 +4661,9 @@ import { log } from "./logger.js";
         }
       }
       // Fallback for 9+ simultaneous fingers: golden-angle spaced HSL hues
+      // (as hex so getReadableTextColor can pick the winner's ink)
       const hue = Math.round(((++fallbackColorIndex) * 137.508) % 360);
-      return { color: `hsl(${hue} 78% 54%)`, slot: null };
+      return { color: hslToHex(hue, 78, 54), slot: null };
     };
 
     const allocateShape = () => {
@@ -4739,7 +4756,13 @@ import { log } from "./logger.js";
       }
 
       playPickerHaptic("major");
-      if (statusEl) statusEl.textContent = "Player selected";
+      if (statusEl) {
+        const activePalette = palettes[state.settings.palette] || palettes.bold;
+        const colorName = winner.slot !== null ? activePalette.names?.[winner.slot] : null;
+        statusEl.textContent = colorName
+          ? `${colorName} ${winner.shape} selected`
+          : `${winner.shape[0].toUpperCase()}${winner.shape.slice(1)} selected`;
+      }
       updatePrompt();
     };
 
@@ -4980,6 +5003,7 @@ import { log } from "./logger.js";
         resetPicker();
       }
     });
+    updatePrompt();
   };
 
   // Android / native hardware Back navigation: close topmost open dialog first,

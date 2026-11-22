@@ -69,3 +69,35 @@ test('haptic feedback setting is hidden on browsers without vibrate support', as
   await expect(page.locator('#setting-row-haptic')).toBeHidden();
 });
 
+
+test.describe('without a touchscreen', () => {
+  test.use({ hasTouch: false, isMobile: false, viewport: { width: 1280, height: 800 } });
+
+  test('haptic feedback setting is hidden on desktop browsers even though vibrate exists', async ({ page }) => {
+    await page.goto('/');
+    expect(await page.evaluate(() => typeof navigator.vibrate)).toBe('function');
+    await page.locator('#btn-open-options').click();
+    await page.locator('#menu-btn-open-settings').click();
+    await expect(page.locator('#settings-dialog')).toBeVisible();
+    await expect(page.locator('#setting-row-haptic')).toBeHidden();
+  });
+
+  test('picker explains it needs a touchscreen', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('[data-tab-btn="picker"]').click();
+    await expect(page.locator('#picker-prompt-subtitle')).toHaveText('Needs a touchscreen');
+  });
+});
+
+test('tab switches give a short selection buzz on the web', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__vibrations = [];
+    Navigator.prototype.vibrate = function (pattern) {
+      window.__vibrations.push(pattern);
+      return true;
+    };
+  });
+  await page.goto('/');
+  await page.locator('[data-tab-btn="dice"]').click();
+  await expect.poll(() => page.evaluate(() => window.__vibrations)).toContain(8);
+});
