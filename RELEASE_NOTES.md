@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.2.3
+
+* **iOS:** Kept the bottom tab bar fully visible inside the page viewport when launched from the Home screen.
+
 ## 0.2.2
 
 * **Picker:** Centered all spinning shapes on their exact pivot, anchored drop shadows in place, and smoothed peak rotation speed so shapes spin evenly without wobbling.
