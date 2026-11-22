@@ -28,11 +28,6 @@
   /* Layout dimensions */
   --header-height: 64px;
   --nav-height: 68px;
-  /* Home-indicator padding. iOS Home Screen web apps can launch with the page
-     ending above the home indicator (--ios-pwa-gap, see syncIosStandaloneGap
-     in app.js). WebKit doesn't paint below the page there, so don't extend
-     into that space; just drop the padding it already covers. */
-  --safe-bottom: max(0px, env(safe-area-inset-bottom, 0px) - var(--ios-pwa-gap, 0px));
   --max-app-width: 500px;
 
   /* Theme Hue (0-360) Default Blue */
@@ -418,7 +413,7 @@ body > .app-nav {
    -------------------------------------------------------------------------- */
 .app-main {
   top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
-  bottom: calc(var(--nav-height) + var(--safe-bottom));
+  bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
   z-index: 10;
   overflow: hidden;
 }
@@ -1817,7 +1812,7 @@ input:checked + .slider-round:before {
    -------------------------------------------------------------------------- */
 .app-nav {
   bottom: 0;
-  height: calc(var(--nav-height) + var(--safe-bottom));
+  height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
   background-color: var(--glass-bg);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
@@ -1825,7 +1820,7 @@ input:checked + .slider-round:before {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   align-items: center;
-  padding: 0 env(safe-area-inset-right, 0px) var(--safe-bottom) env(safe-area-inset-left, 0px); /* Notch screen styling */
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); /* Notch screen styling */
   z-index: 100;
 }
 
@@ -1954,7 +1949,7 @@ dialog[open].closing::backdrop {
   flex-direction: column;
   max-height: 92vh;
   max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 8px));
-  padding: 0 env(safe-area-inset-right, 0px) var(--safe-bottom) env(safe-area-inset-left, 0px);
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   transition-property: transform, display, overlay;
   transition-duration: 0.4s;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
@@ -2900,7 +2895,7 @@ dialog[open].options-menu-dialog.closing {
    -------------------------------------------------------------------------- */
 .toast-notification {
   position: fixed;
-  bottom: calc(84px + var(--safe-bottom));
+  bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%) translateY(0);
   background-color: var(--bg-tertiary);
