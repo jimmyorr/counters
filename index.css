@@ -1236,8 +1236,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
 .settings-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding-bottom: 24px;
+  gap: 12px;
 }
 
 .settings-section {
@@ -1267,7 +1266,8 @@ html[data-layout="grid"] .card-direct-zone-plus {
    is left, so help text can never run under a control or switch */
 .settings-row > select,
 .settings-row > .switch-toggle,
-.settings-row > .segmented-control {
+.settings-row > .segmented-control,
+.settings-row > .settings-input {
   flex: 0 0 auto;
 }
 
@@ -1478,23 +1478,25 @@ input:checked + .slider-round:before {
   cursor: pointer;
 }
 
-.settings-column {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 4px 0;
+.settings-row-quick-add {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.settings-row-quick-add > .settings-info {
+  flex: 1 1 0;
 }
 
 .settings-input {
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
   border: 1px solid var(--border-strong);
-  padding: 10px 14px;
+  padding: 7px 10px;
   border-radius: 10px;
   font-family: var(--font-primary);
   font-size: 16px; /* 16px minimum stops iOS zooming in on focus */
   outline: none;
-  width: 100%;
+  width: clamp(138px, 57%, 220px);
 }
 
 .settings-input:focus {
@@ -1506,9 +1508,14 @@ input:checked + .slider-round:before {
 }
 
 .settings-feedback {
+  flex: 1 0 100%;
   font-size: 12px;
   color: var(--text-secondary);
-  margin-top: 4px;
+  text-align: right;
+}
+
+.settings-feedback[hidden] {
+  display: none;
 }
 
 .settings-feedback-error {
@@ -1586,7 +1593,6 @@ input:checked + .slider-round:before {
   gap: 8px;
   font-size: 12px;
   color: var(--text-secondary); /* A11y contrast fix */
-  margin-top: 10px;
 }
 
 .app-store-container {

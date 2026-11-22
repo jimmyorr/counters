@@ -12,7 +12,7 @@ test('settings text stays clear of each row\'s control', async ({ page }) => {
     const rows = await page.locator('#settings-dialog .settings-row').evaluateAll((rows) =>
       rows
         .map((row) => {
-          const control = row.querySelector(':scope > select, :scope > .switch-toggle, :scope > .segmented-control');
+          const control = row.querySelector(':scope > select, :scope > .switch-toggle, :scope > .segmented-control, :scope > .settings-input');
           const info = row.querySelector('.settings-info');
           if (!control || !info || !control.offsetParent) return null;
           // Measure the rendered text itself, not its box
@@ -36,7 +36,19 @@ test('settings text stays clear of each row\'s control', async ({ page }) => {
     );
     expect(dots.length).toBe(48);
     expect(Math.max(...dots), `palette dots at ${width}px`).toBeLessThan(0.5);
+    if (width >= 390) {
+      const inputClipped = await page.locator('#setting-quick-add-values').evaluate(
+        (el) => el.scrollWidth > el.clientWidth,
+      );
+      expect(inputClipped, `quick-add input clipped at ${width}px`).toBe(false);
+    }
   }
+  // On a modern phone height (with Haptic feedback visible), Settings fits on a single screen
+  await page.setViewportSize({ width: 393, height: 800 });
+  const mobileOverflows = await page.locator('#settings-dialog .bottom-sheet-body').evaluate(
+    (el) => el.scrollHeight > el.clientHeight,
+  );
+  expect(mobileOverflows).toBe(false);
 });
 
 test('haptic feedback setting is visible and toggleable on browsers supporting vibrate', async ({ page }) => {
@@ -80,6 +92,12 @@ test.describe('without a touchscreen', () => {
     await page.locator('#menu-btn-open-settings').click();
     await expect(page.locator('#settings-dialog')).toBeVisible();
     await expect(page.locator('#setting-row-haptic')).toBeHidden();
+    // Fits on a laptop browser viewport (e.g. 1440x900 with tabs + bookmarks bar) without scrolling
+    await page.setViewportSize({ width: 1440, height: 745 });
+    const overflows = await page.locator('#settings-dialog .bottom-sheet-body').evaluate(
+      (el) => el.scrollHeight > el.clientHeight,
+    );
+    expect(overflows).toBe(false);
   });
 
   test('picker explains it needs a touchscreen', async ({ page }) => {
