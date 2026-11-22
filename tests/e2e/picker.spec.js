@@ -366,3 +366,128 @@ test('all 9 Picker shapes stay centered on (50, 50) with stationary drop-shadows
   expect(nearPeakSpeed).toBeGreaterThan(450);
   expect(nearPeakSpeed).toBeLessThanOrEqual(520);
 });
+
+test.describe('Picker teams mode', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.clock.install({ time: T0 });
+    await page.goto('/');
+    await page.locator('[data-tab-btn="picker"]').click();
+    await expect(page.locator('#picker-stage')).toBeInViewport({ ratio: 0.99 });
+    await page.clock.pauseAt(new Date(T0.getTime() + 60_000));
+  });
+
+  test('top-left mode pill is only active on Picker and toggles between Pick 1 and 2 teams', async ({ page }) => {
+    const modeBtn = page.locator('#header-picker-mode');
+    await expect(modeBtn).toHaveJSProperty('inert', false);
+    await expect(page.locator('#header-picker-mode-text')).toHaveText('Pick 1');
+    await expect(promptTitle(page)).toHaveText('Place fingers to choose');
+
+    await modeBtn.click();
+    await expect(page.locator('#header-picker-mode-text')).toHaveText('2 teams');
+    await expect(page.locator('#picker-stage')).toHaveAttribute('data-mode', 'teams');
+    await expect(page.locator('#picker-stage')).toHaveAttribute('data-team-count', '2');
+    await expect(promptTitle(page)).toHaveText('Place fingers for 2 teams');
+
+    // Switching away from Picker marks the mode pill inert
+    await page.locator('[data-tab-btn="counters"]').click();
+    await expect(modeBtn).toHaveJSProperty('inert', true);
+  });
+
+  test('splits 4 fingers into 2 even teams with shared color/shape and staggered shockwave reveal', async ({ page }) => {
+    await page.evaluate(() => {
+      window.__vibrateCalls = [];
+      navigator.vibrate = (pattern) => {
+        window.__vibrateCalls.push(pattern);
+        return true;
+      };
+    });
+
+    await page.locator('#header-picker-mode').click();
+    await dispatchPointer(page, 'pointerdown', 1, 70, 120);
+    await dispatchPointer(page, 'pointerdown', 2, 200, 120);
+    await dispatchPointer(page, 'pointerdown', 3, 70, 260);
+    await dispatchPointer(page, 'pointerdown', 4, 200, 260);
+
+    await expect(page.locator('#header-picker-mode')).toHaveClass(/is-locked/);
+    await expect(circles(page)).toHaveCount(4);
+
+    // At 3000ms: Team 0 reveals first with shockwaves and sparkles
+    await page.clock.runFor(3020);
+    await expect(page.locator('#picker-circles .picker-circle.is-team-revealed')).toHaveCount(2);
+    await expect(page.locator('#picker-particles .picker-shockwave')).toHaveCount(2);
+    await expect(page.locator('#picker-particles .picker-particle')).toHaveCount(20);
+
+    // 180ms later: Team 1 reveals and triggers major vibration without background flood
+    await page.clock.runFor(200);
+    await expect(page.locator('#picker-circles .picker-circle.is-team-revealed')).toHaveCount(4);
+    await expect(page.locator('#picker-status')).toHaveText('2 teams selected');
+    await expect(page.locator('#picker-winner-bg')).not.toHaveClass(/active/);
+
+    const tokens = await circles(page).evaluateAll((els) =>
+      els.map((el) => ({
+        team: el.dataset.team,
+        color: el.dataset.color,
+        shape: el.dataset.shape,
+      })),
+    );
+    const team0 = tokens.filter((t) => t.team === '0');
+    const team1 = tokens.filter((t) => t.team === '1');
+    expect(team0).toHaveLength(2);
+    expect(team1).toHaveLength(2);
+    expect(new Set(team0.map((t) => t.color)).size).toBe(1);
+    expect(new Set(team0.map((t) => t.shape)).size).toBe(1);
+    expect(new Set(team1.map((t) => t.color)).size).toBe(1);
+    expect(new Set(team1.map((t) => t.shape)).size).toBe(1);
+    expect(team0[0].color).not.toBe(team1[0].color);
+    expect(team0[0].shape).not.toBe(team1[0].shape);
+
+    // Major vibration fired at the end of the reveal
+    const vibrates = await page.evaluate(() => window.__vibrateCalls);
+    expect(vibrates[vibrates.length - 1]).toEqual([40, 30, 80]);
+
+    // Lifting all fingers resets cleanly while keeping 2 teams mode active
+    for (const id of [1, 2, 3, 4]) {
+      await dispatchPointer(page, 'pointerup', id, 100, 100);
+    }
+    await expect(circles(page)).toHaveCount(0);
+    await expect(page.locator('#header-picker-mode-text')).toHaveText('2 teams');
+    await expect(page.locator('#header-picker-mode')).not.toHaveClass(/is-locked/);
+    await expect(promptTitle(page)).toHaveText('Place fingers for 2 teams');
+  });
+
+  test('splits 3 fingers into balanced teams of 2 and 1', async ({ page }) => {
+    await page.locator('#header-picker-mode').click();
+    await dispatchPointer(page, 'pointerdown', 1, 70, 120);
+    await dispatchPointer(page, 'pointerdown', 2, 200, 120);
+    await dispatchPointer(page, 'pointerdown', 3, 135, 250);
+
+    await page.clock.runFor(3300);
+    await expect(page.locator('#picker-circles .picker-circle.is-team-revealed')).toHaveCount(3);
+
+    const teams = await circles(page).evaluateAll((els) => els.map((el) => el.dataset.team));
+    const counts = [
+      teams.filter((t) => t === '0').length,
+      teams.filter((t) => t === '1').length,
+    ].sort((a, b) => a - b);
+    expect(counts).toEqual([1, 2]);
+  });
+});
+
+test('Picker teams mode with reduced motion reveals all teams immediately without effects', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.clock.install({ time: T0 });
+  await page.goto('/');
+  await page.locator('[data-tab-btn="picker"]').click();
+  await expect(page.locator('#picker-stage')).toBeInViewport({ ratio: 0.99 });
+  await page.clock.pauseAt(new Date(T0.getTime() + 60_000));
+
+  await page.locator('#header-picker-mode').click();
+  await dispatchPointer(page, 'pointerdown', 1, 80, 120);
+  await dispatchPointer(page, 'pointerdown', 2, 200, 120);
+
+  await page.clock.runFor(3050);
+  await expect(page.locator('#picker-circles .picker-circle.is-team-revealed')).toHaveCount(2);
+  await expect(page.locator('#picker-particles .picker-shockwave')).toHaveCount(0);
+  await expect(page.locator('#picker-particles .picker-particle')).toHaveCount(0);
+  await expect(page.locator('#picker-status')).toHaveText('2 teams selected');
+});

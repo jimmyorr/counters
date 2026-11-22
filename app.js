@@ -2096,6 +2096,10 @@ import { log } from "./logger.js";
         control.id === "header-leader-container" && state.counters.length === 0;
       control.inert = !isCountersTab || isLeaderEmpty;
     });
+    const pickerModeBtn = $("#header-picker-mode");
+    if (pickerModeBtn) {
+      pickerModeBtn.inert = tabId !== "picker";
+    }
 
     // Update Topbar View Title with soft cross-fade
     const viewTitle = $("#app-view-title");
@@ -4685,13 +4689,16 @@ import { log } from "./logger.js";
     const promptTitle = $("#picker-prompt-title");
     const promptSubtitle = $("#picker-prompt-subtitle");
     const statusEl = $("#picker-status");
+    const modeBtn = $("#header-picker-mode");
+    const modeText = $("#header-picker-mode-text");
     const tabsSlider = $("#tabs-slider");
     if (!stage || !circlesLayer) return;
 
     const PICKER_COUNTDOWN_MS = 3000;
-    const PICKER_MIN_FINGERS = 2;
     const PICKER_EXPLOSION_STAGGER_MS = 140;
+    const PICKER_TEAM_REVEAL_STAGGER_MS = 180;
     const PICKER_PARTICLE_COUNT = 14;
+    const PICKER_TEAM_SPARKLE_COUNT = 10;
     const ROTATION_MIN_DEG_PER_SEC = 36;
     // Stay below 60Hz/120Hz wagon-wheel stroboscopic harmonics (e.g. 5x14.4°=72° at 864°/s)
     const ROTATION_MAX_DEG_PER_SEC = 500;
@@ -4700,6 +4707,15 @@ import { log } from "./logger.js";
     const SWIPE_FLICK_PX = 36;
     const SWIPE_FLICK_VELOCITY = 0.3; // px/ms
     const SWIPE_AXIS_RATIO = 1.5;
+
+    // Mode configuration — teamCount is parameterized for downstream multi-team support
+    const pickerConfig = {
+      mode: "single", // 'single' | 'teams'
+      teamCount: 2,
+    };
+
+    const getMinFingers = () =>
+      pickerConfig.mode === "teams" ? Math.max(2, pickerConfig.teamCount) : 2;
 
     let phase = "idle"; // 'idle' | 'waiting' | 'counting' | 'eliminating' | 'selected'
     const touches = new Map(); // pointerId -> { x, y, color, slot, shape, shapeSlot, angle, direction, el }
@@ -4813,19 +4829,40 @@ import { log } from "./logger.js";
       rotationRaf = requestAnimationFrame(stepRotation);
     };
 
+    const updateModeUI = () => {
+      const isTeams = pickerConfig.mode === "teams";
+      const label = isTeams ? `${pickerConfig.teamCount} teams` : "Pick 1";
+      stage.dataset.mode = pickerConfig.mode;
+      stage.dataset.teamCount = String(pickerConfig.teamCount);
+      if (modeText) modeText.textContent = label;
+      if (modeBtn) {
+        modeBtn.setAttribute("aria-label", `Picker mode: ${label}`);
+        modeBtn.classList.toggle("is-locked", phase !== "idle");
+      }
+    };
+
     const updatePrompt = () => {
       if (!promptEl) return;
+      const isTeams = pickerConfig.mode === "teams";
+      const minFingers = getMinFingers();
       if (phase === "idle") {
         promptEl.classList.remove("hidden");
-        if (promptTitle) promptTitle.textContent = "Place fingers to choose";
+        if (promptTitle) {
+          promptTitle.textContent = isTeams
+            ? `Place fingers for ${pickerConfig.teamCount} teams`
+            : "Place fingers to choose";
+        }
         if (promptSubtitle) {
           promptSubtitle.textContent = hasTouchInput()
-            ? "2 or more players"
+            ? `${minFingers} or more players`
             : "Needs a touchscreen";
         }
       } else if (phase === "waiting") {
         promptEl.classList.remove("hidden");
-        if (promptTitle) promptTitle.textContent = "Waiting for another player";
+        if (promptTitle) {
+          promptTitle.textContent =
+            minFingers > 2 ? "Waiting for more players" : "Waiting for another player";
+        }
         if (promptSubtitle) promptSubtitle.textContent = "Hold to choose";
       } else {
         promptEl.classList.add("hidden");
@@ -4880,22 +4917,58 @@ import { log } from "./logger.js";
       entry.el.style.setProperty("--y", `${entry.y}px`);
     };
 
-    const spawnGeometricExplosion = (entry) => {
+    const spawnShockwave = (entry, color) => {
       if (!particlesLayer || prefersReducedMotion()) return;
-      const shapeDef = PICKER_SHAPES.find((s) => s.name === entry.shape) || PICKER_SHAPES[0];
+      const ring = document.createElement("div");
+      ring.className = "picker-shockwave";
+      ring.dataset.color = color;
+      ring.style.setProperty("--shockwave-color", color);
+      particlesLayer.appendChild(ring);
 
-      for (let i = 0; i < PICKER_PARTICLE_COUNT; i++) {
+      if (typeof ring.animate === "function") {
+        const anim = ring.animate(
+          [
+            {
+              transform: `translate3d(${entry.x - 56}px, ${entry.y - 56}px, 0) scale(0.65)`,
+              opacity: 0.9,
+            },
+            {
+              transform: `translate3d(${entry.x - 56}px, ${entry.y - 56}px, 0) scale(2.15)`,
+              opacity: 0,
+            },
+          ],
+          {
+            duration: 420,
+            easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+            fill: "forwards",
+          },
+        );
+        anim.onfinish = () => ring.remove();
+        anim.oncancel = () => ring.remove();
+      } else {
+        ring.remove();
+      }
+    };
+
+    const spawnGeometricExplosion = (
+      entry,
+      { count = PICKER_PARTICLE_COUNT, color = entry.color, shape = entry.shape } = {},
+    ) => {
+      if (!particlesLayer || prefersReducedMotion()) return;
+      const shapeDef = PICKER_SHAPES.find((s) => s.name === shape) || PICKER_SHAPES[0];
+
+      for (let i = 0; i < count; i++) {
         const particle = document.createElement("div");
         particle.className = "picker-particle";
-        particle.dataset.color = entry.color;
+        particle.dataset.color = color;
         particle.dataset.shape = shapeDef.name;
         const size = 12 + Math.round(Math.random() * 14);
-        particle.style.setProperty("--particle-color", entry.color);
+        particle.style.setProperty("--particle-color", color);
         particle.style.setProperty("--particle-size", `${size}px`);
         particle.innerHTML = `<svg aria-hidden="true" viewBox="0 0 100 100">${shapeDef.markup}</svg>`;
         particlesLayer.appendChild(particle);
 
-        const baseAngle = (Math.PI * 2 * i) / PICKER_PARTICLE_COUNT;
+        const baseAngle = (Math.PI * 2 * i) / count;
         const angle = baseAngle + (Math.random() - 0.5) * 0.45;
         const distance = 70 + Math.random() * 85;
         const endX = entry.x + Math.cos(angle) * distance;
@@ -4956,22 +5029,120 @@ import { log } from "./logger.js";
           : `${winner.shape[0].toUpperCase()}${winner.shape.slice(1)} selected`;
       }
       updatePrompt();
+      updateModeUI();
+    };
+
+    const assignTeams = (ids, teamCount) => {
+      const activePalette = palettes[state.settings.palette] || palettes.bold;
+      const shuffledIds = [...ids];
+      for (let i = shuffledIds.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledIds[i], shuffledIds[j]] = [shuffledIds[j], shuffledIds[i]];
+      }
+
+      const teamOrder = shuffleIndices(teamCount);
+      const teams = Array.from({ length: teamCount }, (_, t) => {
+        const colorSlot = roundColorOrder[t];
+        const color =
+          colorSlot !== undefined && activePalette.colors[colorSlot]
+            ? activePalette.colors[colorSlot]
+            : `hsl(${Math.round(((t + 1) * 137.508) % 360)} 78% 54%)`;
+        const shapeSlot = roundShapeOrder[t % roundShapeOrder.length];
+        const shape = PICKER_SHAPES[shapeSlot] || PICKER_SHAPES[t % PICKER_SHAPES.length];
+        return { teamIndex: t, color, shape, memberIds: [] };
+      });
+
+      shuffledIds.forEach((id, i) => {
+        const targetTeam = teamOrder[i % teamCount];
+        teams[targetTeam].memberIds.push(id);
+      });
+
+      return teams;
+    };
+
+    const applyTeamToEntry = (entry, team, withEffects) => {
+      entry.color = team.color;
+      entry.shape = team.shape.name;
+      entry.direction = team.teamIndex % 2 === 0 ? 1 : -1;
+      entry.el.dataset.team = String(team.teamIndex);
+      entry.el.dataset.color = team.color;
+      entry.el.dataset.shape = team.shape.name;
+      entry.el.style.setProperty("--circle-color", team.color);
+      entry.el.innerHTML = `<svg class="picker-shape" aria-hidden="true" viewBox="0 0 100 100">${team.shape.markup}</svg>`;
+      entry.el.classList.add("is-team-revealed");
+      if (withEffects) {
+        spawnShockwave(entry, team.color);
+        spawnGeometricExplosion(entry, {
+          count: PICKER_TEAM_SPARKLE_COUNT,
+          color: team.color,
+          shape: team.shape.name,
+        });
+      }
+    };
+
+    const selectPickerTeams = (ids) => {
+      const teamCount = Math.max(2, pickerConfig.teamCount);
+      const teams = assignTeams(ids, teamCount);
+
+      if (prefersReducedMotion()) {
+        teams.forEach((team) => {
+          team.memberIds.forEach((id) => {
+            const entry = touches.get(id);
+            if (entry) applyTeamToEntry(entry, team, false);
+          });
+        });
+        phase = "selected";
+        playPickerHaptic("major");
+        if (statusEl) statusEl.textContent = `${teamCount} teams selected`;
+        updatePrompt();
+        updateModeUI();
+        return;
+      }
+
+      phase = "eliminating";
+      clearEliminationTimers();
+
+      teams.forEach((team, waveIndex) => {
+        const timerId = setTimeout(() => {
+          team.memberIds.forEach((id) => {
+            const entry = touches.get(id);
+            if (entry) applyTeamToEntry(entry, team, true);
+          });
+          if (waveIndex < teams.length - 1) {
+            playPickerHaptic("minor");
+          } else {
+            phase = "selected";
+            playPickerHaptic("major");
+            if (statusEl) statusEl.textContent = `${teamCount} teams selected`;
+            updatePrompt();
+            updateModeUI();
+          }
+        }, waveIndex * PICKER_TEAM_REVEAL_STAGGER_MS);
+        eliminationTimers.push(timerId);
+      });
     };
 
     const selectPickerWinner = () => {
       countdownTimer = null;
       countdownStartedAt = null;
       const ids = Array.from(touches.keys());
-      if (ids.length < PICKER_MIN_FINGERS) {
-        phase = ids.length === 1 ? "waiting" : "idle";
+      const minFingers = getMinFingers();
+      if (ids.length < minFingers) {
+        phase = ids.length > 0 ? "waiting" : "idle";
         updatePrompt();
+        updateModeUI();
+        return;
+      }
+
+      heldPointers.clear();
+      ids.forEach((id) => heldPointers.add(id));
+
+      if (pickerConfig.mode === "teams") {
+        selectPickerTeams(ids);
         return;
       }
 
       const winnerId = ids[Math.floor(Math.random() * ids.length)];
-      heldPointers.clear();
-      ids.forEach((id) => heldPointers.add(id));
-
       const loserIds = ids.filter((id) => id !== winnerId);
       // Shuffle elimination order so defeated shapes pop in a fresh order
       for (let i = loserIds.length - 1; i > 0; i--) {
@@ -5041,6 +5212,7 @@ import { log } from "./logger.js";
       }
       if (statusEl) statusEl.textContent = "";
       updatePrompt();
+      updateModeUI();
     };
 
     const trySingleFingerSwipe = (e, isRelease = false) => {
@@ -5118,7 +5290,7 @@ import { log } from "./logger.js";
 
       playPickerHaptic("minor");
 
-      if (touches.size >= PICKER_MIN_FINGERS) {
+      if (touches.size >= getMinFingers()) {
         swipeCandidate = null;
         phase = "counting";
         schedulePickerSelection();
@@ -5131,10 +5303,13 @@ import { log } from "./logger.js";
             startY: e.clientY,
             startTime: performance.now(),
           };
+        } else {
+          swipeCandidate = null;
         }
       }
       startRotationLoop();
       updatePrompt();
+      updateModeUI();
     };
 
     const movePickerTouch = (e) => {
@@ -5164,11 +5339,11 @@ import { log } from "./logger.js";
         swipeCandidate = null;
       }
 
-      if (touches.size >= PICKER_MIN_FINGERS) {
+      if (touches.size >= getMinFingers()) {
         phase = "counting";
         schedulePickerSelection();
         updatePrompt();
-      } else if (touches.size === 1) {
+      } else if (touches.size > 0) {
         clearCountdown();
         phase = "waiting";
         if (!prefersReducedMotion()) {
@@ -5180,6 +5355,19 @@ import { log } from "./logger.js";
       }
     };
 
+    if (modeBtn) {
+      modeBtn.addEventListener("click", () => {
+        if (state.currentTab !== "picker" || phase !== "idle") return;
+        pickerConfig.mode = pickerConfig.mode === "single" ? "teams" : "single";
+        playSelectionHaptic();
+        updateModeUI();
+        updatePrompt();
+      });
+    }
+
+    updateModeUI();
+    updatePrompt();
+
     stage.addEventListener("pointerdown", addPickerTouch);
     stage.addEventListener("pointermove", movePickerTouch);
     stage.addEventListener("pointerup", removePickerTouch);
@@ -5188,12 +5376,12 @@ import { log } from "./logger.js";
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden && phase !== "idle") {
-        resetPicker();
+        resetPicker({ immediate: true });
       }
     });
     window.addEventListener("blur", () => {
       if (phase !== "idle") {
-        resetPicker();
+        resetPicker({ immediate: true });
       }
     });
     updatePrompt();
