@@ -5158,6 +5158,16 @@ import { log } from "./logger.js";
       onOfflineReady() {
         log.info("App ready to work offline");
       },
+      onRegistered(reg) {
+        if (!reg) return;
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") {
+            reg.update().catch(() => {
+              /* ignore when offline */
+            });
+          }
+        });
+      },
     });
   };
 
