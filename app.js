@@ -1945,12 +1945,18 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   // 10. Navigation / Tab Switching
   // ------------------------------------------------------------------------
+  const TABS = ["counters", "dice", "timer", "picker"];
   let isProgrammaticTabScroll = false;
   let programmaticTabTimeout = null;
+  let resetPicker = () => {};
 
   const updateTabUI = (tabId) => {
     if (state.currentTab === tabId) return;
+    const prevTab = state.currentTab;
     state.currentTab = tabId;
+    if (prevTab === "picker") {
+      resetPicker();
+    }
     playSelectionHaptic();
 
     // Update footer button active class and roving tabindex
@@ -1972,6 +1978,7 @@ import { log } from "./logger.js";
       if (tabId === "counters") viewTitle.textContent = "Counters";
       else if (tabId === "dice") viewTitle.textContent = "Dice";
       else if (tabId === "timer") viewTitle.textContent = "Timer";
+      else if (tabId === "picker") viewTitle.textContent = "Picker";
     }
   };
 
@@ -3604,17 +3611,16 @@ import { log } from "./logger.js";
 
     $(".app-nav")?.addEventListener("keydown", (e) => {
       if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(e.key)) return;
-      const tabs = ["counters", "dice", "timer"];
-      const idx = tabs.indexOf(state.currentTab);
+      const idx = TABS.indexOf(state.currentTab);
       if (idx === -1) return;
       e.preventDefault();
       let nextIdx = idx;
-      if (e.key === "ArrowRight") nextIdx = (idx + 1) % tabs.length;
+      if (e.key === "ArrowRight") nextIdx = (idx + 1) % TABS.length;
       else if (e.key === "ArrowLeft")
-        nextIdx = (idx - 1 + tabs.length) % tabs.length;
+        nextIdx = (idx - 1 + TABS.length) % TABS.length;
       else if (e.key === "Home") nextIdx = 0;
-      else if (e.key === "End") nextIdx = tabs.length - 1;
-      const nextTab = tabs[nextIdx];
+      else if (e.key === "End") nextIdx = TABS.length - 1;
+      const nextTab = TABS[nextIdx];
       switchTab(nextTab);
       $(`[data-tab-btn="${nextTab}"]`)?.focus();
     });
@@ -3622,14 +3628,13 @@ import { log } from "./logger.js";
     // Native scroll observer for Swipe detection & real-time header/nav synchronization
     const tabsSlider = $("#tabs-slider");
     if (tabsSlider) {
-      const tabs = ["counters", "dice", "timer"];
       let scrollRaf = null;
 
       const syncTabFromScroll = () => {
         const width = tabsSlider.clientWidth;
         if (!width) return;
         const index = Math.round(tabsSlider.scrollLeft / width);
-        const currentVisibleTab = tabs[Math.min(Math.max(index, 0), tabs.length - 1)];
+        const currentVisibleTab = TABS[Math.min(Math.max(index, 0), TABS.length - 1)];
 
         if (isProgrammaticTabScroll) {
           if (currentVisibleTab === state.currentTab) {
@@ -3663,7 +3668,7 @@ import { log } from "./logger.js";
           const target = e.snapTargetInline;
           if (target && target.id) {
             const tabId = target.id.replace("tab-", "");
-            if (tabs.includes(tabId) && state.currentTab !== tabId) {
+            if (TABS.includes(tabId) && state.currentTab !== tabId) {
               updateTabUI(tabId);
             }
           }
@@ -4399,8 +4404,235 @@ import { log } from "./logger.js";
     });
   };
 
+  // ------------------------------------------------------------------------
+  // 18b. First-player Picker tab (Chwazi-style multi-touch selector)
+  // ------------------------------------------------------------------------
+  const setupPicker = () => {
+    const stage = $("#picker-stage");
+    const circlesLayer = $("#picker-circles");
+    const promptEl = $("#picker-prompt");
+    const promptTitle = $("#picker-prompt-title");
+    const promptSubtitle = $("#picker-prompt-subtitle");
+    const statusEl = $("#picker-status");
+    const tabsSlider = $("#tabs-slider");
+    if (!stage || !circlesLayer) return;
+
+    const PICKER_COUNTDOWN_MS = 3000;
+    const PICKER_MIN_FINGERS = 2;
+
+    let phase = "idle"; // 'idle' | 'waiting' | 'counting' | 'selected'
+    const touches = new Map(); // pointerId -> { x, y, color, slot, el }
+    const heldPointers = new Set(); // pointerIds still down during 'selected'
+    let roundColorOrder = [];
+    let fallbackColorIndex = 0;
+    let countdownTimer = null;
+
+    const setSliderLocked = (locked) => {
+      if (!tabsSlider) return;
+      if (locked) {
+        const pickerPanel = document.getElementById("tab-picker");
+        if (pickerPanel) {
+          const targetX = pickerPanel.offsetLeft - tabsSlider.offsetLeft;
+          if (Math.abs(tabsSlider.scrollLeft - targetX) > 1) {
+            tabsSlider.scrollTo({ left: targetX, behavior: "instant" });
+          }
+        }
+      }
+      tabsSlider.style.overflowX = locked ? "hidden" : "";
+    };
+
+    const clearCountdown = () => {
+      if (countdownTimer !== null) {
+        clearTimeout(countdownTimer);
+        countdownTimer = null;
+      }
+    };
+
+    const updatePrompt = () => {
+      if (!promptEl) return;
+      if (phase === "idle") {
+        promptEl.classList.remove("hidden");
+        if (promptTitle) promptTitle.textContent = "Place fingers to choose";
+        if (promptSubtitle) promptSubtitle.textContent = "2 or more players";
+      } else if (phase === "waiting") {
+        promptEl.classList.remove("hidden");
+        if (promptTitle) promptTitle.textContent = "Waiting for another player";
+        if (promptSubtitle) promptSubtitle.textContent = "Hold to choose";
+      } else {
+        promptEl.classList.add("hidden");
+      }
+    };
+
+    const shuffleRoundColors = () => {
+      const activePalette = palettes[state.settings.palette] || palettes.bold;
+      const slots = activePalette.colors.map((_, i) => i);
+      for (let i = slots.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [slots[i], slots[j]] = [slots[j], slots[i]];
+      }
+      roundColorOrder = slots;
+      fallbackColorIndex = 0;
+    };
+
+    const allocateColor = () => {
+      const activePalette = palettes[state.settings.palette] || palettes.bold;
+      const usedSlots = new Set();
+      touches.forEach((entry) => {
+        if (entry.slot !== null) usedSlots.add(entry.slot);
+      });
+      for (const slot of roundColorOrder) {
+        if (!usedSlots.has(slot) && activePalette.colors[slot]) {
+          return { color: activePalette.colors[slot], slot };
+        }
+      }
+      // Fallback for 9+ simultaneous fingers: golden-angle spaced HSL hues
+      const hue = Math.round(((++fallbackColorIndex) * 137.508) % 360);
+      return { color: `hsl(${hue} 78% 54%)`, slot: null };
+    };
+
+    const positionCircle = (entry, clientX, clientY) => {
+      const rect = stage.getBoundingClientRect();
+      entry.x = clientX - rect.left;
+      entry.y = clientY - rect.top;
+      entry.el.style.setProperty("--x", `${entry.x}px`);
+      entry.el.style.setProperty("--y", `${entry.y}px`);
+    };
+
+    const selectPickerWinner = () => {
+      countdownTimer = null;
+      const ids = Array.from(touches.keys());
+      if (ids.length < PICKER_MIN_FINGERS) {
+        phase = ids.length === 1 ? "waiting" : "idle";
+        updatePrompt();
+        return;
+      }
+
+      const winnerId = ids[Math.floor(Math.random() * ids.length)];
+      phase = "selected";
+      heldPointers.clear();
+      ids.forEach((id) => heldPointers.add(id));
+
+      for (const [id, entry] of touches.entries()) {
+        if (id === winnerId) {
+          entry.el.classList.add("is-winner");
+        } else {
+          entry.el.remove();
+          touches.delete(id);
+        }
+      }
+
+      if (statusEl) statusEl.textContent = "Player selected";
+      updatePrompt();
+    };
+
+    const schedulePickerSelection = () => {
+      clearCountdown();
+      countdownTimer = setTimeout(selectPickerWinner, PICKER_COUNTDOWN_MS);
+    };
+
+    resetPicker = () => {
+      clearCountdown();
+      touches.forEach((entry) => entry.el.remove());
+      touches.clear();
+      heldPointers.clear();
+      phase = "idle";
+      setSliderLocked(false);
+      if (statusEl) statusEl.textContent = "";
+      updatePrompt();
+    };
+
+    const addPickerTouch = (e) => {
+      if (state.currentTab !== "picker") return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (phase === "selected" || touches.has(e.pointerId)) return;
+      e.stopPropagation();
+
+      try {
+        stage.setPointerCapture(e.pointerId);
+      } catch {
+        /* ignore */
+      }
+
+      if (phase === "idle") {
+        shuffleRoundColors();
+        setSliderLocked(true);
+      }
+
+      const { color, slot } = allocateColor();
+      const el = document.createElement("div");
+      el.className = "picker-circle";
+      el.dataset.pointerId = String(e.pointerId);
+      el.dataset.color = color;
+      el.style.setProperty("--circle-color", color);
+      circlesLayer.appendChild(el);
+
+      const entry = { x: 0, y: 0, color, slot, el };
+      positionCircle(entry, e.clientX, e.clientY);
+      touches.set(e.pointerId, entry);
+
+      if (touches.size >= PICKER_MIN_FINGERS) {
+        phase = "counting";
+        schedulePickerSelection();
+      } else {
+        phase = "waiting";
+      }
+      updatePrompt();
+    };
+
+    const movePickerTouch = (e) => {
+      const entry = touches.get(e.pointerId);
+      if (!entry) return;
+      positionCircle(entry, e.clientX, e.clientY);
+    };
+
+    const removePickerTouch = (e) => {
+      if (phase === "selected") {
+        if (!heldPointers.has(e.pointerId)) return;
+        heldPointers.delete(e.pointerId);
+        if (heldPointers.size === 0) {
+          resetPicker();
+        }
+        return;
+      }
+
+      const entry = touches.get(e.pointerId);
+      if (!entry) return;
+      entry.el.remove();
+      touches.delete(e.pointerId);
+
+      if (touches.size >= PICKER_MIN_FINGERS) {
+        phase = "counting";
+        schedulePickerSelection();
+        updatePrompt();
+      } else if (touches.size === 1) {
+        clearCountdown();
+        phase = "waiting";
+        updatePrompt();
+      } else {
+        resetPicker();
+      }
+    };
+
+    stage.addEventListener("pointerdown", addPickerTouch);
+    stage.addEventListener("pointermove", movePickerTouch);
+    stage.addEventListener("pointerup", removePickerTouch);
+    stage.addEventListener("pointercancel", removePickerTouch);
+    stage.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && phase !== "idle") {
+        resetPicker();
+      }
+    });
+    window.addEventListener("blur", () => {
+      if (phase !== "idle") {
+        resetPicker();
+      }
+    });
+  };
+
   // Android / native hardware Back navigation: close topmost open dialog first,
-  // then return from Dice/Timer to Counters, before letting the OS exit
+  // then return from Dice/Timer/Picker to Counters, before letting the OS exit
   const handleBackNavigation = ({ canGoBack = false } = {}) => {
     // Topmost is the one opened last, not the last in the markup: the confirm
     // sheet comes before History in index.html but opens on top of it
@@ -4455,6 +4687,7 @@ import { log } from "./logger.js";
 
     // Extras
     setupPlaceholdersInteractions();
+    setupPicker();
     setupBottomSheetDragging();
     setupCardDragDrop();
 

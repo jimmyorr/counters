@@ -370,6 +370,62 @@
             </div>
           </div>
         </section>
+
+        <!-- Tab 4: Picker View -->
+        <section
+          class="tab-content tab-picker"
+          id="tab-picker"
+          data-view="picker"
+          role="tabpanel"
+          aria-labelledby="tab-btn-picker"
+          inert
+        >
+          <div class="picker-stage" id="picker-stage">
+            <div class="picker-prompt" id="picker-prompt" aria-hidden="true">
+              <div class="placeholder-icon picker-prompt-icon">
+                <svg
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="64"
+                  height="64"
+                  fill="currentColor"
+                >
+                  <circle cx="12" cy="6.5" r="4" />
+                  <circle
+                    cx="6.5"
+                    cy="16.5"
+                    r="3.25"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  />
+                  <circle
+                    cx="17.5"
+                    cy="16.5"
+                    r="3.25"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  />
+                </svg>
+              </div>
+              <p class="picker-prompt-title" id="picker-prompt-title">
+                Place fingers to choose
+              </p>
+              <p class="picker-prompt-subtitle" id="picker-prompt-subtitle">
+                2 or more players
+              </p>
+            </div>
+            <div class="picker-circles" id="picker-circles"></div>
+            <div
+              class="visually-hidden"
+              id="picker-status"
+              role="status"
+              aria-live="polite"
+            ></div>
+          </div>
+        </section>
       </div>
     </main>
 
@@ -457,6 +513,45 @@
           </svg>
         </span>
         <span class="nav-text">Timer</span>
+      </button>
+
+      <button
+        class="nav-item"
+        id="tab-btn-picker"
+        data-tab-btn="picker"
+        aria-controls="tab-picker"
+        aria-label="Picker"
+        role="tab"
+        aria-selected="false"
+        tabindex="-1"
+      >
+        <span class="nav-icon">
+          <svg
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <circle cx="12" cy="6.5" r="4" />
+            <circle
+              cx="6.5"
+              cy="16.5"
+              r="3.25"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <circle
+              cx="17.5"
+              cy="16.5"
+              r="3.25"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+          </svg>
+        </span>
+        <span class="nav-text">Picker</span>
       </button>
     </nav>
 
