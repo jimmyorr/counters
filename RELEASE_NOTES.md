@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.2.2
+
+* **Picker:** Centered all spinning shapes on their exact pivot, anchored drop shadows in place, and smoothed peak rotation speed so shapes spin evenly without wobbling.
+* **iOS:** Extended the app shell into the missing bottom viewport band when launched from the Home screen.
+
 ## 0.2.1
 
 * **Picker:** Added a multi-touch picker tab that places spinning shapes under each finger and crowns a random winner with haptics and a full-screen color flood.
