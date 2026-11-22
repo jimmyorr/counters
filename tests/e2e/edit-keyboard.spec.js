@@ -136,6 +136,16 @@ test.describe('background stability behind keyboard sheets', () => {
     await expect(page.locator('#edit-value-dialog')).toBeVisible();
     await expect(page.locator('#edit-value-input')).toBeFocused();
 
+    // The long-press shrinks Mommy's card (scale 0.985) and it springs back over
+    // 0.4s. That's press feedback, not layout movement, so let it settle first
+    await expect
+      .poll(() =>
+        page
+          .locator('#counters-list-wrapper .counter-card')
+          .evaluateAll((els) => els.map((el) => getComputedStyle(el).transform)),
+      )
+      .toEqual(['none', 'none', 'none', 'none']);
+
     await page.setViewportSize({ width: 393, height: 852 - 290 });
     await expect(page.locator('html')).toHaveClass(/keyboard-open/);
     await expect(page.locator('html')).toHaveClass(/viewport-locked/);
