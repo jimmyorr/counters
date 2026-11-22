@@ -1963,12 +1963,18 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   // 10. Navigation / Tab Switching
   // ------------------------------------------------------------------------
+  const TABS = ["counters", "dice", "timer", "picker"];
   let isProgrammaticTabScroll = false;
   let programmaticTabTimeout = null;
+  let resetPicker = () => {};
 
   const updateTabUI = (tabId) => {
     if (state.currentTab === tabId) return;
+    const prevTab = state.currentTab;
     state.currentTab = tabId;
+    if (prevTab === "picker") {
+      resetPicker({ immediate: true });
+    }
     playSelectionHaptic();
 
     // Update footer button active class and roving tabindex
@@ -1990,6 +1996,7 @@ import { log } from "./logger.js";
       if (tabId === "counters") viewTitle.textContent = "Counters";
       else if (tabId === "dice") viewTitle.textContent = "Dice";
       else if (tabId === "timer") viewTitle.textContent = "Timer";
+      else if (tabId === "picker") viewTitle.textContent = "Picker";
     }
   };
 
@@ -3624,17 +3631,16 @@ import { log } from "./logger.js";
 
     $(".app-nav")?.addEventListener("keydown", (e) => {
       if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(e.key)) return;
-      const tabs = ["counters", "dice", "timer"];
-      const idx = tabs.indexOf(state.currentTab);
+      const idx = TABS.indexOf(state.currentTab);
       if (idx === -1) return;
       e.preventDefault();
       let nextIdx = idx;
-      if (e.key === "ArrowRight") nextIdx = (idx + 1) % tabs.length;
+      if (e.key === "ArrowRight") nextIdx = (idx + 1) % TABS.length;
       else if (e.key === "ArrowLeft")
-        nextIdx = (idx - 1 + tabs.length) % tabs.length;
+        nextIdx = (idx - 1 + TABS.length) % TABS.length;
       else if (e.key === "Home") nextIdx = 0;
-      else if (e.key === "End") nextIdx = tabs.length - 1;
-      const nextTab = tabs[nextIdx];
+      else if (e.key === "End") nextIdx = TABS.length - 1;
+      const nextTab = TABS[nextIdx];
       switchTab(nextTab);
       $(`[data-tab-btn="${nextTab}"]`)?.focus();
     });
@@ -3642,14 +3648,13 @@ import { log } from "./logger.js";
     // Native scroll observer for Swipe detection & real-time header/nav synchronization
     const tabsSlider = $("#tabs-slider");
     if (tabsSlider) {
-      const tabs = ["counters", "dice", "timer"];
       let scrollRaf = null;
 
       const syncTabFromScroll = () => {
         const width = tabsSlider.clientWidth;
         if (!width) return;
         const index = Math.round(tabsSlider.scrollLeft / width);
-        const currentVisibleTab = tabs[Math.min(Math.max(index, 0), tabs.length - 1)];
+        const currentVisibleTab = TABS[Math.min(Math.max(index, 0), TABS.length - 1)];
 
         if (isProgrammaticTabScroll) {
           if (currentVisibleTab === state.currentTab) {
@@ -3683,7 +3688,7 @@ import { log } from "./logger.js";
           const target = e.snapTargetInline;
           if (target && target.id) {
             const tabId = target.id.replace("tab-", "");
-            if (tabs.includes(tabId) && state.currentTab !== tabId) {
+            if (TABS.includes(tabId) && state.currentTab !== tabId) {
               updateTabUI(tabId);
             }
           }
@@ -4419,8 +4424,566 @@ import { log } from "./logger.js";
     });
   };
 
+  // ------------------------------------------------------------------------
+  // 18b. First-player Picker tab (Chwazi-style multi-touch selector)
+  // ------------------------------------------------------------------------
+  const PICKER_SHAPES = [
+    {
+      name: "triangle",
+      markup: '<polygon class="picker-shape-path" points="50,10 88,78 12,78" />',
+    },
+    {
+      name: "square",
+      markup: '<rect class="picker-shape-path" x="15" y="15" width="70" height="70" rx="8" />',
+    },
+    {
+      name: "diamond",
+      markup: '<polygon class="picker-shape-path" points="50,8 92,50 50,92 8,50" />',
+    },
+    {
+      name: "pentagon",
+      markup: '<polygon class="picker-shape-path" points="50,9 89,37 74,84 26,84 11,37" />',
+    },
+    {
+      name: "hexagon",
+      markup: '<polygon class="picker-shape-path" points="50,8 86,29 86,71 50,92 14,71 14,29" />',
+    },
+    {
+      name: "star",
+      markup:
+        '<polygon class="picker-shape-path" points="50,8 61,35 90,37 68,56 75,85 50,69 25,85 32,56 10,37 39,35" />',
+    },
+    {
+      name: "octagon",
+      markup:
+        '<polygon class="picker-shape-path" points="33,10 67,10 90,33 90,67 67,90 33,90 10,67 10,33" />',
+    },
+    {
+      name: "cross",
+      markup:
+        '<path class="picker-shape-path" d="M36,12 H64 V36 H88 V64 H64 V88 H36 V64 H12 V36 H36 Z" />',
+    },
+    {
+      name: "heart",
+      markup:
+        '<path class="picker-shape-path" d="M50,86 C47,83 12,60 12,35 C12,21 23,12 35,12 C43,12 48,17 50,22 C52,17 57,12 65,12 C77,12 88,21 88,35 C88,60 53,83 50,86 Z" />',
+    },
+  ];
+
+  const setupPicker = () => {
+    const stage = $("#picker-stage");
+    const circlesLayer = $("#picker-circles");
+    const particlesLayer = $("#picker-particles");
+    const winnerBgEl = $("#picker-winner-bg");
+    const promptEl = $("#picker-prompt");
+    const promptTitle = $("#picker-prompt-title");
+    const promptSubtitle = $("#picker-prompt-subtitle");
+    const statusEl = $("#picker-status");
+    const tabsSlider = $("#tabs-slider");
+    if (!stage || !circlesLayer) return;
+
+    const PICKER_COUNTDOWN_MS = 3000;
+    const PICKER_MIN_FINGERS = 2;
+    const PICKER_EXPLOSION_STAGGER_MS = 140;
+    const PICKER_PARTICLE_COUNT = 14;
+    const ROTATION_MIN_DEG_PER_SEC = 35;
+    const ROTATION_MAX_DEG_PER_SEC = 840;
+    const ROTATION_SETTLED_DEG_PER_SEC = 24;
+    const SWIPE_TRIGGER_PX = 64;
+    const SWIPE_FLICK_PX = 36;
+    const SWIPE_FLICK_VELOCITY = 0.3; // px/ms
+    const SWIPE_AXIS_RATIO = 1.5;
+
+    let phase = "idle"; // 'idle' | 'waiting' | 'counting' | 'eliminating' | 'selected'
+    const touches = new Map(); // pointerId -> { x, y, color, slot, shape, shapeSlot, angle, direction, el }
+    const heldPointers = new Set(); // pointerIds still down during 'eliminating' / 'selected'
+    let swipeCandidate = null; // { pointerId, startX, startY, startTime }
+    let roundColorOrder = [];
+    let roundShapeOrder = [];
+    let fallbackColorIndex = 0;
+    let fallbackShapeIndex = 0;
+    let countdownTimer = null;
+    let countdownStartedAt = null;
+    let eliminationTimers = [];
+    let rotationRaf = null;
+    let lastRotationTime = null;
+
+    const shuffleIndices = (length) => {
+      const slots = Array.from({ length }, (_, i) => i);
+      for (let i = slots.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [slots[i], slots[j]] = [slots[j], slots[i]];
+      }
+      return slots;
+    };
+
+    const playPickerHaptic = (level) => {
+      if (!state.settings.hapticsEnabled) return;
+      if (Capacitor.isNativePlatform()) {
+        playHaptic(level === "major" ? ImpactStyle.Heavy : ImpactStyle.Light);
+        return;
+      }
+      if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") {
+        try {
+          navigator.vibrate(level === "major" ? [40, 30, 80] : 15);
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+
+    const setSliderLocked = (locked) => {
+      if (!tabsSlider) return;
+      if (locked) {
+        const pickerPanel = document.getElementById("tab-picker");
+        if (pickerPanel) {
+          const targetX = pickerPanel.offsetLeft - tabsSlider.offsetLeft;
+          if (Math.abs(tabsSlider.scrollLeft - targetX) > 1) {
+            tabsSlider.scrollTo({ left: targetX, behavior: "instant" });
+          }
+        }
+      }
+      tabsSlider.style.overflowX = locked ? "hidden" : "";
+    };
+
+    const clearCountdown = () => {
+      if (countdownTimer !== null) {
+        clearTimeout(countdownTimer);
+        countdownTimer = null;
+      }
+      countdownStartedAt = null;
+    };
+
+    const clearEliminationTimers = () => {
+      eliminationTimers.forEach((id) => clearTimeout(id));
+      eliminationTimers = [];
+    };
+
+    const stopRotationLoop = () => {
+      if (rotationRaf !== null) {
+        cancelAnimationFrame(rotationRaf);
+        rotationRaf = null;
+      }
+      lastRotationTime = null;
+      delete stage.dataset.rotationSpeed;
+    };
+
+    const getRotationSpeed = (now) => {
+      if (phase === "counting" && countdownStartedAt !== null) {
+        const progress = Math.min(1, Math.max(0, (now - countdownStartedAt) / PICKER_COUNTDOWN_MS));
+        return (
+          ROTATION_MIN_DEG_PER_SEC +
+          (ROTATION_MAX_DEG_PER_SEC - ROTATION_MIN_DEG_PER_SEC) * progress * progress
+        );
+      }
+      if (phase === "eliminating") return ROTATION_MAX_DEG_PER_SEC;
+      if (phase === "selected") return ROTATION_SETTLED_DEG_PER_SEC;
+      return ROTATION_MIN_DEG_PER_SEC;
+    };
+
+    const stepRotation = () => {
+      rotationRaf = null;
+      if (touches.size === 0 || prefersReducedMotion()) {
+        lastRotationTime = null;
+        return;
+      }
+      const now = Date.now();
+      const dt = lastRotationTime === null ? 0 : Math.min(0.1, Math.max(0, (now - lastRotationTime) / 1000));
+      lastRotationTime = now;
+
+      const speed = getRotationSpeed(now);
+      stage.dataset.rotationSpeed = speed.toFixed(1);
+
+      touches.forEach((entry) => {
+        entry.angle = (entry.angle + entry.direction * speed * dt) % 360;
+        entry.el.style.setProperty("--rot", `${entry.angle.toFixed(2)}deg`);
+      });
+
+      rotationRaf = requestAnimationFrame(stepRotation);
+    };
+
+    const startRotationLoop = () => {
+      if (prefersReducedMotion()) return;
+      stage.dataset.rotationSpeed = getRotationSpeed(Date.now()).toFixed(1);
+      if (rotationRaf !== null) return;
+      lastRotationTime = Date.now();
+      rotationRaf = requestAnimationFrame(stepRotation);
+    };
+
+    const updatePrompt = () => {
+      if (!promptEl) return;
+      if (phase === "idle") {
+        promptEl.classList.remove("hidden");
+        if (promptTitle) promptTitle.textContent = "Place fingers to choose";
+        if (promptSubtitle) promptSubtitle.textContent = "2 or more players";
+      } else if (phase === "waiting") {
+        promptEl.classList.remove("hidden");
+        if (promptTitle) promptTitle.textContent = "Waiting for another player";
+        if (promptSubtitle) promptSubtitle.textContent = "Hold to choose";
+      } else {
+        promptEl.classList.add("hidden");
+      }
+    };
+
+    const shuffleRoundPools = () => {
+      const activePalette = palettes[state.settings.palette] || palettes.bold;
+      roundColorOrder = shuffleIndices(activePalette.colors.length);
+      roundShapeOrder = shuffleIndices(PICKER_SHAPES.length);
+      fallbackColorIndex = 0;
+      fallbackShapeIndex = 0;
+    };
+
+    const allocateColor = () => {
+      const activePalette = palettes[state.settings.palette] || palettes.bold;
+      const usedSlots = new Set();
+      touches.forEach((entry) => {
+        if (entry.slot !== null) usedSlots.add(entry.slot);
+      });
+      for (const slot of roundColorOrder) {
+        if (!usedSlots.has(slot) && activePalette.colors[slot]) {
+          return { color: activePalette.colors[slot], slot };
+        }
+      }
+      // Fallback for 9+ simultaneous fingers: golden-angle spaced HSL hues
+      const hue = Math.round(((++fallbackColorIndex) * 137.508) % 360);
+      return { color: `hsl(${hue} 78% 54%)`, slot: null };
+    };
+
+    const allocateShape = () => {
+      const usedShapeSlots = new Set();
+      touches.forEach((entry) => {
+        if (entry.shapeSlot !== null) usedShapeSlots.add(entry.shapeSlot);
+      });
+      for (const shapeSlot of roundShapeOrder) {
+        if (!usedShapeSlots.has(shapeSlot) && PICKER_SHAPES[shapeSlot]) {
+          return { shape: PICKER_SHAPES[shapeSlot], shapeSlot };
+        }
+      }
+      const fallbackSlot = fallbackShapeIndex++ % PICKER_SHAPES.length;
+      return { shape: PICKER_SHAPES[fallbackSlot], shapeSlot: null };
+    };
+
+    const positionCircle = (entry, clientX, clientY) => {
+      const rect = stage.getBoundingClientRect();
+      entry.x = clientX - rect.left;
+      entry.y = clientY - rect.top;
+      entry.el.style.setProperty("--x", `${entry.x}px`);
+      entry.el.style.setProperty("--y", `${entry.y}px`);
+    };
+
+    const spawnGeometricExplosion = (entry) => {
+      if (!particlesLayer || prefersReducedMotion()) return;
+      const shapeDef = PICKER_SHAPES.find((s) => s.name === entry.shape) || PICKER_SHAPES[0];
+
+      for (let i = 0; i < PICKER_PARTICLE_COUNT; i++) {
+        const particle = document.createElement("div");
+        particle.className = "picker-particle";
+        particle.dataset.color = entry.color;
+        particle.dataset.shape = shapeDef.name;
+        const size = 12 + Math.round(Math.random() * 14);
+        particle.style.setProperty("--particle-color", entry.color);
+        particle.style.setProperty("--particle-size", `${size}px`);
+        particle.innerHTML = `<svg aria-hidden="true" viewBox="0 0 100 100">${shapeDef.markup}</svg>`;
+        particlesLayer.appendChild(particle);
+
+        const baseAngle = (Math.PI * 2 * i) / PICKER_PARTICLE_COUNT;
+        const angle = baseAngle + (Math.random() - 0.5) * 0.45;
+        const distance = 70 + Math.random() * 85;
+        const endX = entry.x + Math.cos(angle) * distance;
+        const endY = entry.y + Math.sin(angle) * distance;
+        const spin = (Math.random() < 0.5 ? -1 : 1) * (180 + Math.random() * 220);
+
+        if (typeof particle.animate === "function") {
+          const anim = particle.animate(
+            [
+              {
+                transform: `translate3d(${entry.x - size / 2}px, ${entry.y - size / 2}px, 0) rotate(0deg) scale(1)`,
+                opacity: 1,
+              },
+              {
+                transform: `translate3d(${endX - size / 2}px, ${endY - size / 2}px, 0) rotate(${spin.toFixed(0)}deg) scale(0.15)`,
+                opacity: 0,
+              },
+            ],
+            {
+              duration: 520,
+              easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+              fill: "forwards",
+            },
+          );
+          anim.onfinish = () => particle.remove();
+          anim.oncancel = () => particle.remove();
+        } else {
+          particle.remove();
+        }
+      }
+    };
+
+    const finalizeWinner = (winnerId) => {
+      const winner = touches.get(winnerId);
+      if (!winner) {
+        resetPicker();
+        return;
+      }
+
+      phase = "selected";
+      const ink = getReadableTextColor(winner.color);
+      winner.el.style.setProperty("--winner-ink", ink);
+      winner.el.classList.add("is-winner");
+
+      if (winnerBgEl) {
+        winnerBgEl.style.setProperty("--winner-bg", winner.color);
+        winnerBgEl.style.setProperty("--winner-x", `${winner.x}px`);
+        winnerBgEl.style.setProperty("--winner-y", `${winner.y}px`);
+        winnerBgEl.classList.add("active");
+      }
+
+      playPickerHaptic("major");
+      if (statusEl) statusEl.textContent = "Player selected";
+      updatePrompt();
+    };
+
+    const selectPickerWinner = () => {
+      countdownTimer = null;
+      countdownStartedAt = null;
+      const ids = Array.from(touches.keys());
+      if (ids.length < PICKER_MIN_FINGERS) {
+        phase = ids.length === 1 ? "waiting" : "idle";
+        updatePrompt();
+        return;
+      }
+
+      const winnerId = ids[Math.floor(Math.random() * ids.length)];
+      heldPointers.clear();
+      ids.forEach((id) => heldPointers.add(id));
+
+      const loserIds = ids.filter((id) => id !== winnerId);
+      // Shuffle elimination order so defeated shapes pop in a fresh order
+      for (let i = loserIds.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [loserIds[i], loserIds[j]] = [loserIds[j], loserIds[i]];
+      }
+
+      if (prefersReducedMotion()) {
+        loserIds.forEach((id) => {
+          const entry = touches.get(id);
+          if (entry) {
+            entry.el.remove();
+            touches.delete(id);
+          }
+        });
+        finalizeWinner(winnerId);
+        return;
+      }
+
+      phase = "eliminating";
+      clearEliminationTimers();
+
+      loserIds.forEach((id, index) => {
+        const timerId = setTimeout(() => {
+          const entry = touches.get(id);
+          if (!entry) return;
+          entry.el.remove();
+          touches.delete(id);
+          spawnGeometricExplosion(entry);
+        }, index * PICKER_EXPLOSION_STAGGER_MS);
+        eliminationTimers.push(timerId);
+      });
+
+      const revealTimerId = setTimeout(() => {
+        finalizeWinner(winnerId);
+      }, loserIds.length * PICKER_EXPLOSION_STAGGER_MS);
+      eliminationTimers.push(revealTimerId);
+    };
+
+    const schedulePickerSelection = () => {
+      clearCountdown();
+      countdownStartedAt = Date.now();
+      countdownTimer = setTimeout(selectPickerWinner, PICKER_COUNTDOWN_MS);
+      if (!prefersReducedMotion()) {
+        stage.dataset.rotationSpeed = ROTATION_MIN_DEG_PER_SEC.toFixed(1);
+      }
+    };
+
+    resetPicker = ({ immediate = false } = {}) => {
+      clearCountdown();
+      clearEliminationTimers();
+      stopRotationLoop();
+      touches.forEach((entry) => entry.el.remove());
+      touches.clear();
+      heldPointers.clear();
+      swipeCandidate = null;
+      phase = "idle";
+      setSliderLocked(false);
+      if (particlesLayer) particlesLayer.innerHTML = "";
+      if (winnerBgEl) {
+        winnerBgEl.classList.remove("active");
+        if (immediate) {
+          winnerBgEl.style.removeProperty("--winner-bg");
+          winnerBgEl.style.removeProperty("--winner-x");
+          winnerBgEl.style.removeProperty("--winner-y");
+        }
+      }
+      if (statusEl) statusEl.textContent = "";
+      updatePrompt();
+    };
+
+    const trySingleFingerSwipe = (e, isRelease = false) => {
+      if (!swipeCandidate || swipeCandidate.pointerId !== e.pointerId) return false;
+      if (phase !== "waiting" || touches.size !== 1) {
+        swipeCandidate = null;
+        return false;
+      }
+      const dx = e.clientX - swipeCandidate.startX;
+      const dy = e.clientY - swipeCandidate.startY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      if (absX <= absY * SWIPE_AXIS_RATIO) return false;
+
+      const pickerIdx = TABS.indexOf("picker");
+      const targetTab = dx > 0 ? TABS[pickerIdx - 1] : TABS[pickerIdx + 1];
+      if (!targetTab) return false;
+
+      const elapsed = Math.max(1, performance.now() - swipeCandidate.startTime);
+      const isDragSwipe = absX >= SWIPE_TRIGGER_PX;
+      const isFlickSwipe =
+        isRelease && absX >= SWIPE_FLICK_PX && absX / elapsed >= SWIPE_FLICK_VELOCITY;
+      if (!isDragSwipe && !isFlickSwipe) return false;
+
+      resetPicker();
+      switchTab(targetTab);
+      return true;
+    };
+
+    const addPickerTouch = (e) => {
+      if (state.currentTab !== "picker") return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (phase === "eliminating" || phase === "selected" || touches.has(e.pointerId)) return;
+      e.stopPropagation();
+
+      try {
+        stage.setPointerCapture(e.pointerId);
+      } catch {
+        /* ignore */
+      }
+
+      const wasIdle = phase === "idle";
+      if (wasIdle) {
+        shuffleRoundPools();
+        setSliderLocked(true);
+      }
+
+      const { color, slot } = allocateColor();
+      const { shape, shapeSlot } = allocateShape();
+      const el = document.createElement("div");
+      el.className = "picker-circle";
+      el.dataset.pointerId = String(e.pointerId);
+      el.dataset.color = color;
+      el.dataset.shape = shape.name;
+      el.style.setProperty("--circle-color", color);
+      el.style.setProperty("--rot", "0deg");
+      el.innerHTML = `<svg class="picker-shape" aria-hidden="true" viewBox="0 0 100 100">${shape.markup}</svg>`;
+      circlesLayer.appendChild(el);
+
+      const direction = touches.size % 2 === 0 ? 1 : -1;
+      const entry = {
+        x: 0,
+        y: 0,
+        color,
+        slot,
+        shape: shape.name,
+        shapeSlot,
+        angle: 0,
+        direction,
+        el,
+      };
+      positionCircle(entry, e.clientX, e.clientY);
+      touches.set(e.pointerId, entry);
+
+      playPickerHaptic("minor");
+
+      if (touches.size >= PICKER_MIN_FINGERS) {
+        swipeCandidate = null;
+        phase = "counting";
+        schedulePickerSelection();
+      } else {
+        phase = "waiting";
+        if (wasIdle) {
+          swipeCandidate = {
+            pointerId: e.pointerId,
+            startX: e.clientX,
+            startY: e.clientY,
+            startTime: performance.now(),
+          };
+        }
+      }
+      startRotationLoop();
+      updatePrompt();
+    };
+
+    const movePickerTouch = (e) => {
+      if (trySingleFingerSwipe(e, false)) return;
+      const entry = touches.get(e.pointerId);
+      if (!entry) return;
+      positionCircle(entry, e.clientX, e.clientY);
+    };
+
+    const removePickerTouch = (e) => {
+      if (phase === "eliminating" || phase === "selected") {
+        if (!heldPointers.has(e.pointerId)) return;
+        heldPointers.delete(e.pointerId);
+        if (heldPointers.size === 0) {
+          resetPicker();
+        }
+        return;
+      }
+
+      if (e.type === "pointerup" && trySingleFingerSwipe(e, true)) return;
+
+      const entry = touches.get(e.pointerId);
+      if (!entry) return;
+      entry.el.remove();
+      touches.delete(e.pointerId);
+      if (swipeCandidate?.pointerId === e.pointerId) {
+        swipeCandidate = null;
+      }
+
+      if (touches.size >= PICKER_MIN_FINGERS) {
+        phase = "counting";
+        schedulePickerSelection();
+        updatePrompt();
+      } else if (touches.size === 1) {
+        clearCountdown();
+        phase = "waiting";
+        if (!prefersReducedMotion()) {
+          stage.dataset.rotationSpeed = ROTATION_MIN_DEG_PER_SEC.toFixed(1);
+        }
+        updatePrompt();
+      } else {
+        resetPicker();
+      }
+    };
+
+    stage.addEventListener("pointerdown", addPickerTouch);
+    stage.addEventListener("pointermove", movePickerTouch);
+    stage.addEventListener("pointerup", removePickerTouch);
+    stage.addEventListener("pointercancel", removePickerTouch);
+    stage.addEventListener("contextmenu", (e) => e.preventDefault());
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden && phase !== "idle") {
+        resetPicker();
+      }
+    });
+    window.addEventListener("blur", () => {
+      if (phase !== "idle") {
+        resetPicker();
+      }
+    });
+  };
+
   // Android / native hardware Back navigation: close topmost open dialog first,
-  // then return from Dice/Timer to Counters, before letting the OS exit
+  // then return from Dice/Timer/Picker to Counters, before letting the OS exit
   const handleBackNavigation = ({ canGoBack = false } = {}) => {
     // Topmost is the one opened last, not the last in the markup: the confirm
     // sheet comes before History in index.html but opens on top of it
@@ -4475,6 +5038,7 @@ import { log } from "./logger.js";
 
     // Extras
     setupPlaceholdersInteractions();
+    setupPicker();
     setupBottomSheetDragging();
     setupCardDragDrop();
 

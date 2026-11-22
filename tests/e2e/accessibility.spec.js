@@ -202,13 +202,17 @@ test.describe('keyboard navigation and non-drag reordering', () => {
     const countersTab = page.locator('[data-tab-btn="counters"]');
     const diceTab = page.locator('[data-tab-btn="dice"]');
     const timerTab = page.locator('[data-tab-btn="timer"]');
+    const pickerTab = page.locator('[data-tab-btn="picker"]');
 
     await expect(countersTab).toHaveAttribute('aria-selected', 'true');
     await expect(countersTab).toHaveAttribute('tabindex', '0');
     await expect(diceTab).toHaveAttribute('tabindex', '-1');
+    await expect(timerTab).toHaveAttribute('tabindex', '-1');
+    await expect(pickerTab).toHaveAttribute('tabindex', '-1');
     await expect(page.locator('#tab-counters')).toHaveJSProperty('inert', false);
     await expect(page.locator('#tab-dice')).toHaveJSProperty('inert', true);
     await expect(page.locator('#tab-timer')).toHaveJSProperty('inert', true);
+    await expect(page.locator('#tab-picker')).toHaveJSProperty('inert', true);
 
     await countersTab.focus();
     await page.keyboard.press('ArrowRight');
@@ -218,8 +222,8 @@ test.describe('keyboard navigation and non-drag reordering', () => {
     await expect(page.locator('#tab-counters')).toHaveJSProperty('inert', true);
 
     await page.keyboard.press('End');
-    await expect(timerTab).toBeFocused();
-    await expect(page.locator('#tab-timer')).toHaveJSProperty('inert', false);
+    await expect(pickerTab).toBeFocused();
+    await expect(page.locator('#tab-picker')).toHaveJSProperty('inert', false);
 
     await page.keyboard.press('Home');
     await expect(countersTab).toBeFocused();
