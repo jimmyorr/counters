@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.2.5
+
+* **Settings:** Added direct App Store and Google Play links for web visitors without browser sniffing.
+* **Web:** Removed deprecated iOS full-screen meta tag and layout-shrinking keyboard flag so Android Chrome uses its native visual-viewport keyboard behavior.
+
 ## 0.2.4
 
 * **iOS:** Removed the legacy translucent status-bar override and viewport gap workarounds so Home screen installs fill the screen and tint the status bar in light and dark mode.
