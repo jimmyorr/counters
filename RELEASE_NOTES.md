@@ -1,5 +1,11 @@
 # Release notes
 
+## 0.2.1
+
+* **Picker:** Added a multi-touch picker tab that places spinning shapes under each finger and crowns a random winner with haptics and a full-screen color flood.
+* **Haptics:** Enabled haptic feedback on mobile web browsers that support vibration.
+* **Dialogs:** Locked the background layout while bottom sheets and the software keyboard are open so cards underneath no longer shift.
+
 ## 0.2.0
 
 * **Counters:** Widened the score tap target on counter cards so opening the calculator is easier without hitting − or +.

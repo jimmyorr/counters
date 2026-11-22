@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script>window.__APP_VERSION__ = "0.2.0";
-window.__COMMIT_HASH__ = "5b708cd";
+    <script>window.__APP_VERSION__ = "0.2.1";
+window.__COMMIT_HASH__ = "e4fcef0";
 window.__IS_DIRTY__ = false;</script>
 
     <meta charset="UTF-8" />
@@ -104,8 +104,8 @@ window.__IS_DIRTY__ = false;</script>
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-DSfrWyXH.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CIQEm0wm.css">
+    <script type="module" crossorigin src="./assets/index-hL4cb_4m.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Yntdhzo0.css">
   <link rel="manifest" href="./manifest.webmanifest"></head>
   <body>
     <!-- Subtle ambient background gradient influenced by the current leader -->
@@ -375,6 +375,72 @@ window.__IS_DIRTY__ = false;</script>
             </div>
           </div>
         </section>
+
+        <!-- Tab 4: Picker View -->
+        <section
+          class="tab-content tab-picker"
+          id="tab-picker"
+          data-view="picker"
+          role="tabpanel"
+          aria-labelledby="tab-btn-picker"
+          inert
+        >
+          <div class="picker-stage" id="picker-stage">
+            <div
+              class="picker-winner-bg"
+              id="picker-winner-bg"
+              aria-hidden="true"
+            ></div>
+            <div class="picker-prompt" id="picker-prompt">
+              <div class="placeholder-icon picker-prompt-icon">
+                <svg
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  width="64"
+                  height="64"
+                  fill="currentColor"
+                >
+                  <circle cx="12" cy="6.5" r="4" />
+                  <circle
+                    cx="6.5"
+                    cy="16.5"
+                    r="3.25"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  />
+                  <circle
+                    cx="17.5"
+                    cy="16.5"
+                    r="3.25"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  />
+                </svg>
+              </div>
+              <p class="picker-prompt-title" id="picker-prompt-title">
+                Place fingers to choose
+              </p>
+              <p class="picker-prompt-subtitle" id="picker-prompt-subtitle">
+                2 or more players
+              </p>
+            </div>
+            <div class="picker-circles" id="picker-circles"></div>
+            <div
+              class="picker-particles"
+              id="picker-particles"
+              aria-hidden="true"
+            ></div>
+            <div
+              class="visually-hidden"
+              id="picker-status"
+              role="status"
+              aria-live="polite"
+            ></div>
+          </div>
+        </section>
       </div>
     </main>
 
@@ -462,6 +528,45 @@ window.__IS_DIRTY__ = false;</script>
           </svg>
         </span>
         <span class="nav-text">Timer</span>
+      </button>
+
+      <button
+        class="nav-item"
+        id="tab-btn-picker"
+        data-tab-btn="picker"
+        aria-controls="tab-picker"
+        aria-label="Picker"
+        role="tab"
+        aria-selected="false"
+        tabindex="-1"
+      >
+        <span class="nav-icon">
+          <svg
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <circle cx="12" cy="6.5" r="4" />
+            <circle
+              cx="6.5"
+              cy="16.5"
+              r="3.25"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+            <circle
+              cx="17.5"
+              cy="16.5"
+              r="3.25"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            />
+          </svg>
+        </span>
+        <span class="nav-text">Picker</span>
       </button>
     </nav>
 
