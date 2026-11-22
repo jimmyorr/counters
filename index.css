@@ -198,6 +198,8 @@ body {
 .ambient-backdrop {
   position: fixed;
   inset: 0;
+  /* --ios-pwa-gap: see syncIosStandaloneGap in app.js */
+  bottom: calc(-1 * var(--ios-pwa-gap, 0px));
   background-image:
     radial-gradient(
       circle at 14% 14%,
@@ -247,7 +249,7 @@ body > .app-nav {
    visible through the blurred dialog backdrop */
 :root.viewport-locked .ambient-backdrop {
   bottom: auto;
-  height: var(--locked-app-height);
+  height: calc(var(--locked-app-height) + var(--ios-pwa-gap, 0px));
 }
 
 :root.viewport-locked .app-main {
@@ -413,7 +415,9 @@ body > .app-nav {
    -------------------------------------------------------------------------- */
 .app-main {
   top: calc(var(--header-height) + env(safe-area-inset-top, 0px));
-  bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
+  bottom: calc(
+    var(--nav-height) + env(safe-area-inset-bottom, 0px) - var(--ios-pwa-gap, 0px)
+  );
   z-index: 10;
   overflow: hidden;
 }
@@ -1808,7 +1812,7 @@ input:checked + .slider-round:before {
    8. Bottom Navigation Bar Styling
    -------------------------------------------------------------------------- */
 .app-nav {
-  bottom: 0;
+  bottom: calc(-1 * var(--ios-pwa-gap, 0px));
   height: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
   background-color: var(--glass-bg);
   -webkit-backdrop-filter: blur(16px);
@@ -1896,6 +1900,7 @@ dialog:not([open]) {
 
 /* Modal Backdrops styling */
 dialog::backdrop {
+  bottom: calc(-1 * var(--ios-pwa-gap, 0px));
   background-color: var(--modal-backdrop);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
@@ -1926,7 +1931,7 @@ dialog[open].closing::backdrop {
 /* Bottom Sheet Slide Up Panels */
 .bottom-sheet-dialog {
   position: fixed;
-  bottom: 0;
+  bottom: calc(-1 * var(--ios-pwa-gap, 0px));
   top: auto;
   left: 50%;
   transform: translate(-50%, 100%);

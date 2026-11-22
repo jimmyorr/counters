@@ -203,6 +203,30 @@ import { log } from "./logger.js";
       tryReleaseBackgroundViewport();
     }
   };
+  // iOS Home Screen web apps can launch with a layout viewport shorter than the
+  // screen (WebKit bug 301994, seen on iOS 26.1+ and 27.2): window.innerHeight
+  // comes up ~60px short, so everything anchored to bottom: 0 floats above an
+  // empty band. Measure the shortfall and let the CSS extend the shell into it
+  // via --ios-pwa-gap. Once WebKit fixes this the gap measures 0 and nothing
+  // changes. Skipped while typing, when the keyboard is what shortens things.
+  const isIosStandalone =
+    !Capacitor.isNativePlatform() && window.navigator.standalone === true;
+  const syncIosStandaloneGap = () => {
+    if (!isIosStandalone) return;
+    if (document.activeElement?.matches("input, textarea")) return;
+    const portrait = window.matchMedia("(orientation: portrait)").matches;
+    const screenHeight = portrait
+      ? Math.max(window.screen.width, window.screen.height)
+      : Math.min(window.screen.width, window.screen.height);
+    const gap = Math.round(screenHeight - window.innerHeight);
+    // Anything bigger than a status bar's worth isn't this bug
+    const applied = gap > 0 && gap <= 100 ? gap : 0;
+    document.documentElement.style.setProperty("--ios-pwa-gap", `${applied}px`);
+  };
+  syncIosStandaloneGap();
+  window.addEventListener("resize", syncIosStandaloneGap);
+  window.addEventListener("orientationchange", syncIosStandaloneGap);
+
   window.visualViewport?.addEventListener("resize", syncKeyboardState);
   window.visualViewport?.addEventListener("scroll", syncKeyboardState);
   window.addEventListener("resize", syncKeyboardState);
