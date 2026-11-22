@@ -2,6 +2,11 @@
 
 Guidelines and rules for AI coding assistants working in the Counters repository.
 
+## Architecture & platform philosophy
+
+* **Meet the OS and libraries where they are**: Rely on standard web, browser, and Capacitor APIs (e.g., standard web app manifest fields, `theme-color`, `100dvh`, and `env(safe-area-inset-*)`) rather than fighting platform behavior with fragile workarounds.
+* **Avoid platform hacks**: Do not introduce user-agent or standalone-mode sniffing, manual `screen.height - window.innerHeight` geometry math, forced page reloads, or deprecated vendor overrides (such as `apple-mobile-web-app-status-bar-style="black-translucent"`) to paper over OS or browser quirks. When an OS container has a native constraint, work cleanly within it instead of hacking around it.
+
 ## UI copy & iconography rules
 
 * **Title capitalization style**: Always use **Sentence case** for all user-facing titles, labels, tooltips, buttons, dialog headers, and text values. This rule also strictly applies to all documentation titles, headers, and subheaders in the repository (e.g. in markdown files).
