@@ -37,14 +37,6 @@ import { log } from "./logger.js";
     window.gtag = gtag;
     gtag("js", new Date());
     gtag("config", "G-K0MFHHQ1RM");
-
-    if (/android/i.test(navigator.userAgent)) {
-      const storeLink = document.getElementById("about-app-store-link");
-      if (storeLink) {
-        storeLink.href =
-          "https://play.google.com/store/apps/details?id=com.cowneck.counters";
-      }
-    }
   } else {
     // Native App via Capacitor
     FirebaseAnalytics.setEnabled({ enabled: true }).catch((err) => {
@@ -62,11 +54,10 @@ import { log } from "./logger.js";
 
   // Freeze the background shell (.ambient-backdrop, .app-main, .app-nav) at its
   // pre-dialog pixel dimensions while any modal sheet or software keyboard is
-  // active. On native iOS/Android ("resize": "native") and Android Chrome
-  // (interactive-widget=resizes-content), opening the keyboard shrinks the
-  // WebView height (and drops safe-area-inset-bottom to 0), which would
-  // otherwise smoosh flex-stretched counter cards upward behind the blurred
-  // dialog backdrop.
+  // active. On native iOS/Android ("resize": "native"), opening the keyboard
+  // shrinks the WebView height (and drops safe-area-inset-bottom to 0), which
+  // would otherwise smoosh flex-stretched counter cards upward behind the
+  // blurred dialog backdrop.
   let lockedViewportWidth = 0;
   let lockedWindowHeight = 0;
   let unlockViewportTimer = null;
@@ -147,10 +138,8 @@ import { log } from "./logger.js";
   // shows the keyboard differently:
   //  - Native apps: the Keyboard plugin shrinks the whole web view, so the
   //    window itself gets shorter and --vv-bottom stays 0.
-  //  - iOS Safari: only the visual viewport shrinks (and may scroll), so the
-  //    sheet is lifted by --vv-bottom.
-  //  - Chrome on Android: interactive-widget=resizes-content in the viewport
-  //    meta makes it behave like the native apps.
+  //  - Mobile web (iOS Safari & Android Chrome): only the visual viewport
+  //    shrinks (and may scroll), so the sheet is lifted by --vv-bottom.
   // Best effort on the web; desktop never matches (no coarse pointer).
   let fullViewportHeight = 0;
   let viewportWidth = 0;
