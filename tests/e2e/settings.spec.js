@@ -38,3 +38,34 @@ test('settings text stays clear of each row\'s control', async ({ page }) => {
     expect(Math.max(...dots), `palette dots at ${width}px`).toBeLessThan(0.5);
   }
 });
+
+test('haptic feedback setting is visible and toggleable on browsers supporting vibrate', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#btn-open-options').click();
+  await page.locator('#menu-btn-open-settings').click();
+  await expect(page.locator('#settings-dialog')).toBeVisible();
+
+  const row = page.locator('#setting-row-haptic');
+  const toggle = page.locator('#setting-haptic');
+  await expect(row).toBeVisible();
+  await expect(toggle).toBeChecked();
+
+  await row.locator('.switch-toggle').click();
+  await expect(toggle).not.toBeChecked();
+});
+
+test('haptic feedback setting is hidden on browsers without vibrate support', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(Navigator.prototype, 'vibrate', {
+      value: undefined,
+      configurable: true,
+    });
+  });
+  await page.goto('/');
+  await page.locator('#btn-open-options').click();
+  await page.locator('#menu-btn-open-settings').click();
+  await expect(page.locator('#settings-dialog')).toBeVisible();
+
+  await expect(page.locator('#setting-row-haptic')).toBeHidden();
+});
+

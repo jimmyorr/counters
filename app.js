@@ -1133,8 +1133,26 @@ import { log } from "./logger.js";
     }, 200);
   };
 
+  const supportsHaptics = () =>
+    Capacitor.isNativePlatform() ||
+    (typeof navigator !== "undefined" && typeof navigator.vibrate === "function");
+
   const playHaptic = async (style = ImpactStyle.Light) => {
-    if (!state.settings.hapticsEnabled || !Capacitor.isNativePlatform()) return;
+    if (!state.settings.hapticsEnabled || !supportsHaptics()) return;
+    if (!Capacitor.isNativePlatform()) {
+      const pattern =
+        style === ImpactStyle.Heavy
+          ? [40, 30, 80]
+          : style === ImpactStyle.Medium
+            ? 25
+            : 15;
+      try {
+        navigator.vibrate(pattern);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
     try {
       if (Object.values(NotificationType).includes(style)) {
         await Haptics.notification({ type: style });
@@ -3237,11 +3255,13 @@ import { log } from "./logger.js";
   const loadSettingsIntoDOM = () => {
     $("#setting-sound").checked = state.settings.soundEnabled;
     const hapticSetting = $("#setting-haptic");
+    const hapticRow = $("#setting-row-haptic");
     if (hapticSetting) {
-      if (Capacitor.isNativePlatform()) {
+      if (supportsHaptics()) {
         hapticSetting.checked = state.settings.hapticsEnabled;
-      } else {
-        $("#setting-row-haptic").style.display = "none";
+        if (hapticRow) hapticRow.style.display = "";
+      } else if (hapticRow) {
+        hapticRow.style.display = "none";
       }
     }
     const keepAwakeEl = $("#setting-keep-awake");
