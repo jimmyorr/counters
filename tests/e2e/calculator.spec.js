@@ -105,13 +105,22 @@ test.describe('in-app number pad mode', () => {
     expect((await stored(page, 'counters-settings')).useSystemNumberInput).toBe(false);
   });
 
-  test('displays the number pad and hides system quick-add controls', async ({ page }) => {
+  test('displays the number pad and keeps quick-add controls available', async ({ page }) => {
     await openCalculator(page, card(page, 'a'));
     await expect(page.locator('#calc-system-container')).toBeHidden();
+    await expect(page.locator('#calc-quick-add-container')).toBeVisible();
     await expect(page.locator('#calc-numpad-container')).toBeVisible();
     await expect(page.locator('#calc-numpad-display')).toHaveText('0');
     await expect(page.locator('#calc-numpad-btn-add')).toHaveText('Add');
     await expect(page.locator('#calc-numpad-btn-subtract')).toHaveText('Subtract');
+  });
+
+  test('quick-add buttons in number pad mode still apply instantly', async ({ page }) => {
+    await openCalculator(page, card(page, 'a'));
+    await page.locator('#calc-quick-add-container button[data-quick-val="5"]').click();
+    await expect(dialog(page)).toBeHidden();
+    await expect(valueOf(card(page, 'a'))).toHaveText('15');
+    expect((await stored(page, 'counters-list'))[0].value).toBe(15);
   });
 
   test('tapping a number updates Add and Subtract buttons, and Add increments value', async ({ page }) => {

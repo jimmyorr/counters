@@ -2217,13 +2217,15 @@ import { log } from "./logger.js";
     const sysContainer = $("#calc-system-container");
     const numpadContainer = $("#calc-numpad-container");
 
+    dialog.classList.toggle("calculator-numpad-active", !useSysInput);
+
     if (sysContainer) sysContainer.hidden = !useSysInput;
     if (numpadContainer) numpadContainer.hidden = useSysInput;
 
+    updateCalcDisplayDOM();
     if (useSysInput) {
       const input = $("#calc-number-input");
       if (input) input.value = "";
-      updateCalcDisplayDOM();
     } else {
       updateNumpadDisplayDOM();
     }
@@ -2301,7 +2303,12 @@ import { log } from "./logger.js";
       if (!btn) return;
       playHaptic(ImpactStyle.Light);
       const amount = parseFloat(btn.getAttribute("data-quick-val") || "0");
-      if (amount !== 0) applyToActiveCounter(amount);
+      if (amount !== 0) {
+        if (state.settings.useSystemNumberInput === false) {
+          state.calcPendingOperation = "plus";
+        }
+        applyToActiveCounter(amount);
+      }
     });
 
     $("#calc-btn-submit").addEventListener("click", () => {

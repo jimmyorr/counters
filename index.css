@@ -1243,7 +1243,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-light);
   border-radius: 16px;
-  padding: 16px;
+  padding: 14px 16px;
   box-shadow: var(--card-shadow);
 }
 
@@ -1252,7 +1252,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 0;
+  padding: 9px 0;
   border-bottom: 1px solid var(--border-light);
 }
 
@@ -2466,6 +2466,43 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .numpad-action-add:active {
   transform: scale(0.96);
+}
+
+/* Compact quick-adds & keypad when in number pad mode */
+#calculator-dialog.calculator-numpad-active .quick-add-grid {
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+#calculator-dialog.calculator-numpad-active .quick-add-grid > button {
+  padding: 10px 0;
+  font-size: 15px;
+  border-radius: 10px;
+}
+
+#calculator-dialog.calculator-numpad-active .numpad-display-wrapper {
+  height: 48px;
+  margin-bottom: 10px;
+}
+
+#calculator-dialog.calculator-numpad-active .numpad-grid {
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+#calculator-dialog.calculator-numpad-active .numpad-key {
+  height: 46px;
+  font-size: 21px;
+}
+
+#calculator-dialog.calculator-numpad-active .numpad-actions-row {
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+#calculator-dialog.calculator-numpad-active .numpad-action-btn {
+  height: 48px;
+  font-size: 15px;
 }
 
 /* --------------------------------------------------------------------------
