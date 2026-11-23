@@ -287,6 +287,7 @@ import { log } from "./logger.js";
     activeCounterIdForEdit: null,
     calcPendingOperation: "plus", // 'plus' or 'minus'
     calcNumpadValue: "",
+    calcQuickSign: "plus", // sign of the quick-add presets: 'plus' or 'minus'
     calcOpenedByKeyboard: false,
     autoSortTimeout: null,
   };
@@ -2230,6 +2231,20 @@ import { log } from "./logger.js";
     }
   };
 
+  // Presets follow the ± toggle; it resets to + each time the sheet opens
+  const updateQuickSignDOM = () => {
+    const minus = state.calcQuickSign === "minus";
+    const toggle = $("#calc-quick-sign");
+    if (toggle) {
+      toggle.setAttribute("aria-pressed", minus ? "true" : "false");
+      toggle.classList.toggle("is-minus", minus);
+    }
+    $$("#calc-quick-add-container button[data-quick-val]").forEach((btn) => {
+      const val = parseFloat(btn.getAttribute("data-quick-val"));
+      btn.textContent = `${minus ? "−" : "+"}${formatNumber(val)}`;
+    });
+  };
+
   const openCalculator = (counterId, { byKeyboard = false } = {}) => {
     const counter = state.counters.find((c) => c.id === counterId);
     const dialog = $("#calculator-dialog");
@@ -2239,6 +2254,8 @@ import { log } from "./logger.js";
     state.calcPendingOperation = "plus";
     state.calcOpenedByKeyboard = byKeyboard;
     state.calcNumpadValue = "";
+    state.calcQuickSign = "plus";
+    updateQuickSignDOM();
 
     const hexColor = getCounterHex(counter);
     const titleEl = $("#calc-dialog-title");
@@ -2283,12 +2300,19 @@ import { log } from "./logger.js";
 
     // Quick-add buttons apply instantly
     $("#calc-quick-add-container").addEventListener("click", (e) => {
+      if (e.target.closest("#calc-quick-sign")) {
+        playHaptic(ImpactStyle.Light);
+        playClickSound();
+        state.calcQuickSign = state.calcQuickSign === "minus" ? "plus" : "minus";
+        updateQuickSignDOM();
+        return;
+      }
       const btn = e.target.closest("button[data-quick-val]");
       if (!btn) return;
       playHaptic(ImpactStyle.Light);
       const amount = parseFloat(btn.getAttribute("data-quick-val") || "0");
       if (amount !== 0) {
-        state.calcPendingOperation = "plus";
+        state.calcPendingOperation = state.calcQuickSign;
         applyToActiveCounter(amount);
       }
     });
@@ -2839,11 +2863,18 @@ import { log } from "./logger.js";
     const container = $("#calc-quick-add-container");
     if (!container) return;
 
-    container.innerHTML = state.settings.quickAddValues
-      .map((val) => {
-        return `<button data-quick-val="${val}">+${formatNumber(val)}</button>`;
-      })
-      .join("");
+    const rows = Math.max(1, Math.ceil(state.settings.quickAddValues.length / 3));
+    container.innerHTML =
+      `<button type="button" class="quick-sign-toggle" id="calc-quick-sign" aria-pressed="false" aria-label="Subtract preset amounts" style="grid-row: span ${rows}">` +
+      `<span class="quick-sign-plus" aria-hidden="true">+</span>` +
+      `<span class="quick-sign-minus" aria-hidden="true">−</span>` +
+      `</button>` +
+      state.settings.quickAddValues
+        .map((val) => {
+          return `<button data-quick-val="${val}">+${formatNumber(val)}</button>`;
+        })
+        .join("");
+    updateQuickSignDOM();
   };
 
   // ------------------------------------------------------------------------

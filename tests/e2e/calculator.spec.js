@@ -154,3 +154,31 @@ test('leaves Ctrl and Cmd shortcuts to the browser', async ({ page }) => {
   await expect(page.locator('#calc-numpad-display')).toHaveText('4');
   await expect(valueOf(card(page, 'a'))).toHaveText('10');
 });
+
+test('± switch flips the presets to subtract, and resets when reopened', async ({ page }) => {
+  await openCalculator(page, card(page, 'a'));
+  const toggle = page.locator('#calc-quick-sign');
+  const preset = page.locator('#calc-quick-add-container button[data-quick-val="5"]');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect(preset).toHaveText('+5');
+
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(preset).toHaveText('−5');
+  await preset.click();
+  await expect(dialog(page)).toHaveJSProperty('open', false);
+  await expect(valueOf(card(page, 'a'))).toHaveText('5');
+
+  // Back to + next time, so a preset never subtracts by surprise
+  await openCalculator(page, card(page, 'a'));
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await expect(preset).toHaveText('+5');
+});
+
+test('± switch leaves the number pad Add and Subtract alone', async ({ page }) => {
+  await openCalculator(page, card(page, 'a'));
+  await page.locator('#calc-quick-sign').click();
+  await page.locator('#calc-numpad-grid [data-key="3"]').click();
+  await page.locator('#calc-numpad-btn-add').click();
+  await expect(valueOf(card(page, 'a'))).toHaveText('13');
+});

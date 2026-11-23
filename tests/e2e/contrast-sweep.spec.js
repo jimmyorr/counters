@@ -33,8 +33,13 @@ const sweep = async (page, counters, { check }) => {
     await c.locator('.card-value-body').click();
     await expect(page.locator('#calc-dialog-title')).toBeVisible();
     await check(`${id} calculator title`, page.locator('#calc-dialog-title'), TEXT);
-    await check(`${id} calculator quick-add`, page.locator('#calc-quick-add-container button').first(), TEXT);
-    await check(`${id} calculator display`, page.locator('#calc-numpad-display'), TEXT);
+    await check(`${id} calculator quick-add`, page.locator('#calc-quick-add-container button[data-quick-val]').first(), TEXT);
+    await check(`${id} calculator sign (+ selected)`, page.locator('#calc-quick-sign .quick-sign-plus'), TEXT);
+    await page.locator('#calc-quick-sign').click();
+    await page.waitForTimeout(300); // let the color transition finish
+    await check(`${id} calculator sign (− selected)`, page.locator('#calc-quick-sign .quick-sign-minus'), TEXT);
+    // 24px bold counts as large text under WCAG
+    await check(`${id} calculator display`, page.locator('#calc-numpad-display'), LARGE_TEXT);
     await check(`${id} calculator add`, page.locator('#calc-numpad-btn-add'), TEXT);
     await check(`${id} calculator subtract`, page.locator('#calc-numpad-btn-subtract'), TEXT);
     await page.keyboard.press('Escape');
