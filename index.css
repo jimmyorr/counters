@@ -2039,8 +2039,7 @@ dialog[open].closing::backdrop {
   color: var(--sheet-text, #ffffff);
 }
 
-.bottom-sheet-dialog .form-input:focus,
-.bottom-sheet-dialog .math-display-wrapper:has(.math-number-input:focus) {
+.bottom-sheet-dialog .form-input:focus {
   border-color: var(--sheet-theme, var(--accent-color));
 }
 
@@ -2224,34 +2223,37 @@ dialog[open].bottom-sheet-dialog.closing {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
 }
 
 /* Quick Add List */
 .quick-add-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .quick-add-grid > button:nth-child(n + 4) {
   grid-column: span 1;
 }
 
-/* Special centering logic for standard layouts */
 .quick-add-grid > button {
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-light);
   color: var(--sheet-control-ink, var(--accent-ink));
   font-family: var(--font-primary);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  padding: 14px 0;
-  border-radius: 12px;
+  padding: 10px 0;
+  border-radius: 10px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transition: all var(--trans-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (hover: hover) {
@@ -2265,89 +2267,6 @@ dialog[open].bottom-sheet-dialog.closing {
   transform: scale(0.94);
 }
 
-/* Calculator Active Row */
-.math-entry-row {
-  display: grid;
-  grid-template-columns: 80px 1fr 1fr;
-  gap: 8px;
-  width: 100%;
-  margin-bottom: 20px;
-  height: 56px;
-}
-
-#calc-btn-submit {
-  font-size: 15px;
-  font-weight: 600;
-  padding: 0 14px;
-  border-radius: 12px;
-  white-space: nowrap;
-  height: 100%;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.operation-toggles {
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-strong);
-  padding: 3px;
-  border-radius: 12px;
-  display: flex;
-}
-
-.op-btn {
-  flex: 1;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-family: var(--font-primary);
-  font-size: 20px;
-  font-weight: 500;
-  padding: 6px 0;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: all var(--trans-fast);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.op-btn.active {
-  background-color: var(--accent-color);
-  color: var(--accent-on-fill, #000000);
-  font-weight: 600;
-}
-
-.math-display-wrapper {
-  position: relative;
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-strong);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-}
-
-.math-op-indicator {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--sheet-control-ink, var(--accent-ink));
-  margin-right: 10px;
-}
-
-.math-number-input {
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  font-family: var(--font-primary);
-  font-size: 22px;
-  font-weight: 700;
-  width: 100%;
-  outline: none;
-  text-align: right;
-  letter-spacing: 0.5px;
-  -moz-appearance: textfield;
-}
 
 input[type="number"] {
   -moz-appearance: textfield;
@@ -2357,6 +2276,154 @@ input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+/* In-App Number Pad */
+.numpad-display-wrapper {
+  position: relative;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  width: 100%;
+  height: 48px;
+  margin-bottom: 10px;
+}
+
+.numpad-display-value {
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.numpad-display-value.placeholder {
+  color: var(--text-secondary);
+}
+
+.numpad-btn-backspace {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--trans-fast);
+}
+
+@media (hover: hover) {
+  .numpad-btn-backspace:hover {
+    color: var(--text-primary);
+    background-color: color-mix(in srgb, var(--sheet-theme, var(--accent-color)) 12%, transparent);
+  }
+}
+
+.numpad-btn-backspace:active {
+  transform: scale(0.92);
+}
+
+.numpad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.numpad-key {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+  font-size: 21px;
+  font-weight: 600;
+  height: 46px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all var(--trans-fast);
+}
+
+@media (hover: hover) {
+  .numpad-key:hover {
+    background-color: color-mix(in srgb, var(--sheet-theme, var(--accent-color)) 12%, var(--bg-tertiary));
+    border-color: var(--sheet-control-ink, var(--accent-color));
+  }
+}
+
+.numpad-key:active {
+  transform: scale(0.94);
+  background-color: color-mix(in srgb, var(--sheet-theme, var(--accent-color)) 20%, var(--bg-tertiary));
+}
+
+.numpad-key-clear {
+  color: var(--sheet-control-ink, var(--accent-ink));
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.numpad-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.numpad-action-btn {
+  font-family: var(--font-primary);
+  font-size: 15px;
+  font-weight: 600;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 12px;
+  transition: all var(--trans-fast);
+}
+
+.numpad-action-subtract {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-strong);
+  color: var(--sheet-control-ink, var(--accent-ink));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+@media (hover: hover) {
+  .numpad-action-subtract:hover {
+    background-color: color-mix(in srgb, var(--sheet-theme, var(--accent-color)) 15%, transparent);
+    border-color: var(--sheet-control-ink, var(--accent-color));
+  }
+}
+
+.numpad-action-subtract:active {
+  transform: scale(0.96);
+}
+
+.numpad-action-add {
+  margin: 0;
+}
+
+.numpad-action-add:active {
+  transform: scale(0.96);
 }
 
 /* --------------------------------------------------------------------------
@@ -3140,14 +3207,6 @@ textarea:focus-visible {
   box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--focus-ring, #000000);
 }
 
-/* For composite inputs like math-display, apply the ring to the wrapper instead */
-input.math-number-input:focus-visible {
-  box-shadow: none;
-}
-
-.math-display-wrapper:has(.math-number-input:focus-visible) {
-  box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--focus-ring, #000000);
-}
 
 :root.light-mode {
   --focus-ring: #191b22;

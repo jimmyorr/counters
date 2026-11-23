@@ -96,7 +96,7 @@ test.describe('color contrast', () => {
     await seed(page, { counters: [counter('y', 'Yellow', 0, { color: '#f5d547' })] });
     await page.goto('/');
     await card(page, 'y').locator('.card-value-body').click();
-    expect(await contrast(page.locator('#calc-btn-submit'))).toBeGreaterThanOrEqual(4.5);
+    expect(await contrast(page.locator('#calc-numpad-btn-add'))).toBeGreaterThanOrEqual(4.5);
   });
 
   for (const theme of ['light', 'dark']) {

@@ -286,6 +286,7 @@ import { log } from "./logger.js";
     activeCounterIdForCalc: null,
     activeCounterIdForEdit: null,
     calcPendingOperation: "plus", // 'plus' or 'minus'
+    calcNumpadValue: "",
     calcOpenedByKeyboard: false,
     autoSortTimeout: null,
   };
@@ -2207,59 +2208,26 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   // 12. Calculator Dialog Sheet Logic (Accumulating math value)
   // ------------------------------------------------------------------------
-  const updateSubmitButtonText = () => {
-    const submitBtn = $("#calc-btn-submit");
-    if (!submitBtn) return;
+  const updateNumpadDisplayDOM = () => {
+    const displayEl = $("#calc-numpad-display");
+    const subBtn = $("#calc-numpad-btn-subtract");
+    const addBtn = $("#calc-numpad-btn-add");
 
-    const inputEl = $("#calc-number-input");
-    let valStr = inputEl?.value || "";
-
-    if (valStr.length > 14) {
-      valStr = valStr.slice(0, 14);
-      if (inputEl) inputEl.value = valStr;
+    const valStr = state.calcNumpadValue;
+    if (displayEl) {
+      displayEl.textContent = valStr || "0";
+      displayEl.classList.toggle("placeholder", !valStr);
     }
 
-    const val = parseFloat(valStr);
-    const isMinus = state.calcPendingOperation === "minus";
-
-    if (!val || isNaN(val)) {
-      submitBtn.textContent = isMinus ? "Subtract" : "Add";
-    } else {
-      submitBtn.textContent = `${isMinus ? "Subtract" : "Add"} ${formatNumber(
-        val,
-      )}`;
+    const val = parseFloat(valStr || "0");
+    if (subBtn) {
+      subBtn.textContent =
+        !val || isNaN(val) ? "Subtract" : `Subtract ${formatNumber(val)}`;
     }
-  };
-
-  const updateCalcDisplayDOM = () => {
-    const opIndicator = $(".math-op-indicator");
-    const opMinus = $("#calc-op-minus");
-    const opPlus = $("#calc-op-plus");
-
-    const sign = state.calcPendingOperation === "plus" ? "+" : "−";
-
-    if (opIndicator) {
-      opIndicator.textContent = sign;
+    if (addBtn) {
+      addBtn.textContent =
+        !val || isNaN(val) ? "Add" : `Add ${formatNumber(val)}`;
     }
-
-    // Dynamically update quick add button signs (+ / -) to match toggled operator
-    $$("#calc-quick-add-container button").forEach((btn) => {
-      const val = btn.getAttribute("data-quick-val");
-      btn.textContent = `${sign}${formatNumber(parseFloat(val))}`;
-    });
-
-    if (opMinus && opPlus) {
-      opMinus.classList.toggle(
-        "active",
-        state.calcPendingOperation === "minus",
-      );
-      opPlus.classList.toggle(
-        "active",
-        state.calcPendingOperation === "plus",
-      );
-    }
-
-    updateSubmitButtonText();
   };
 
   const openCalculator = (counterId, { byKeyboard = false } = {}) => {
@@ -2270,52 +2238,21 @@ import { log } from "./logger.js";
     state.activeCounterIdForCalc = counterId;
     state.calcPendingOperation = "plus";
     state.calcOpenedByKeyboard = byKeyboard;
+    state.calcNumpadValue = "";
 
     const hexColor = getCounterHex(counter);
     const titleEl = $("#calc-dialog-title");
     titleEl.textContent = `${counter.label}: ${formatNumber(counter.value)}`;
-    const input = $("#calc-number-input");
-    input.value = "";
-    updateCalcDisplayDOM();
-    setSheetTheme(dialog, hexColor);
 
+    updateNumpadDisplayDOM();
+    setSheetTheme(dialog, hexColor);
     openDialog(dialog);
-    input.focus({ preventScroll: true });
     playClickSound(600, 700, 0.08, 0.05);
   };
 
   const setupCalculatorDialog = () => {
     const dialog = $("#calculator-dialog");
     if (!dialog) return;
-
-    $("#calc-number-input")?.addEventListener("input", updateSubmitButtonText);
-
-    // The calculator isn't a <form>, so wire Enter (and the mobile "Go" key) to submit
-    $("#calc-number-input")?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.isComposing) {
-        e.preventDefault();
-        $("#calc-btn-submit")?.click();
-      }
-    });
-
-    // Prevent focus from shifting away from the text input when tapping the toggle
-    $(".operation-toggles").addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-    });
-
-    $(".operation-toggles").addEventListener("click", (e) => {
-      const btn = e.target.closest(".op-btn");
-      if (!btn) return;
-      playHaptic(ImpactStyle.Light);
-
-      if (btn && !btn.classList.contains("active")) {
-        state.calcPendingOperation = btn.id === "calc-op-minus" ? "minus" : "plus";
-      } else {
-        state.calcPendingOperation = state.calcPendingOperation === "plus" ? "minus" : "plus";
-      }
-      updateCalcDisplayDOM();
-      playClickSound();
-    });
 
     // Add or subtract an amount from the active counter, then close
     const applyToActiveCounter = (amount) => {
@@ -2347,17 +2284,125 @@ import { log } from "./logger.js";
       if (!btn) return;
       playHaptic(ImpactStyle.Light);
       const amount = parseFloat(btn.getAttribute("data-quick-val") || "0");
-      if (amount !== 0) applyToActiveCounter(amount);
+      if (amount !== 0) {
+        state.calcPendingOperation = "plus";
+        applyToActiveCounter(amount);
+      }
     });
 
-    $("#calc-btn-submit").addEventListener("click", () => {
+    // Number pad key clicks
+    $("#calc-numpad-grid")?.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-key]");
+      if (!btn) return;
+      playHaptic(ImpactStyle.Light);
+      playClickSound();
+
+      const key = btn.getAttribute("data-key");
+      if (key === "clear") {
+        state.calcNumpadValue = "";
+      } else if (key === ".") {
+        if (!state.calcNumpadValue.includes(".")) {
+          state.calcNumpadValue = state.calcNumpadValue
+            ? `${state.calcNumpadValue}.`
+            : "0.";
+        }
+      } else if (/^[0-9]$/.test(key)) {
+        if (state.calcNumpadValue.length < 10) {
+          if (state.calcNumpadValue === "0") {
+            state.calcNumpadValue = key;
+          } else {
+            state.calcNumpadValue += key;
+          }
+        }
+      }
+      updateNumpadDisplayDOM();
+    });
+
+    // Number pad backspace
+    $("#calc-numpad-backspace")?.addEventListener("click", () => {
+      playHaptic(ImpactStyle.Light);
+      playClickSound();
+      if (state.calcNumpadValue) {
+        state.calcNumpadValue = state.calcNumpadValue.slice(0, -1);
+        updateNumpadDisplayDOM();
+      }
+    });
+
+    // Number pad Add button
+    $("#calc-numpad-btn-add")?.addEventListener("click", () => {
       playHaptic(ImpactStyle.Medium);
-      const amount = parseFloat($("#calc-number-input").value || "0");
-      if (amount === 0) {
+      const amount = parseFloat(state.calcNumpadValue || "0");
+      if (isNaN(amount) || amount === 0) {
         dialog.close();
         return;
       }
+      state.calcPendingOperation = "plus";
       applyToActiveCounter(amount);
+    });
+
+    // Number pad Subtract button
+    $("#calc-numpad-btn-subtract")?.addEventListener("click", () => {
+      playHaptic(ImpactStyle.Medium);
+      const amount = parseFloat(state.calcNumpadValue || "0");
+      if (isNaN(amount) || amount === 0) {
+        dialog.close();
+        return;
+      }
+      state.calcPendingOperation = "minus";
+      applyToActiveCounter(amount);
+    });
+
+    // Physical keyboard support for calculator dialog
+    window.addEventListener("keydown", (e) => {
+      if (!dialog.open) return;
+      if (e.isComposing) return;
+
+      if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        playHaptic(ImpactStyle.Light);
+        playClickSound();
+        if (state.calcNumpadValue.length < 10) {
+          if (state.calcNumpadValue === "0") {
+            state.calcNumpadValue = e.key;
+          } else {
+            state.calcNumpadValue += e.key;
+          }
+          updateNumpadDisplayDOM();
+        }
+      } else if (e.key === ".") {
+        e.preventDefault();
+        playHaptic(ImpactStyle.Light);
+        playClickSound();
+        if (!state.calcNumpadValue.includes(".")) {
+          state.calcNumpadValue = state.calcNumpadValue
+            ? `${state.calcNumpadValue}.`
+            : "0.";
+          updateNumpadDisplayDOM();
+        }
+      } else if (e.key === "Backspace") {
+        e.preventDefault();
+        playHaptic(ImpactStyle.Light);
+        playClickSound();
+        if (state.calcNumpadValue) {
+          state.calcNumpadValue = state.calcNumpadValue.slice(0, -1);
+          updateNumpadDisplayDOM();
+        }
+      } else if (e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        playHaptic(ImpactStyle.Light);
+        playClickSound();
+        state.calcNumpadValue = "";
+        updateNumpadDisplayDOM();
+      } else if (e.key === "+") {
+        e.preventDefault();
+        $("#calc-numpad-btn-add")?.click();
+      } else if (e.key === "-") {
+        e.preventDefault();
+        $("#calc-numpad-btn-subtract")?.click();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        $("#calc-numpad-btn-add")?.click();
+      }
     });
 
     dialog.addEventListener("close", () => {

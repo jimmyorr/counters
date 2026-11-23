@@ -594,44 +594,65 @@
       </div>
 
       <div class="bottom-sheet-body">
-        <!-- Calculator layout -->
-        <div class="calculator-wrapper">
-          <!-- Quick Add Buttons Grid -->
-          <div class="quick-add-grid" id="calc-quick-add-container">
-            <!-- Injected dynamically by JavaScript, e.g. +5, +10, +50 -->
+        <!-- Quick Add Buttons Grid (available in both system and numpad modes) -->
+        <div class="quick-add-grid" id="calc-quick-add-container">
+          <!-- Injected dynamically by JavaScript, e.g. +5, +10, +50 -->
+        </div>
+
+        <!-- In-app number pad layout -->
+        <div class="calculator-wrapper" id="calc-numpad-container">
+          <div class="numpad-display-wrapper">
+            <div class="numpad-display-value" id="calc-numpad-display" aria-live="polite">0</div>
+            <button
+              type="button"
+              class="numpad-btn-backspace"
+              id="calc-numpad-backspace"
+              aria-label="Backspace"
+            >
+              <svg
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="currentColor"
+              >
+                <path
+                  d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7.07L2.4 12l4.66-7H22v14zm-11.59-2L14 13.41 17.59 17 19 15.59 15.41 12 19 8.41 17.59 7 14 10.59 10.41 7 9 8.41 12.59 12 9 15.59z"
+                />
+              </svg>
+            </button>
           </div>
 
-          <!-- Interactive Math Area -->
-          <div class="math-entry-row">
-            <!-- Operation Toggles (+ / -) -->
-            <div class="operation-toggles">
-              <button class="op-btn" id="calc-op-minus" aria-label="Subtract">
-                −
-              </button>
-              <button class="op-btn active" id="calc-op-plus" aria-label="Add">
-                +
-              </button>
-            </div>
-            <!-- Numeric Display Screen -->
-            <div class="math-display-wrapper">
-              <span class="math-op-indicator">+</span>
-              <input
-                type="number"
-                inputmode="decimal"
-                step="any"
-                class="math-number-input"
-                id="calc-number-input"
-                placeholder="0"
-                aria-label="Pending value adjustment"
-              />
-            </div>
-            <!-- Apply Adjustment Button -->
+          <div class="numpad-grid" id="calc-numpad-grid">
+            <button type="button" class="numpad-key" data-key="1">1</button>
+            <button type="button" class="numpad-key" data-key="2">2</button>
+            <button type="button" class="numpad-key" data-key="3">3</button>
+            <button type="button" class="numpad-key" data-key="4">4</button>
+            <button type="button" class="numpad-key" data-key="5">5</button>
+            <button type="button" class="numpad-key" data-key="6">6</button>
+            <button type="button" class="numpad-key" data-key="7">7</button>
+            <button type="button" class="numpad-key" data-key="8">8</button>
+            <button type="button" class="numpad-key" data-key="9">9</button>
+            <button type="button" class="numpad-key" data-key=".">.</button>
+            <button type="button" class="numpad-key" data-key="0">0</button>
+            <button type="button" class="numpad-key numpad-key-clear" data-key="clear" aria-label="Clear">C</button>
+          </div>
+
+          <div class="numpad-actions-row">
             <button
-              type="submit"
-              class="primary-btn"
-              id="calc-btn-submit"
+              type="button"
+              class="numpad-action-btn numpad-action-subtract"
+              id="calc-numpad-btn-subtract"
             >
-              Apply
+              Subtract
+            </button>
+            <button
+              type="button"
+              class="numpad-action-btn primary-btn numpad-action-add"
+              id="calc-numpad-btn-add"
+            >
+              Add
             </button>
           </div>
         </div>
@@ -1110,6 +1131,7 @@
                 <span class="slider-round"></span>
               </label>
             </div>
+
 
             <!-- Quick Add Editing -->
             <div class="settings-row settings-row-quick-add">
