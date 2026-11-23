@@ -108,7 +108,7 @@ const LOGO = { title: 'COUNTERS', tagline: subtitle() };
 // side by side; `png` saves a PNG (RGB, no alpha) instead of a JPEG.
 const ARTWORK = {
   thumbnail: {
-    screens: ['scoreboard', 'dice', 'timer'],
+    screens: ['scoreboard', 'calculator', 'picker'],
     width: 1280,
     height: 720,
     logo: true,
@@ -116,7 +116,7 @@ const ARTWORK = {
   // 3840x1646. App Store Connect takes the header only as a PNG (it calls a
   // JPEG's dimensions invalid), though it takes the search results as a JPEG
   'appstore-header': {
-    screens: ['palettes', 'scoreboard', 'dice', 'timer', 'habits'],
+    screens: ['palettes', 'scoreboard', 'picker', 'dice', 'habits'],
     width: 1920,
     height: 823,
     scale: 2,
@@ -124,14 +124,14 @@ const ARTWORK = {
   },
   // 3840x2560
   'appstore-search': {
-    screens: ['scoreboard', 'dice', 'timer'],
+    screens: ['scoreboard', 'picker', 'dice'],
     width: 1920,
     height: 1280,
     scale: 2,
   },
   // Google Play's feature graphic
   'play-feature': {
-    screens: ['palettes', 'scoreboard', 'dice'],
+    screens: ['palettes', 'scoreboard', 'picker'],
     width: 1024,
     height: 500,
     logo: true,
@@ -211,7 +211,7 @@ const SHOTS = {
       await app.wait(4000);
     },
   },
-  // Adding points with the calculator
+  // Adding points with the built-in calculator number pad
   // Picks up where the scoreboard clip ends, so the video's scores carry on
   calculator: {
     counters: PLAYERS_LATER,
@@ -220,33 +220,25 @@ const SHOTS = {
     async setup(app) {
       await app.tap(`${card('alice')} .card-value-body`);
       await app.wait(600);
-      await app.type('#calc-number-input', '12');
+      await app.tap('.numpad-key[data-key="1"]');
+      await app.wait(150);
+      await app.tap('.numpad-key[data-key="2"]');
       await app.wait(300);
     },
     // The clip starts on the scoreboard and goes through the whole entry
     clipSetup: null,
     seconds: 4,
     async clip(app) {
-      await app.wait(500);
+      await app.wait(400);
       await app.tap(`${card('alice')} .card-value-body`);
-      await app.wait(700);
-      await app.type('#calc-number-input', '12');
-      await app.wait(600);
-      await app.tap('#calc-btn-submit');
-      await app.wait(1500);
+      await app.wait(650);
+      await app.tap('.numpad-key[data-key="1"]');
+      await app.wait(250);
+      await app.tap('.numpad-key[data-key="2"]');
+      await app.wait(450);
+      await app.tap('#calc-numpad-btn-add');
+      await app.wait(1600);
     },
-  },
-  // The grid layout in dark theme with the Vaporwave palette
-  palettes: {
-    counters: [
-      counter('red', 'Red team', 18, 1),
-      counter('blue', 'Blue team', 24, 0),
-      counter('green', 'Green team', 21, 6),
-      counter('gold', 'Gold team', 15, 4),
-      counter('round', 'Round', 7, 7),
-      counter('fouls', 'Fouls', 3, 3),
-    ],
-    settings: { theme: 'dark', layout: 'grid', palette: 'vaporwave' },
   },
   // Rolling dice: 3d6 after a roll
   dice: {
@@ -300,14 +292,38 @@ const SHOTS = {
       await app.wait(5500);
     },
   },
-  // The history of a game
-  history: {
+  // Choosing a starting player with multi-touch Picker shapes
+  picker: {
     counters: PLAYERS,
-    history: GAME_HISTORY,
-    settings: { theme: 'dark' },
+    settings: { theme: 'dark', palette: 'bold' },
     async setup(app) {
-      await app.tap('#btn-open-history');
-      await app.wait(800);
+      await app.tap(tab('picker'));
+      await app.wait(600);
+      app.random(7);
+      await app.touch(1, 0.28, 0.26);
+      await app.wait(120);
+      await app.touch(2, 0.72, 0.33);
+      await app.wait(120);
+      await app.touch(3, 0.30, 0.63);
+      await app.wait(120);
+      await app.touch(4, 0.70, 0.70);
+      await app.wait(1600);
+    },
+    async clipSetup(app) {
+      await app.tap(tab('picker'));
+      await app.wait(600);
+    },
+    seconds: 5.5,
+    async clip(app) {
+      app.random(7);
+      await app.wait(200);
+      await app.touch(1, 0.28, 0.30);
+      await app.wait(250);
+      await app.touch(2, 0.72, 0.38);
+      await app.wait(250);
+      await app.touch(3, 0.46, 0.68);
+      // 3 s countdown + staggered eliminations + winner background flood
+      await app.wait(4750);
     },
   },
   // Counting more than games: daily habits, in the Pastel palette
@@ -319,6 +335,28 @@ const SHOTS = {
       counter('steps', 'Coffee', 2, 5),
     ],
     settings: { palette: 'pastel', topBarContent: 'total' },
+  },
+  // The history of a game, over Nautical counters
+  history: {
+    counters: PLAYERS,
+    history: GAME_HISTORY,
+    settings: { theme: 'dark', palette: 'nautical' },
+    async setup(app) {
+      await app.tap('#btn-open-history');
+      await app.wait(800);
+    },
+  },
+  // The grid layout in dark theme with the Vintage palette
+  palettes: {
+    counters: [
+      counter('blue', 'Blue team', 24, 0),
+      counter('red', 'Red team', 18, 1),
+      counter('green', 'Green team', 21, 4),
+      counter('gold', 'Gold team', 15, 5),
+      counter('round', 'Round', 7, 7),
+      counter('fouls', 'Fouls', 3, 6),
+    ],
+    settings: { theme: 'dark', layout: 'grid', palette: 'vintage' },
   },
 };
 

@@ -89,13 +89,24 @@ const SCREEN = { width: 402, height: 874 };
 
 fs.mkdirSync(OUT, { recursive: true });
 
+const stillShots = Object.keys(SHOTS).filter((s) => SHOTS[s].still !== false);
+const stillFilename = (targetName, shotName) => {
+  const num = String(stillShots.indexOf(shotName) + 1).padStart(2, '0');
+  return `${targetName}-${num}-${shotName}.jpg`;
+};
+const VIDEO_FILENAMES = {
+  'iphone-preview': 'iphone-medium-00-preview.mp4',
+  'ipad-preview': 'ipad-00-preview.mp4',
+  trailer: 'trailer.mp4',
+};
+
 // A page for browsing the stills in OUT, by device or by shot
 function writeViewer() {
   const devices = Object.keys(TARGETS).filter((t) => !TARGETS[t].video);
   const stills = [];
-  for (const shot of Object.keys(SHOTS)) {
+  for (const shot of stillShots) {
     for (const device of devices) {
-      const file = `${shot}-${device}.jpg`;
+      const file = stillFilename(device, shot);
       if (fs.existsSync(path.join(OUT, file))) stills.push({ shot, device, file });
     }
   }
@@ -432,6 +443,29 @@ function installPromoHooks({ seed, hideCaret }) {
 // The app helper the shots' setup and clip get (see promo-shots.js). `onFrame`
 // runs after each frame while filming.
 function appHelper(page, { live = false } = {}) {
+  const showTapDot = async (x, y) => {
+    if (!app.onFrame) return;
+    await page.evaluate(
+      ([px, py]) => {
+        const dot = document.createElement('div');
+        dot.style.cssText =
+          `position:fixed;left:${px - 22}px;top:${py - 22}px;width:44px;height:44px;` +
+          'border-radius:50%;background:rgba(255,255,255,0.55);z-index:2147483647;' +
+          'box-shadow:0 0 0 2px rgba(0,0,0,0.25);pointer-events:none';
+        document.body.append(dot);
+        dot
+          .animate(
+            [
+              { transform: 'scale(0.6)', opacity: 1 },
+              { transform: 'scale(1.3)', opacity: 0 },
+            ],
+            { duration: 450, easing: 'ease-out' },
+          )
+          .finished.then(() => dot.remove());
+      },
+      [x, y],
+    );
+  };
   const app = {
     onFrame: null,
     async wait(ms) {
@@ -448,30 +482,31 @@ function appHelper(page, { live = false } = {}) {
       if (!box) throw new Error(`Nothing to tap at ${selector}`);
       const x = box.x + box.width / 2;
       const y = box.y + box.height / 2;
-      // In videos, a soft dot shows where the tap lands
-      if (app.onFrame) {
-        await page.evaluate(
-          ([x, y]) => {
-            const dot = document.createElement('div');
-            dot.style.cssText =
-              `position:fixed;left:${x - 22}px;top:${y - 22}px;width:44px;height:44px;` +
-              'border-radius:50%;background:rgba(255,255,255,0.55);z-index:2147483647;' +
-              'box-shadow:0 0 0 2px rgba(0,0,0,0.25);pointer-events:none';
-            document.body.append(dot);
-            dot
-              .animate(
-                [
-                  { transform: 'scale(0.6)', opacity: 1 },
-                  { transform: 'scale(1.3)', opacity: 0 },
-                ],
-                { duration: 450, easing: 'ease-out' },
-              )
-              .finished.then(() => dot.remove());
-          },
-          [x, y],
-        );
-      }
+      await showTapDot(x, y);
       await page.mouse.click(x, y);
+    },
+    async touch(pointerId, rx, ry) {
+      const box = await page.locator('#picker-stage').boundingBox();
+      if (!box) throw new Error('Nothing to touch at #picker-stage');
+      const x = box.x + box.width * rx;
+      const y = box.y + box.height * ry;
+      await showTapDot(x, y);
+      await page.evaluate(
+        ([id, px, py]) => {
+          document.getElementById('picker-stage').dispatchEvent(
+            new PointerEvent('pointerdown', {
+              bubbles: true,
+              cancelable: true,
+              pointerId: id,
+              pointerType: 'touch',
+              isPrimary: id === 1,
+              clientX: px,
+              clientY: py,
+            }),
+          );
+        },
+        [pointerId, x, y],
+      );
     },
     async type(selector, text) {
       await page.locator(selector).first().focus();
@@ -682,6 +717,7 @@ async function main() {
       const sheet = path.join(OUT, 'sheet.jpg');
       await page.screenshot({ path: sheet, type: 'jpeg', quality: 85 });
       await page.close();
+      files.forEach((f) => fs.rmSync(f, { force: true }));
       console.log(sheet);
     }
 
@@ -713,7 +749,7 @@ async function main() {
       for (const name of selected) {
         if (SHOTS[name].still === false) continue;
         for (const targetName of stillTargets) {
-          const file = path.join(OUT, `${name}-${targetName}.jpg`);
+          const file = path.join(OUT, stillFilename(targetName, name));
           fs.writeFileSync(file, await still(browser, name, TARGETS[targetName]));
           console.log(file);
         }
@@ -828,7 +864,7 @@ async function video(browser) {
     filter += `,afade=t=in:d=1,afade=t=out:st=${(total - 2).toFixed(3)}:d=2`;
   }
   filter += '[a]';
-  const file = path.join(OUT, `counters-${videoTargetName}.mp4`);
+  const file = path.join(OUT, VIDEO_FILENAMES[videoTargetName] || `counters-${videoTargetName}.mp4`);
   ffmpeg([
     ...parts.flatMap((p) => ['-i', p.mp4]),
     ...audioIn,
@@ -837,6 +873,7 @@ async function video(browser) {
     ...['-c:a', 'aac', '-b:a', '256k', ...H264],
     ...['-r', String(FPS), '-t', total.toFixed(3), '-movflags', '+faststart', file],
   ]);
+  parts.forEach((p) => fs.rmSync(p.mp4, { force: true }));
   console.log(`${file} (${total.toFixed(1)} s)`);
 }
 
