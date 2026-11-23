@@ -1337,15 +1337,15 @@ import { log } from "./logger.js";
 
     if (!leaderContainer || !leaderText) return;
     if (state.counters.length === 0) {
-      leaderContainer.style.opacity = "0";
-      leaderContainer.style.pointerEvents = "none";
+      leaderContainer.classList.add("leader-empty");
+      leaderContainer.inert = true;
       leaderText.textContent = "";
       updateAmbientBackdrop(null);
       return;
     }
 
-    leaderContainer.style.opacity = "1";
-    leaderContainer.style.pointerEvents = "auto";
+    leaderContainer.classList.remove("leader-empty");
+    leaderContainer.inert = state.currentTab !== "counters";
 
     const type = state.settings.topBarContent;
     const icon = leaderContainer.querySelector(".leader-icon svg");
@@ -1976,6 +1976,76 @@ import { log } from "./logger.js";
   let programmaticTabTimeout = null;
   let resetPicker = () => {};
 
+  const syncHeaderScrollProgress = (slider) => {
+    if (!slider) return;
+    const width = slider.clientWidth;
+    if (!width) return;
+    const raw = Math.min(1, Math.max(0, slider.scrollLeft / width));
+    // Smoothstep S-curve: gentle start and end as Counters slides away or back
+    const eased = raw * raw * (3 - 2 * raw);
+    const visibility = 1 - eased;
+    $(".app-header")?.style.setProperty("--counters-visibility", visibility.toFixed(4));
+  };
+
+  let activeTitleAnim = null;
+  const crossFadeHeaderTitle = (viewTitle, nextTitle) => {
+    if (!viewTitle || viewTitle.textContent === nextTitle) return;
+    const container = viewTitle.parentElement;
+    if (container) {
+      container.querySelectorAll(".app-title-ghost").forEach((el) => el.remove());
+    }
+    if (activeTitleAnim) {
+      activeTitleAnim.cancel();
+      activeTitleAnim = null;
+    }
+
+    if (prefersReducedMotion() || typeof viewTitle.animate !== "function") {
+      viewTitle.textContent = nextTitle;
+      return;
+    }
+
+    const prevTitle = viewTitle.textContent;
+    if (container && prevTitle) {
+      const ghost = document.createElement("span");
+      ghost.className = "app-title-ghost";
+      ghost.setAttribute("aria-hidden", "true");
+      ghost.textContent = prevTitle;
+      container.appendChild(ghost);
+
+      const exitAnim = ghost.animate(
+        [
+          { opacity: 1, transform: "translateY(0)" },
+          { opacity: 0, transform: "translateY(-3px)" },
+        ],
+        {
+          duration: 240,
+          easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+          fill: "forwards",
+        },
+      );
+      exitAnim.onfinish = () => ghost.remove();
+      exitAnim.oncancel = () => ghost.remove();
+    }
+
+    viewTitle.textContent = nextTitle;
+    activeTitleAnim = viewTitle.animate(
+      [
+        { opacity: 0, transform: "translateY(3px)" },
+        { opacity: 1, transform: "translateY(0)" },
+      ],
+      {
+        duration: 280,
+        easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+      },
+    );
+    activeTitleAnim.onfinish = () => {
+      activeTitleAnim = null;
+    };
+    activeTitleAnim.oncancel = () => {
+      activeTitleAnim = null;
+    };
+  };
+
   const updateTabUI = (tabId) => {
     if (state.currentTab === tabId) return;
     const prevTab = state.currentTab;
@@ -1998,13 +2068,23 @@ import { log } from "./logger.js";
       panel.inert = panel.id !== "tab-" + tabId;
     });
 
-    // Update Topbar View Title
+    // Keep Counters-only header controls out of tab order when off-tab
+    const isCountersTab = tabId === "counters";
+    $(".app-header")?.setAttribute("data-active-tab", tabId);
+    $$(".counters-only-control").forEach((control) => {
+      const isLeaderEmpty =
+        control.id === "header-leader-container" && state.counters.length === 0;
+      control.inert = !isCountersTab || isLeaderEmpty;
+    });
+
+    // Update Topbar View Title with soft cross-fade
     const viewTitle = $("#app-view-title");
     if (viewTitle) {
-      if (tabId === "counters") viewTitle.textContent = "Counters";
-      else if (tabId === "dice") viewTitle.textContent = "Dice";
-      else if (tabId === "timer") viewTitle.textContent = "Timer";
-      else if (tabId === "picker") viewTitle.textContent = "Picker";
+      let nextTitle = "Counters";
+      if (tabId === "dice") nextTitle = "Dice";
+      else if (tabId === "timer") nextTitle = "Timer";
+      else if (tabId === "picker") nextTitle = "Picker";
+      crossFadeHeaderTitle(viewTitle, nextTitle);
     }
   };
 
@@ -2017,16 +2097,23 @@ import { log } from "./logger.js";
     }, 450);
 
     updateTabUI(tabId);
-    
+
     // Smoothly scroll the native snap container to the target tab
     const slider = $("#tabs-slider");
     const target = document.getElementById("tab-" + tabId);
     if (slider && target) {
       const scrollTargetX = target.offsetLeft - slider.offsetLeft;
+      const instant = prefersReducedMotion();
       slider.scrollTo({
         left: scrollTargetX,
-        behavior: prefersReducedMotion() ? "instant" : "smooth",
+        behavior: instant ? "instant" : "smooth",
       });
+      if (instant) {
+        $(".app-header")?.style.setProperty(
+          "--counters-visibility",
+          tabId === "counters" ? "1" : "0",
+        );
+      }
     }
   };
 
@@ -3661,6 +3748,7 @@ import { log } from "./logger.js";
       const syncTabFromScroll = () => {
         const width = tabsSlider.clientWidth;
         if (!width) return;
+        syncHeaderScrollProgress(tabsSlider);
         const index = Math.round(tabsSlider.scrollLeft / width);
         const currentVisibleTab = TABS[Math.min(Math.max(index, 0), TABS.length - 1)];
 
