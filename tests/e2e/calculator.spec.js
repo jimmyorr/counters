@@ -92,3 +92,87 @@ test('score hitbox shares width rather than tightly wrapping the number', async 
   expect(valueBox.width).toBeGreaterThan(displayBox.width + 30);
   expect(valueBox.width / cardBox.width).toBeGreaterThan(0.25);
 });
+
+test.describe('in-app number pad mode', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.locator('#btn-open-options').click();
+    await page.locator('#menu-btn-open-settings').click();
+    await page.locator('label:has(#setting-system-number-input)').click();
+    await page.keyboard.press('Escape');
+  });
+
+  test('toggling in settings persists and activates number pad', async ({ page }) => {
+    expect((await stored(page, 'counters-settings')).useSystemNumberInput).toBe(false);
+  });
+
+  test('displays the number pad and hides system quick-add controls', async ({ page }) => {
+    await openCalculator(page, card(page, 'a'));
+    await expect(page.locator('#calc-system-container')).toBeHidden();
+    await expect(page.locator('#calc-numpad-container')).toBeVisible();
+    await expect(page.locator('#calc-numpad-display')).toHaveText('0');
+    await expect(page.locator('#calc-numpad-btn-add')).toHaveText('Add');
+    await expect(page.locator('#calc-numpad-btn-subtract')).toHaveText('Subtract');
+  });
+
+  test('tapping a number updates Add and Subtract buttons, and Add increments value', async ({ page }) => {
+    await openCalculator(page, card(page, 'a'));
+    await page.locator('#calc-numpad-grid button[data-key="7"]').click();
+
+    await expect(page.locator('#calc-numpad-display')).toHaveText('7');
+    await expect(page.locator('#calc-numpad-btn-add')).toHaveText('Add 7');
+    await expect(page.locator('#calc-numpad-btn-subtract')).toHaveText('Subtract 7');
+
+    await page.locator('#calc-numpad-btn-add').click();
+    await expect(dialog(page)).toBeHidden();
+    await expect(valueOf(card(page, 'a'))).toHaveText('17');
+    expect((await stored(page, 'counters-list'))[0].value).toBe(17);
+  });
+
+  test('tapping Subtract decrements value directly', async ({ page }) => {
+    await openCalculator(page, card(page, 'a'));
+    await page.locator('#calc-numpad-grid button[data-key="7"]').click();
+    await page.locator('#calc-numpad-btn-subtract').click();
+
+    await expect(dialog(page)).toBeHidden();
+    await expect(valueOf(card(page, 'a'))).toHaveText('3');
+    expect((await stored(page, 'counters-list'))[0].value).toBe(3);
+  });
+
+  test('handles decimals, backspace, and clear', async ({ page }) => {
+    await openCalculator(page, card(page, 'a'));
+    const key = (k) => page.locator(`#calc-numpad-grid button[data-key="${k}"]`);
+
+    await key('2').click();
+    await key('.').click();
+    await key('5').click();
+    await expect(page.locator('#calc-numpad-display')).toHaveText('2.5');
+    await expect(page.locator('#calc-numpad-btn-add')).toHaveText('Add 2.5');
+
+    // Backspace removes trailing char
+    await page.locator('#calc-numpad-backspace').click();
+    await expect(page.locator('#calc-numpad-display')).toHaveText('2.');
+
+    // Clear resets to 0
+    await key('clear').click();
+    await expect(page.locator('#calc-numpad-display')).toHaveText('0');
+    await expect(page.locator('#calc-numpad-btn-add')).toHaveText('Add');
+  });
+
+  test('submitting empty value closes without changing counter', async ({ page }) => {
+    await openCalculator(page, card(page, 'a'));
+    await page.locator('#calc-numpad-btn-add').click();
+    await expect(dialog(page)).toBeHidden();
+    await expect(valueOf(card(page, 'a'))).toHaveText('10');
+  });
+
+  test('supports desktop keyboard input in number pad mode', async ({ page }) => {
+    await openCalculator(page, card(page, 'a'));
+    await page.keyboard.press('8');
+    await expect(page.locator('#calc-numpad-display')).toHaveText('8');
+    await expect(page.locator('#calc-numpad-btn-add')).toHaveText('Add 8');
+
+    await page.keyboard.press('Enter');
+    await expect(dialog(page)).toBeHidden();
+    await expect(valueOf(card(page, 'a'))).toHaveText('18');
+  });
+});

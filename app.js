@@ -274,6 +274,7 @@ import { log } from "./logger.js";
       autoSort: false,
       soundEnabled: true,
       hapticsEnabled: true,
+      useSystemNumberInput: true,
       quickAddValues: [5, 10, 15, 20, 50, 100],
       themeHue: 205,
       keepAwake: false,
@@ -286,6 +287,7 @@ import { log } from "./logger.js";
     activeCounterIdForCalc: null,
     activeCounterIdForEdit: null,
     calcPendingOperation: "plus", // 'plus' or 'minus'
+    calcNumpadValue: "",
     calcOpenedByKeyboard: false,
     autoSortTimeout: null,
   };
@@ -2175,6 +2177,28 @@ import { log } from "./logger.js";
     updateSubmitButtonText();
   };
 
+  const updateNumpadDisplayDOM = () => {
+    const displayEl = $("#calc-numpad-display");
+    const subBtn = $("#calc-numpad-btn-subtract");
+    const addBtn = $("#calc-numpad-btn-add");
+
+    const valStr = state.calcNumpadValue;
+    if (displayEl) {
+      displayEl.textContent = valStr || "0";
+      displayEl.classList.toggle("placeholder", !valStr);
+    }
+
+    const val = parseFloat(valStr || "0");
+    if (subBtn) {
+      subBtn.textContent =
+        !val || isNaN(val) ? "Subtract" : `Subtract ${formatNumber(val)}`;
+    }
+    if (addBtn) {
+      addBtn.textContent =
+        !val || isNaN(val) ? "Add" : `Add ${formatNumber(val)}`;
+    }
+  };
+
   const openCalculator = (counterId, { byKeyboard = false } = {}) => {
     const counter = state.counters.find((c) => c.id === counterId);
     const dialog = $("#calculator-dialog");
@@ -2183,17 +2207,34 @@ import { log } from "./logger.js";
     state.activeCounterIdForCalc = counterId;
     state.calcPendingOperation = "plus";
     state.calcOpenedByKeyboard = byKeyboard;
+    state.calcNumpadValue = "";
 
     const hexColor = getCounterHex(counter);
     const titleEl = $("#calc-dialog-title");
     titleEl.textContent = `${counter.label}: ${formatNumber(counter.value)}`;
-    const input = $("#calc-number-input");
-    input.value = "";
-    updateCalcDisplayDOM();
-    setSheetTheme(dialog, hexColor);
 
+    const useSysInput = state.settings.useSystemNumberInput !== false;
+    const sysContainer = $("#calc-system-container");
+    const numpadContainer = $("#calc-numpad-container");
+
+    if (sysContainer) sysContainer.hidden = !useSysInput;
+    if (numpadContainer) numpadContainer.hidden = useSysInput;
+
+    if (useSysInput) {
+      const input = $("#calc-number-input");
+      if (input) input.value = "";
+      updateCalcDisplayDOM();
+    } else {
+      updateNumpadDisplayDOM();
+    }
+
+    setSheetTheme(dialog, hexColor);
     openDialog(dialog);
-    input.focus({ preventScroll: true });
+
+    if (useSysInput) {
+      const input = $("#calc-number-input");
+      input?.focus({ preventScroll: true });
+    }
     playClickSound(600, 700, 0.08, 0.05);
   };
 
@@ -2271,6 +2312,121 @@ import { log } from "./logger.js";
         return;
       }
       applyToActiveCounter(amount);
+    });
+
+    // Number pad key clicks
+    $("#calc-numpad-grid")?.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-key]");
+      if (!btn) return;
+      playHaptic(ImpactStyle.Light);
+      playClickSound();
+
+      const key = btn.getAttribute("data-key");
+      if (key === "clear") {
+        state.calcNumpadValue = "";
+      } else if (key === ".") {
+        if (!state.calcNumpadValue.includes(".")) {
+          state.calcNumpadValue = state.calcNumpadValue
+            ? `${state.calcNumpadValue}.`
+            : "0.";
+        }
+      } else if (/^[0-9]$/.test(key)) {
+        if (state.calcNumpadValue.length < 10) {
+          if (state.calcNumpadValue === "0") {
+            state.calcNumpadValue = key;
+          } else {
+            state.calcNumpadValue += key;
+          }
+        }
+      }
+      updateNumpadDisplayDOM();
+    });
+
+    // Number pad backspace
+    $("#calc-numpad-backspace")?.addEventListener("click", () => {
+      playHaptic(ImpactStyle.Light);
+      playClickSound();
+      if (state.calcNumpadValue) {
+        state.calcNumpadValue = state.calcNumpadValue.slice(0, -1);
+        updateNumpadDisplayDOM();
+      }
+    });
+
+    // Number pad Add button
+    $("#calc-numpad-btn-add")?.addEventListener("click", () => {
+      playHaptic(ImpactStyle.Medium);
+      const amount = parseFloat(state.calcNumpadValue || "0");
+      if (isNaN(amount) || amount === 0) {
+        dialog.close();
+        return;
+      }
+      state.calcPendingOperation = "plus";
+      applyToActiveCounter(amount);
+    });
+
+    // Number pad Subtract button
+    $("#calc-numpad-btn-subtract")?.addEventListener("click", () => {
+      playHaptic(ImpactStyle.Medium);
+      const amount = parseFloat(state.calcNumpadValue || "0");
+      if (isNaN(amount) || amount === 0) {
+        dialog.close();
+        return;
+      }
+      state.calcPendingOperation = "minus";
+      applyToActiveCounter(amount);
+    });
+
+    // Physical keyboard support for number pad mode
+    window.addEventListener("keydown", (e) => {
+      if (!dialog.open || state.settings.useSystemNumberInput !== false) return;
+      if (e.isComposing) return;
+
+      if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        playHaptic(ImpactStyle.Light);
+        playClickSound();
+        if (state.calcNumpadValue.length < 10) {
+          if (state.calcNumpadValue === "0") {
+            state.calcNumpadValue = e.key;
+          } else {
+            state.calcNumpadValue += e.key;
+          }
+          updateNumpadDisplayDOM();
+        }
+      } else if (e.key === ".") {
+        e.preventDefault();
+        playHaptic(ImpactStyle.Light);
+        playClickSound();
+        if (!state.calcNumpadValue.includes(".")) {
+          state.calcNumpadValue = state.calcNumpadValue
+            ? `${state.calcNumpadValue}.`
+            : "0.";
+          updateNumpadDisplayDOM();
+        }
+      } else if (e.key === "Backspace") {
+        e.preventDefault();
+        playHaptic(ImpactStyle.Light);
+        playClickSound();
+        if (state.calcNumpadValue) {
+          state.calcNumpadValue = state.calcNumpadValue.slice(0, -1);
+          updateNumpadDisplayDOM();
+        }
+      } else if (e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        playHaptic(ImpactStyle.Light);
+        playClickSound();
+        state.calcNumpadValue = "";
+        updateNumpadDisplayDOM();
+      } else if (e.key === "+") {
+        e.preventDefault();
+        $("#calc-numpad-btn-add")?.click();
+      } else if (e.key === "-") {
+        e.preventDefault();
+        $("#calc-numpad-btn-subtract")?.click();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        $("#calc-numpad-btn-add")?.click();
+      }
     });
 
     dialog.addEventListener("close", () => {
@@ -3281,6 +3437,10 @@ import { log } from "./logger.js";
     }
     const keepAwakeEl = $("#setting-keep-awake");
     if (keepAwakeEl) keepAwakeEl.checked = state.settings.keepAwake;
+    const sysNumInputEl = $("#setting-system-number-input");
+    if (sysNumInputEl) {
+      sysNumInputEl.checked = state.settings.useSystemNumberInput !== false;
+    }
     syncThemeSetting();
     renderPaletteSetting();
     const quickAddInput = $("#setting-quick-add-values");
@@ -3334,6 +3494,17 @@ import { log } from "./logger.js";
             log.warn("KeepAwake disable failed:", err),
           );
         }
+        playClickSound();
+        playSelectionHaptic();
+      });
+    }
+
+    // Use System Number Input Toggle
+    const sysNumInputToggle = $("#setting-system-number-input");
+    if (sysNumInputToggle) {
+      sysNumInputToggle.addEventListener("change", (e) => {
+        state.settings.useSystemNumberInput = e.target.checked;
+        saveSettings();
         playClickSound();
         playSelectionHaptic();
       });
