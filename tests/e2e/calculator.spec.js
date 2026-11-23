@@ -84,8 +84,16 @@ test('submitting empty value closes without changing counter', async ({ page }) 
 test('opens from the keyboard', async ({ page }) => {
   await card(page, 'a').locator('.card-value-body').focus();
   await page.keyboard.press('Enter');
-  await expect(dialog(page)).toBeVisible();
+  // A closed sheet still counts as visible to Playwright, so check it's open
+  await expect(dialog(page)).toHaveJSProperty('open', true);
   await expect(page.locator('#calc-numpad-display')).toBeVisible();
+
+  // Typing then Enter adds, with focus moved into the sheet
+  await page.keyboard.press('8');
+  await expect(page.locator('#calc-numpad-display')).toHaveText('8');
+  await page.keyboard.press('Enter');
+  await expect(dialog(page)).toHaveJSProperty('open', false);
+  await expect(valueOf(card(page, 'a'))).toHaveText('18');
 });
 
 test('supports desktop keyboard input', async ({ page }) => {
@@ -125,4 +133,24 @@ test('score hitbox shares width rather than tightly wrapping the number', async 
 
   expect(valueBox.width).toBeGreaterThan(displayBox.width + 30);
   expect(valueBox.width / cardBox.width).toBeGreaterThan(0.25);
+});
+
+test('Enter presses the focused button instead of always adding', async ({ page }) => {
+  await openCalculator(page, card(page, 'a'));
+  await page.keyboard.press('3');
+  await page.locator('#calc-numpad-btn-subtract').focus();
+  await page.keyboard.press('Enter');
+  await expect(dialog(page)).toBeHidden();
+  await expect(valueOf(card(page, 'a'))).toHaveText('7');
+});
+
+test('leaves Ctrl and Cmd shortcuts to the browser', async ({ page }) => {
+  await openCalculator(page, card(page, 'a'));
+  await page.keyboard.press('4');
+  for (const shortcut of ['Control+Minus', 'Meta+Minus', 'Control+c', 'Meta+c']) {
+    await page.keyboard.press(shortcut);
+  }
+  await expect(dialog(page)).toBeVisible();
+  await expect(page.locator('#calc-numpad-display')).toHaveText('4');
+  await expect(valueOf(card(page, 'a'))).toHaveText('10');
 });

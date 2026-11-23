@@ -2247,6 +2247,9 @@ import { log } from "./logger.js";
     updateNumpadDisplayDOM();
     setSheetTheme(dialog, hexColor);
     openDialog(dialog);
+    // Opened from the keyboard, focus stayed on the card behind the sheet, so
+    // typed digits never arrived. Put it on Add: digits still type, Enter adds.
+    if (byKeyboard) $("#calc-numpad-btn-add")?.focus({ preventScroll: true });
     playClickSound(600, 700, 0.08, 0.05);
   };
 
@@ -2356,6 +2359,8 @@ import { log } from "./logger.js";
     window.addEventListener("keydown", (e) => {
       if (!dialog.open) return;
       if (e.isComposing) return;
+      // Leave browser and OS shortcuts alone (Ctrl/⌘ + minus zooms out, + C copies)
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
 
       if (/^[0-9]$/.test(e.key)) {
         e.preventDefault();
@@ -2400,6 +2405,12 @@ import { log } from "./logger.js";
         e.preventDefault();
         $("#calc-numpad-btn-subtract")?.click();
       } else if (e.key === "Enter") {
+        // Enter on a focused button (Subtract, C, a quick-add) presses that
+        // button. Enter from outside the sheet is the one that just opened it
+        // from a card, and must not immediately submit and close it.
+        const target = e.target instanceof Element ? e.target : null;
+        if (target?.closest("button")) return;
+        if (target && target !== document.body && !dialog.contains(target)) return;
         e.preventDefault();
         $("#calc-numpad-btn-add")?.click();
       }
