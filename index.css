@@ -1243,7 +1243,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
   background-color: var(--bg-secondary);
   border: 1px solid var(--border-light);
   border-radius: 16px;
-  padding: 14px 16px;
+  padding: 16px;
   box-shadow: var(--card-shadow);
 }
 
@@ -1252,7 +1252,7 @@ html[data-layout="grid"] .card-direct-zone-plus {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 9px 0;
+  padding: 12px 0;
   border-bottom: 1px solid var(--border-light);
 }
 
@@ -2000,8 +2000,7 @@ dialog[open].closing::backdrop {
   color: var(--sheet-text, #ffffff);
 }
 
-.bottom-sheet-dialog .form-input:focus,
-.bottom-sheet-dialog .math-display-wrapper:has(.math-number-input:focus) {
+.bottom-sheet-dialog .form-input:focus {
   border-color: var(--sheet-theme, var(--accent-color));
 }
 
@@ -2185,38 +2184,37 @@ dialog[open].bottom-sheet-dialog.closing {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.calculator-wrapper[hidden] {
-  display: none;
+  width: 100%;
 }
 
 /* Quick Add List */
 .quick-add-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .quick-add-grid > button:nth-child(n + 4) {
   grid-column: span 1;
 }
 
-/* Special centering logic for standard layouts */
 .quick-add-grid > button {
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-light);
   color: var(--sheet-control-ink, var(--accent-ink));
   font-family: var(--font-primary);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  padding: 14px 0;
-  border-radius: 12px;
+  padding: 10px 0;
+  border-radius: 10px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
   transition: all var(--trans-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (hover: hover) {
@@ -2230,89 +2228,6 @@ dialog[open].bottom-sheet-dialog.closing {
   transform: scale(0.94);
 }
 
-/* Calculator Active Row */
-.math-entry-row {
-  display: grid;
-  grid-template-columns: 80px 1fr 1fr;
-  gap: 8px;
-  width: 100%;
-  margin-bottom: 20px;
-  height: 56px;
-}
-
-#calc-btn-submit {
-  font-size: 15px;
-  font-weight: 600;
-  padding: 0 14px;
-  border-radius: 12px;
-  white-space: nowrap;
-  height: 100%;
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.operation-toggles {
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-strong);
-  padding: 3px;
-  border-radius: 12px;
-  display: flex;
-}
-
-.op-btn {
-  flex: 1;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-family: var(--font-primary);
-  font-size: 20px;
-  font-weight: 500;
-  padding: 6px 0;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: all var(--trans-fast);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.op-btn.active {
-  background-color: var(--accent-color);
-  color: var(--accent-on-fill, #000000);
-  font-weight: 600;
-}
-
-.math-display-wrapper {
-  position: relative;
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-strong);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-}
-
-.math-op-indicator {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--sheet-control-ink, var(--accent-ink));
-  margin-right: 10px;
-}
-
-.math-number-input {
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  font-family: var(--font-primary);
-  font-size: 22px;
-  font-weight: 700;
-  width: 100%;
-  outline: none;
-  text-align: right;
-  letter-spacing: 0.5px;
-  -moz-appearance: textfield;
-}
 
 input[type="number"] {
   -moz-appearance: textfield;
@@ -2335,8 +2250,8 @@ input[type="number"]::-webkit-inner-spin-button {
   justify-content: space-between;
   padding: 0 16px;
   width: 100%;
-  height: 54px;
-  margin-bottom: 12px;
+  height: 48px;
+  margin-bottom: 10px;
 }
 
 .numpad-display-value {
@@ -2350,12 +2265,16 @@ input[type="number"]::-webkit-inner-spin-button {
   white-space: nowrap;
 }
 
+.numpad-display-value.placeholder {
+  color: var(--text-secondary);
+}
+
 .numpad-btn-backspace {
   background: none;
   border: none;
   color: var(--text-secondary);
   cursor: pointer;
-  padding: 8px;
+  padding: 4px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -2377,9 +2296,9 @@ input[type="number"]::-webkit-inner-spin-button {
 .numpad-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 6px;
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .numpad-key {
@@ -2387,9 +2306,9 @@ input[type="number"]::-webkit-inner-spin-button {
   border: 1px solid var(--border-light);
   color: var(--text-primary);
   font-family: var(--font-primary);
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 600;
-  height: 50px;
+  height: 46px;
   border-radius: 12px;
   cursor: pointer;
   display: flex;
@@ -2420,16 +2339,16 @@ input[type="number"]::-webkit-inner-spin-button {
 .numpad-actions-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .numpad-action-btn {
   font-family: var(--font-primary);
   font-size: 15px;
   font-weight: 600;
-  height: 52px;
+  height: 48px;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -2466,43 +2385,6 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .numpad-action-add:active {
   transform: scale(0.96);
-}
-
-/* Compact quick-adds & keypad when in number pad mode */
-#calculator-dialog.calculator-numpad-active .quick-add-grid {
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-#calculator-dialog.calculator-numpad-active .quick-add-grid > button {
-  padding: 10px 0;
-  font-size: 15px;
-  border-radius: 10px;
-}
-
-#calculator-dialog.calculator-numpad-active .numpad-display-wrapper {
-  height: 48px;
-  margin-bottom: 10px;
-}
-
-#calculator-dialog.calculator-numpad-active .numpad-grid {
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-#calculator-dialog.calculator-numpad-active .numpad-key {
-  height: 46px;
-  font-size: 21px;
-}
-
-#calculator-dialog.calculator-numpad-active .numpad-actions-row {
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-#calculator-dialog.calculator-numpad-active .numpad-action-btn {
-  height: 48px;
-  font-size: 15px;
 }
 
 /* --------------------------------------------------------------------------
@@ -3286,14 +3168,6 @@ textarea:focus-visible {
   box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--focus-ring, #000000);
 }
 
-/* For composite inputs like math-display, apply the ring to the wrapper instead */
-input.math-number-input:focus-visible {
-  box-shadow: none;
-}
-
-.math-display-wrapper:has(.math-number-input:focus-visible) {
-  box-shadow: 0 0 0 2px var(--bg-secondary), 0 0 0 4px var(--focus-ring, #000000);
-}
 
 :root.light-mode {
   --focus-ring: #191b22;

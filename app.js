@@ -274,7 +274,6 @@ import { log } from "./logger.js";
       autoSort: false,
       soundEnabled: true,
       hapticsEnabled: true,
-      useSystemNumberInput: true,
       quickAddValues: [5, 10, 15, 20, 50, 100],
       themeHue: 205,
       keepAwake: false,
@@ -2122,61 +2121,6 @@ import { log } from "./logger.js";
   // ------------------------------------------------------------------------
   // 12. Calculator Dialog Sheet Logic (Accumulating math value)
   // ------------------------------------------------------------------------
-  const updateSubmitButtonText = () => {
-    const submitBtn = $("#calc-btn-submit");
-    if (!submitBtn) return;
-
-    const inputEl = $("#calc-number-input");
-    let valStr = inputEl?.value || "";
-
-    if (valStr.length > 14) {
-      valStr = valStr.slice(0, 14);
-      if (inputEl) inputEl.value = valStr;
-    }
-
-    const val = parseFloat(valStr);
-    const isMinus = state.calcPendingOperation === "minus";
-
-    if (!val || isNaN(val)) {
-      submitBtn.textContent = isMinus ? "Subtract" : "Add";
-    } else {
-      submitBtn.textContent = `${isMinus ? "Subtract" : "Add"} ${formatNumber(
-        val,
-      )}`;
-    }
-  };
-
-  const updateCalcDisplayDOM = () => {
-    const opIndicator = $(".math-op-indicator");
-    const opMinus = $("#calc-op-minus");
-    const opPlus = $("#calc-op-plus");
-
-    const sign = state.calcPendingOperation === "plus" ? "+" : "−";
-
-    if (opIndicator) {
-      opIndicator.textContent = sign;
-    }
-
-    // Dynamically update quick add button signs (+ / -) to match toggled operator
-    $$("#calc-quick-add-container button").forEach((btn) => {
-      const val = btn.getAttribute("data-quick-val");
-      btn.textContent = `${sign}${formatNumber(parseFloat(val))}`;
-    });
-
-    if (opMinus && opPlus) {
-      opMinus.classList.toggle(
-        "active",
-        state.calcPendingOperation === "minus",
-      );
-      opPlus.classList.toggle(
-        "active",
-        state.calcPendingOperation === "plus",
-      );
-    }
-
-    updateSubmitButtonText();
-  };
-
   const updateNumpadDisplayDOM = () => {
     const displayEl = $("#calc-numpad-display");
     const subBtn = $("#calc-numpad-btn-subtract");
@@ -2213,65 +2157,15 @@ import { log } from "./logger.js";
     const titleEl = $("#calc-dialog-title");
     titleEl.textContent = `${counter.label}: ${formatNumber(counter.value)}`;
 
-    const useSysInput = state.settings.useSystemNumberInput !== false;
-    const sysContainer = $("#calc-system-container");
-    const numpadContainer = $("#calc-numpad-container");
-
-    dialog.classList.toggle("calculator-numpad-active", !useSysInput);
-
-    if (sysContainer) sysContainer.hidden = !useSysInput;
-    if (numpadContainer) numpadContainer.hidden = useSysInput;
-
-    updateCalcDisplayDOM();
-    if (useSysInput) {
-      const input = $("#calc-number-input");
-      if (input) input.value = "";
-    } else {
-      updateNumpadDisplayDOM();
-    }
-
+    updateNumpadDisplayDOM();
     setSheetTheme(dialog, hexColor);
     openDialog(dialog);
-
-    if (useSysInput) {
-      const input = $("#calc-number-input");
-      input?.focus({ preventScroll: true });
-    }
     playClickSound(600, 700, 0.08, 0.05);
   };
 
   const setupCalculatorDialog = () => {
     const dialog = $("#calculator-dialog");
     if (!dialog) return;
-
-    $("#calc-number-input")?.addEventListener("input", updateSubmitButtonText);
-
-    // The calculator isn't a <form>, so wire Enter (and the mobile "Go" key) to submit
-    $("#calc-number-input")?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.isComposing) {
-        e.preventDefault();
-        $("#calc-btn-submit")?.click();
-      }
-    });
-
-    // Prevent focus from shifting away from the text input when tapping the toggle
-    $(".operation-toggles").addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-    });
-
-    $(".operation-toggles").addEventListener("click", (e) => {
-      const btn = e.target.closest(".op-btn");
-      if (!btn) return;
-      playHaptic(ImpactStyle.Light);
-
-      if (btn && !btn.classList.contains("active")) {
-        state.calcPendingOperation = btn.id === "calc-op-minus" ? "minus" : "plus";
-      } else {
-        state.calcPendingOperation = state.calcPendingOperation === "plus" ? "minus" : "plus";
-      }
-      updateCalcDisplayDOM();
-      playClickSound();
-    });
 
     // Add or subtract an amount from the active counter, then close
     const applyToActiveCounter = (amount) => {
@@ -2304,21 +2198,9 @@ import { log } from "./logger.js";
       playHaptic(ImpactStyle.Light);
       const amount = parseFloat(btn.getAttribute("data-quick-val") || "0");
       if (amount !== 0) {
-        if (state.settings.useSystemNumberInput === false) {
-          state.calcPendingOperation = "plus";
-        }
+        state.calcPendingOperation = "plus";
         applyToActiveCounter(amount);
       }
-    });
-
-    $("#calc-btn-submit").addEventListener("click", () => {
-      playHaptic(ImpactStyle.Medium);
-      const amount = parseFloat($("#calc-number-input").value || "0");
-      if (amount === 0) {
-        dialog.close();
-        return;
-      }
-      applyToActiveCounter(amount);
     });
 
     // Number pad key clicks
@@ -2383,9 +2265,9 @@ import { log } from "./logger.js";
       applyToActiveCounter(amount);
     });
 
-    // Physical keyboard support for number pad mode
+    // Physical keyboard support for calculator dialog
     window.addEventListener("keydown", (e) => {
-      if (!dialog.open || state.settings.useSystemNumberInput !== false) return;
+      if (!dialog.open) return;
       if (e.isComposing) return;
 
       if (/^[0-9]$/.test(e.key)) {
@@ -3444,10 +3326,6 @@ import { log } from "./logger.js";
     }
     const keepAwakeEl = $("#setting-keep-awake");
     if (keepAwakeEl) keepAwakeEl.checked = state.settings.keepAwake;
-    const sysNumInputEl = $("#setting-system-number-input");
-    if (sysNumInputEl) {
-      sysNumInputEl.checked = state.settings.useSystemNumberInput !== false;
-    }
     syncThemeSetting();
     renderPaletteSetting();
     const quickAddInput = $("#setting-quick-add-values");
@@ -3501,17 +3379,6 @@ import { log } from "./logger.js";
             log.warn("KeepAwake disable failed:", err),
           );
         }
-        playClickSound();
-        playSelectionHaptic();
-      });
-    }
-
-    // Use System Number Input Toggle
-    const sysNumInputToggle = $("#setting-system-number-input");
-    if (sysNumInputToggle) {
-      sysNumInputToggle.addEventListener("change", (e) => {
-        state.settings.useSystemNumberInput = e.target.checked;
-        saveSettings();
         playClickSound();
         playSelectionHaptic();
       });

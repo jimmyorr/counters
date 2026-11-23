@@ -599,45 +599,8 @@
           <!-- Injected dynamically by JavaScript, e.g. +5, +10, +50 -->
         </div>
 
-        <!-- Calculator layout (system number input mode) -->
-        <div class="calculator-wrapper" id="calc-system-container">
-          <!-- Interactive Math Area -->
-          <div class="math-entry-row">
-            <!-- Operation Toggles (+ / -) -->
-            <div class="operation-toggles">
-              <button class="op-btn" id="calc-op-minus" aria-label="Subtract">
-                −
-              </button>
-              <button class="op-btn active" id="calc-op-plus" aria-label="Add">
-                +
-              </button>
-            </div>
-            <!-- Numeric Display Screen -->
-            <div class="math-display-wrapper">
-              <span class="math-op-indicator">+</span>
-              <input
-                type="number"
-                inputmode="decimal"
-                step="any"
-                class="math-number-input"
-                id="calc-number-input"
-                placeholder="0"
-                aria-label="Pending value adjustment"
-              />
-            </div>
-            <!-- Apply Adjustment Button -->
-            <button
-              type="submit"
-              class="primary-btn"
-              id="calc-btn-submit"
-            >
-              Apply
-            </button>
-          </div>
-        </div>
-
         <!-- In-app number pad layout -->
-        <div class="calculator-wrapper" id="calc-numpad-container" hidden>
+        <div class="calculator-wrapper" id="calc-numpad-container">
           <div class="numpad-display-wrapper">
             <div class="numpad-display-value" id="calc-numpad-display" aria-live="polite">0</div>
             <button
@@ -1169,21 +1132,6 @@
               </label>
             </div>
 
-            <!-- Use System Number Input Toggle -->
-            <div class="settings-row">
-              <div class="settings-info">
-                <span class="setting-title">Use system number input</span>
-              </div>
-              <label class="switch-toggle">
-                <input
-                  type="checkbox"
-                  id="setting-system-number-input"
-                  aria-label="Use system number input"
-                  checked
-                />
-                <span class="slider-round"></span>
-              </label>
-            </div>
 
             <!-- Quick Add Editing -->
             <div class="settings-row settings-row-quick-add">
