@@ -142,6 +142,7 @@ import { log } from "./logger.js";
   //    shrinks (and may scroll), so the sheet is lifted by --vv-bottom.
   // Best effort on the web; desktop never matches (no coarse pointer).
   let fullViewportHeight = 0;
+  let lastKeyboardVisibleHeight = 0;
   let viewportWidth = 0;
   const syncKeyboardState = () => {
     const vv = window.visualViewport;
@@ -175,6 +176,23 @@ import { log } from "./logger.js";
       root.style.removeProperty("--vv-height");
       root.style.removeProperty("--vv-bottom");
     }
+
+    // The sheet shrinks to the space above the keyboard after the field was
+    // focused, so a field low in a scrolling sheet (Settings' quick-add
+    // values) ends up under the keyboard. Bring it back into view once the
+    // new size has applied, and again whenever the visible height changes.
+    if (keyboardOpen && vv.height !== lastKeyboardVisibleHeight) {
+      const field = document.activeElement;
+      if (field?.closest("dialog[open]")) {
+        requestAnimationFrame(() => {
+          if (document.activeElement === field) {
+            field.scrollIntoView({ block: "center" });
+            if (window.scrollY !== 0 || window.scrollX !== 0) window.scrollTo(0, 0);
+          }
+        });
+      }
+    }
+    lastKeyboardVisibleHeight = keyboardOpen ? vv.height : 0;
 
     if (
       root.classList.contains("viewport-locked") &&

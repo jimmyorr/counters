@@ -181,3 +181,20 @@ test.describe('on desktop', () => {
     await expect(page.locator('html')).not.toHaveClass(/keyboard-open/);
   });
 });
+
+test.describe('settings sheet with the keyboard up', () => {
+  test.use({ viewport: { width: 393, height: 852 } });
+
+  test('scrolls the quick-add values field into view above the keyboard', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('#btn-open-options').click();
+    await page.locator('#menu-btn-open-settings').click();
+    await expect(page.locator('#settings-dialog')).toHaveJSProperty('open', true);
+
+    const field = page.locator('#setting-quick-add-values');
+    await field.focus();
+    await page.setViewportSize({ width: 393, height: 852 - 330 });
+    await expect(page.locator('html')).toHaveClass(/keyboard-open/);
+    await expect(field).toBeInViewport({ ratio: 1 });
+  });
+});
