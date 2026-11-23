@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script>window.__APP_VERSION__ = "0.2.6";
-window.__COMMIT_HASH__ = "a76f080";
+    <script>window.__APP_VERSION__ = "0.2.7";
+window.__COMMIT_HASH__ = "64cda4d";
 window.__IS_DIRTY__ = false;</script>
 
     <meta charset="UTF-8" />
@@ -97,17 +97,17 @@ window.__IS_DIRTY__ = false;</script>
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-Mp1vOSjv.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-Ce5ej6HN.css">
+    <script type="module" crossorigin src="./assets/index-x6B7JgFI.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-O9T3Q4W0.css">
   <link rel="manifest" href="./manifest.webmanifest"></head>
   <body>
     <!-- Subtle ambient background gradient influenced by the current leader -->
     <div id="ambient-backdrop" class="ambient-backdrop" aria-hidden="true"></div>
 
     <!-- App Header -->
-    <header class="app-header">
+    <header class="app-header" data-active-tab="counters">
       <button
-        class="header-left"
+        class="header-left counters-only-control"
         id="header-leader-container"
         aria-label="Display options"
       >
@@ -134,7 +134,7 @@ window.__IS_DIRTY__ = false;</script>
 
       <div class="header-right">
         <button
-          class="header-btn"
+          class="header-btn counters-only-control"
           id="btn-open-history"
           title="History"
           aria-label="Open history"
@@ -153,7 +153,7 @@ window.__IS_DIRTY__ = false;</script>
           </svg>
         </button>
         <button
-          class="header-btn"
+          class="header-btn counters-only-control"
           id="btn-add-counter"
           title="Add counter"
           aria-label="Add counter"

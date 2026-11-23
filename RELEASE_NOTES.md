@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.2.7
+
+* **Navigation:** Smoothly faded Counters-only header controls in and out as you swipe between tabs and cross-faded the header title across views.
+
 ## 0.2.6
 
 * **Settings:** Moved quick-add values onto a single inline row and tightened footer spacing so Settings fits on a single screen without scrolling.
