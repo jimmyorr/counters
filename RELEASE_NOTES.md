@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.3.0
+
+* **Calculator:** Replaced the system keyboard with a built-in number pad featuring separate Add and Subtract actions, a +/− switch for quick-add presets, and full hardware keyboard support.
+* **Dialogs:** Automatically scrolled focused inputs into view when the software keyboard shrinks an open bottom sheet.
+
 ## 0.2.7
 
 * **Navigation:** Smoothly faded Counters-only header controls in and out as you swipe between tabs and cross-faded the header title across views.
