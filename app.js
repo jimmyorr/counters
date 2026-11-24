@@ -1158,21 +1158,165 @@ import { log } from "./logger.js";
 
   const midiToFreq = (midi) => 440 * Math.pow(2, (midi - 69) / 12);
 
+  // One distinct Web Audio instrument per color palette (zero external audio assets)
+  const PALETTE_INSTRUMENTS = {
+    bold: {
+      id: "marimba",
+      label: "Marimba",
+      fundType: "sine",
+      overType: "triangle",
+      overMult: 4,
+      detuneCents: 0,
+      octaveShift: 0,
+      attack: 0.01,
+      decay: 0.28,
+      peakVol: 0.085,
+      sustainVol: 0.0085,
+      overPeak: 0.28,
+      overSustain: 0.06,
+      overDecay: 0.14,
+      filterHz: 3200,
+      swellFilterHz: 4800,
+      filterQ: 0.8,
+      pop: { startMult: 1.15, endMult: 0.32, dur: 0.11, vol: 0.15 },
+    },
+    pastel: {
+      id: "celesta",
+      label: "Music box",
+      fundType: "sine",
+      overType: "sine",
+      overMult: 3,
+      detuneCents: 0,
+      octaveShift: 12,
+      attack: 0.008,
+      decay: 0.45,
+      peakVol: 0.07,
+      sustainVol: 0.007,
+      overPeak: 0.22,
+      overSustain: 0.08,
+      overDecay: 0.4,
+      filterHz: 5200,
+      swellFilterHz: 7500,
+      filterQ: 0.7,
+      pop: { startMult: 1.35, endMult: 0.55, dur: 0.09, vol: 0.13 },
+    },
+    vintage: {
+      id: "rhodes",
+      label: "Electric piano",
+      fundType: "sine",
+      overType: "sine",
+      overMult: 2,
+      detuneCents: 3,
+      octaveShift: 0,
+      attack: 0.012,
+      decay: 0.38,
+      peakVol: 0.08,
+      sustainVol: 0.008,
+      overPeak: 0.32,
+      overSustain: 0.1,
+      overDecay: 0.26,
+      filterHz: 1800,
+      swellFilterHz: 3400,
+      filterQ: 1.0,
+      pop: { startMult: 0.95, endMult: 0.3, dur: 0.12, vol: 0.15 },
+    },
+    nautical: {
+      id: "brass",
+      label: "Warm brass",
+      fundType: "sawtooth",
+      overType: "triangle",
+      overMult: 1,
+      detuneCents: -4,
+      octaveShift: 0,
+      attack: 0.045,
+      decay: 0.35,
+      peakVol: 0.075,
+      sustainVol: 0.0075,
+      overPeak: 0.45,
+      overSustain: 0.35,
+      overDecay: 0.35,
+      filterHz: 900,
+      swellFilterHz: 3200,
+      filterQ: 1.8,
+      pop: { startMult: 0.85, endMult: 0.24, dur: 0.13, vol: 0.16 },
+    },
+    vaporwave: {
+      id: "synth",
+      label: "Retro synth",
+      fundType: "sawtooth",
+      overType: "sawtooth",
+      overMult: 1,
+      detuneCents: 8,
+      octaveShift: 0,
+      attack: 0.03,
+      decay: 0.36,
+      peakVol: 0.06,
+      sustainVol: 0.006,
+      overPeak: 0.7,
+      overSustain: 0.65,
+      overDecay: 0.36,
+      filterHz: 1400,
+      swellFilterHz: 4600,
+      filterQ: 2.2,
+      pop: { startMult: 1.5, endMult: 0.22, dur: 0.11, vol: 0.14 },
+    },
+    colorblind: {
+      id: "vibraphone",
+      label: "Vibraphone",
+      fundType: "sine",
+      overType: "triangle",
+      overMult: 2,
+      detuneCents: 0,
+      octaveShift: 0,
+      attack: 0.012,
+      decay: 0.35,
+      peakVol: 0.08,
+      sustainVol: 0.008,
+      overPeak: 0.18,
+      overSustain: 0.09,
+      overDecay: 0.35,
+      filterHz: 4200,
+      swellFilterHz: 6000,
+      filterQ: 0.7,
+      pop: { startMult: 1.1, endMult: 0.38, dur: 0.1, vol: 0.15 },
+    },
+  };
+
+  const getActivePickerInstrument = () =>
+    PALETTE_INSTRUMENTS[state.settings.palette] || PALETTE_INSTRUMENTS.bold;
+
   let pickerChordBus = null;
+  let pickerChordFilter = null;
   const getPickerChordBus = () => {
     const ctx = getAudioContext();
     if (!pickerChordBus) {
       const busGain = ctx.createGain();
       busGain.gain.setValueAtTime(1, ctx.currentTime);
+      let head = busGain;
+      if (typeof ctx.createBiquadFilter === "function") {
+        const filter = ctx.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(
+          getActivePickerInstrument().filterHz,
+          ctx.currentTime,
+        );
+        filter.Q.setValueAtTime(
+          getActivePickerInstrument().filterQ,
+          ctx.currentTime,
+        );
+        head.connect(filter);
+        head = filter;
+        pickerChordFilter = filter;
+      }
       if (typeof ctx.createDynamicsCompressor === "function") {
         const comp = ctx.createDynamicsCompressor();
         comp.threshold.setValueAtTime(-16, ctx.currentTime);
         comp.knee.setValueAtTime(18, ctx.currentTime);
         comp.ratio.setValueAtTime(4, ctx.currentTime);
-        busGain.connect(comp);
+        head.connect(comp);
         comp.connect(ctx.destination);
       } else {
-        busGain.connect(ctx.destination);
+        head.connect(ctx.destination);
       }
       pickerChordBus = busGain;
     }
@@ -1183,12 +1327,25 @@ import { log } from "./logger.js";
     if (!pickerChordBus || !audioCtx) return;
     try {
       const now = audioCtx.currentTime;
+      const inst = getActivePickerInstrument();
       pickerChordBus.gain.cancelScheduledValues(now);
       pickerChordBus.gain.setValueAtTime(
         Math.max(0.01, pickerChordBus.gain.value || 1),
         now,
       );
       pickerChordBus.gain.linearRampToValueAtTime(1, now + 0.06);
+      if (pickerChordFilter) {
+        pickerChordFilter.frequency.cancelScheduledValues(now);
+        pickerChordFilter.frequency.setValueAtTime(
+          Math.max(120, pickerChordFilter.frequency.value || inst.filterHz),
+          now,
+        );
+        pickerChordFilter.frequency.linearRampToValueAtTime(
+          inst.filterHz,
+          now + 0.06,
+        );
+        pickerChordFilter.Q.setValueAtTime(inst.filterQ, now);
+      }
     } catch {
       /* ignore */
     }
@@ -1200,6 +1357,7 @@ import { log } from "./logger.js";
     try {
       const ctx = getAudioContext();
       const bus = getPickerChordBus();
+      const inst = getActivePickerInstrument();
       const now = ctx.currentTime;
       const totalSec = countdownMs / 1000;
       const swellStart = now + Math.max(0, totalSec - 1);
@@ -1209,40 +1367,79 @@ import { log } from "./logger.js";
       bus.gain.linearRampToValueAtTime(1, now + 0.06);
       bus.gain.setValueAtTime(1, Math.max(now + 0.06, swellStart));
       bus.gain.exponentialRampToValueAtTime(9.5, swellEnd);
+      if (pickerChordFilter) {
+        pickerChordFilter.Q.setValueAtTime(inst.filterQ, now);
+        pickerChordFilter.frequency.cancelScheduledValues(now);
+        pickerChordFilter.frequency.setValueAtTime(
+          Math.max(120, pickerChordFilter.frequency.value || inst.filterHz),
+          now,
+        );
+        pickerChordFilter.frequency.linearRampToValueAtTime(
+          inst.filterHz,
+          now + 0.06,
+        );
+        pickerChordFilter.frequency.setValueAtTime(
+          inst.filterHz,
+          Math.max(now + 0.06, swellStart),
+        );
+        pickerChordFilter.frequency.exponentialRampToValueAtTime(
+          inst.swellFilterHz,
+          swellEnd,
+        );
+      }
     } catch {
       /* ignore */
     }
   };
 
-  // Sustained harmonic voice for a held finger: clear pluck dropping to ~10% whisper sustain until swell
+  // Sustained harmonic voice for a held finger: active palette instrument dropping to ~10% whisper until swell
   const startPickerVoice = (midi) => {
     if (!state.settings.soundEnabled || typeof midi !== "number") return null;
     try {
       const ctx = getAudioContext();
       const bus = getPickerChordBus();
+      const inst = getActivePickerInstrument();
       const now = ctx.currentTime;
-      const freq = midiToFreq(midi);
+      const shiftedMidi = Math.min(96, midi + inst.octaveShift);
+      const freq = midiToFreq(shiftedMidi);
+
+      if (pickerChordFilter) {
+        pickerChordFilter.Q.setValueAtTime(inst.filterQ, now);
+        pickerChordFilter.frequency.setValueAtTime(inst.filterHz, now);
+      }
 
       const voiceGain = ctx.createGain();
       voiceGain.gain.setValueAtTime(0.0008, now);
-      voiceGain.gain.linearRampToValueAtTime(0.08, now + 0.015);
-      voiceGain.gain.exponentialRampToValueAtTime(0.008, now + 0.35);
+      voiceGain.gain.linearRampToValueAtTime(inst.peakVol, now + inst.attack);
+      voiceGain.gain.exponentialRampToValueAtTime(
+        inst.sustainVol,
+        now + inst.decay,
+      );
       voiceGain.connect(bus);
 
       const fundOsc = ctx.createOscillator();
-      fundOsc.type = "sine";
+      fundOsc.type = inst.fundType;
       fundOsc.frequency.setValueAtTime(freq, now);
+      if (inst.detuneCents && fundOsc.detune) {
+        fundOsc.detune.setValueAtTime(-inst.detuneCents, now);
+      }
       fundOsc.connect(voiceGain);
       fundOsc.start(now);
 
       const overGain = ctx.createGain();
-      overGain.gain.setValueAtTime(0.24, now);
-      overGain.gain.exponentialRampToValueAtTime(0.12, now + 0.35);
+      overGain.gain.setValueAtTime(inst.overPeak, now);
+      overGain.gain.exponentialRampToValueAtTime(
+        inst.overSustain,
+        now + inst.overDecay,
+      );
       overGain.connect(voiceGain);
 
       const overOsc = ctx.createOscillator();
-      overOsc.type = "triangle";
-      overOsc.frequency.setValueAtTime(freq * 2, now);
+      overOsc.type = inst.overType;
+      overOsc.frequency.setValueAtTime(freq * inst.overMult, now);
+      if (inst.detuneCents && overOsc.detune) {
+        overOsc.detune.setValueAtTime(inst.detuneCents, now);
+      }
       overOsc.connect(overGain);
       overOsc.start(now);
 
@@ -1255,7 +1452,7 @@ import { log } from "./logger.js";
             const t = ctx.currentTime;
             voiceGain.gain.cancelScheduledValues(t);
             voiceGain.gain.setValueAtTime(
-              Math.max(0.0008, voiceGain.gain.value || 0.008),
+              Math.max(0.0008, voiceGain.gain.value || inst.sustainVol),
               t,
             );
             voiceGain.gain.exponentialRampToValueAtTime(0.0005, t + fadeSec);
@@ -1272,53 +1469,83 @@ import { log } from "./logger.js";
     }
   };
 
-  // Warm kalimba/chime pluck with fundamental sine + soft 2nd-harmonic shimmer
+  // Single plucked note voiced with the active palette's instrument
   const playPickerNote = (
     midi,
-    { duration = 0.55, vol = 0.08, delay = 0 } = {},
+    { duration = 0.55, vol = 0.075, delay = 0 } = {},
   ) => {
     if (!state.settings.soundEnabled || typeof midi !== "number") return;
     try {
       const ctx = getAudioContext();
+      const inst = getActivePickerInstrument();
       const startTime = ctx.currentTime + delay;
-      const freq = midiToFreq(midi);
+      const shiftedMidi = Math.min(96, midi + inst.octaveShift);
+      const freq = midiToFreq(shiftedMidi);
+      const scaledVol = vol * (inst.peakVol / 0.08);
+
+      let dest = ctx.destination;
+      if (typeof ctx.createBiquadFilter === "function") {
+        const noteFilter = ctx.createBiquadFilter();
+        noteFilter.type = "lowpass";
+        noteFilter.frequency.setValueAtTime(inst.swellFilterHz, startTime);
+        noteFilter.Q.setValueAtTime(inst.filterQ, startTime);
+        noteFilter.connect(ctx.destination);
+        dest = noteFilter;
+      }
 
       const fundOsc = ctx.createOscillator();
       const fundGain = ctx.createGain();
-      fundOsc.type = "sine";
+      fundOsc.type = inst.fundType;
       fundOsc.frequency.setValueAtTime(freq, startTime);
+      if (inst.detuneCents && fundOsc.detune) {
+        fundOsc.detune.setValueAtTime(-inst.detuneCents, startTime);
+      }
       fundGain.gain.setValueAtTime(0.0008, startTime);
-      fundGain.gain.linearRampToValueAtTime(vol, startTime + 0.01);
-      fundGain.gain.exponentialRampToValueAtTime(0.0008, startTime + duration);
+      fundGain.gain.linearRampToValueAtTime(
+        scaledVol,
+        startTime + inst.attack,
+      );
+      fundGain.gain.exponentialRampToValueAtTime(
+        0.0008,
+        startTime + duration,
+      );
       fundOsc.connect(fundGain);
-      fundGain.connect(ctx.destination);
+      fundGain.connect(dest);
       fundOsc.start(startTime);
       fundOsc.stop(startTime + duration + 0.02);
 
       const overOsc = ctx.createOscillator();
       const overGain = ctx.createGain();
-      overOsc.type = "triangle";
-      overOsc.frequency.setValueAtTime(freq * 2, startTime);
+      overOsc.type = inst.overType;
+      overOsc.frequency.setValueAtTime(freq * inst.overMult, startTime);
+      if (inst.detuneCents && overOsc.detune) {
+        overOsc.detune.setValueAtTime(inst.detuneCents, startTime);
+      }
       overGain.gain.setValueAtTime(0.0005, startTime);
-      overGain.gain.linearRampToValueAtTime(vol * 0.22, startTime + 0.008);
+      overGain.gain.linearRampToValueAtTime(
+        scaledVol * inst.overPeak,
+        startTime + inst.attack,
+      );
       overGain.gain.exponentialRampToValueAtTime(
         0.0005,
-        startTime + duration * 0.55,
+        startTime + duration * 0.65,
       );
       overOsc.connect(overGain);
-      overGain.connect(ctx.destination);
+      overGain.connect(dest);
       overOsc.start(startTime);
-      overOsc.stop(startTime + duration * 0.55 + 0.02);
+      overOsc.stop(startTime + duration * 0.65 + 0.02);
     } catch (e) {
       log.warn("Picker note audio failed", e);
     }
   };
 
-  // Crisp harmonic pop tuned to a defeated pointer's note
+  // Crisp harmonic pop tuned to a defeated pointer's note and active palette instrument
   const playPickerPop = (midi) => {
     if (!state.settings.soundEnabled || typeof midi !== "number") return;
-    const freq = midiToFreq(midi);
-    playClickSound(freq * 1.15, freq * 0.32, 0.11, 0.15);
+    const inst = getActivePickerInstrument();
+    const freq = midiToFreq(Math.min(96, midi + inst.octaveShift));
+    const { startMult, endMult, dur, vol } = inst.pop;
+    playClickSound(freq * startMult, freq * endMult, dur, vol);
   };
 
   // Celebratory ascending 4-note chord resolution strum (Root -> 3rd -> 5th -> Octave)
@@ -1333,6 +1560,13 @@ import { log } from "./logger.js";
         delay: idx * 0.045,
       });
     });
+  };
+
+  // Short 2-note preview chime when selecting a palette in Settings
+  const playPickerInstrumentPreview = () => {
+    if (!state.settings.soundEnabled) return;
+    playPickerNote(60, { duration: 0.35, vol: 0.065, delay: 0 });
+    playPickerNote(67, { duration: 0.45, vol: 0.065, delay: 0.07 });
   };
 
   // Desktop Chrome/Edge expose navigator.vibrate but have no motor, so on the
@@ -3755,7 +3989,7 @@ import { log } from "./logger.js";
       renderPaletteSetting();
       renderEditPaletteSwatches();
       renderCountersList();
-      playClickSound();
+      playPickerInstrumentPreview();
       playSelectionHaptic();
       if (focus) {
         $(`#setting-palette-group [data-palette-opt="${key}"]`)?.focus();
@@ -5072,6 +5306,7 @@ import { log } from "./logger.js";
       lastChordIndex = nextIdx;
       roundChord = PICKER_CHORDS[nextIdx];
       stage.dataset.chord = roundChord.name;
+      stage.dataset.instrument = getActivePickerInstrument().id;
     };
 
     const shuffleRoundPools = () => {
@@ -5443,6 +5678,7 @@ import { log } from "./logger.js";
       swipeCandidate = null;
       roundChord = null;
       delete stage.dataset.chord;
+      delete stage.dataset.instrument;
       phase = "idle";
       setSliderLocked(false);
       if (particlesLayer) particlesLayer.innerHTML = "";

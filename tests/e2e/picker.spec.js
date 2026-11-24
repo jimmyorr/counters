@@ -611,3 +611,59 @@ test('Picker harmonic audio respects soundEnabled: false', async ({ page }) => {
   expect(await page.evaluate(() => window.__oscCount)).toBe(0);
 });
 
+test('Picker selects a distinct instrument per palette and previews it in Settings', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__oscTypes = [];
+    const OrigCtx = window.AudioContext || window.webkitAudioContext;
+    if (OrigCtx) {
+      const origCreateOsc = OrigCtx.prototype.createOscillator;
+      OrigCtx.prototype.createOscillator = function (...args) {
+        const osc = origCreateOsc.apply(this, args);
+        const origStart = osc.start.bind(osc);
+        osc.start = (...startArgs) => {
+          window.__oscTypes.push(osc.type);
+          return origStart(...startArgs);
+        };
+        return osc;
+      };
+    }
+  });
+  await page.goto('/');
+  await page.locator('[data-tab-btn="picker"]').click();
+  await expect(page.locator('#picker-stage')).toBeInViewport({ ratio: 0.99 });
+
+  const expected = [
+    ['pastel', 'celesta', 'sine'],
+    ['vintage', 'rhodes', 'sine'],
+    ['nautical', 'brass', 'sawtooth'],
+    ['vaporwave', 'synth', 'sawtooth'],
+    ['colorblind', 'vibraphone', 'sine'],
+    ['bold', 'marimba', 'sine'],
+  ];
+
+  for (const [paletteKey, instrumentId, primaryWave] of expected) {
+    // Open Settings and select the palette -> should play 2-note preview (4 oscillators)
+    await page.locator('#btn-open-options').click();
+    await page.locator('#menu-btn-open-settings').click();
+    await expect(page.locator('#settings-dialog')).toBeVisible();
+    await page.evaluate(() => { window.__oscTypes = []; });
+    await page.locator(`#setting-palette-group [data-palette-opt="${paletteKey}"]`).click();
+    const previewTypes = await page.evaluate(() => window.__oscTypes);
+    expect(previewTypes).toHaveLength(4);
+    expect(previewTypes).toContain(primaryWave);
+
+    // Close Settings and verify data-instrument + live voice wave on Picker
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#settings-dialog')).toBeHidden();
+
+    await page.evaluate(() => { window.__oscTypes = []; });
+    await dispatchPointer(page, 'pointerdown', 1, 120, 180);
+    await expect(page.locator('#picker-stage')).toHaveAttribute('data-instrument', instrumentId);
+    const liveTypes = await page.evaluate(() => window.__oscTypes);
+    expect(liveTypes).toHaveLength(2);
+    expect(liveTypes[0]).toBe(primaryWave);
+
+    await dispatchPointer(page, 'pointerup', 1, 120, 180);
+    await expect(page.locator('#picker-stage')).not.toHaveAttribute('data-instrument');
+  }
+});
