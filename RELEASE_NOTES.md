@@ -1,5 +1,10 @@
 # Release notes
 
+## 0.3.1
+
+* **Picker:** Added a 2-teams mode toggle in the header that splits players into balanced teams with shared colors and shapes.
+* **Audio:** Added harmonic chord cues to Picker with distinct palette instruments, major chords in light mode, and minor chords in dark mode.
+
 ## 0.3.0
 
 * **Calculator:** Replaced the system keyboard with a built-in number pad featuring separate Add and Subtract actions, a +/− switch for quick-add presets, and full hardware keyboard support.
