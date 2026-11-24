@@ -25,11 +25,12 @@ Counters is a minimalist app designed for counting things, like scores in games.
 Features:
 
 - Dynamic counters: Add, edit, delete, and set custom colors for individual counters.
-- Calculator overlay: Tap a counter to add or subtract custom values or quick-add presets.
+- Number pad: Tap a counter to add or subtract any value on the built-in number pad, or use quick-add presets with a +/− switch.
 - Dice roller: Roll dice (d4 to d20) with adjustable quantities.
 - Stopwatch/timer: Track intervals or count down using quick-add presets.
 - History log: Record all counter adjustments, resets, and dice rolls.
 - Offline persistence: Save all app states locally to resume instantly.
+- Picker: Everyone puts a finger on the screen to pick a random player or split the group into 2 teams, with haptics and chord sound effects.
 - Shuffle decider: Randomize counter order to determine play order.
 - Total value: View the combined sum of all active counters.
 - Counter sorting: Sort counters automatically by value, or drag and drop to reorder.
