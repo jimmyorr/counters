@@ -156,15 +156,31 @@ test.describe('Picker tab', () => {
     await expect(winnerCircle(page)).toHaveCount(0);
   });
 
-  test('moving a finger updates its circle position', async ({ page }) => {
+  test('moving a finger drags its shape along on a short leash', async ({ page }) => {
     await dispatchPointer(page, 'pointerdown', 1, 80, 100);
     const circle = circles(page).first();
     await expect(circle).toHaveCSS('--x', '80px');
     await expect(circle).toHaveCSS('--y', '100px');
 
-    await dispatchPointer(page, 'pointermove', 1, 165, 225);
-    await expect(circle).toHaveCSS('--x', '165px');
-    await expect(circle).toHaveCSS('--y', '225px');
+    // Straight down 112px: the shape trails the finger by the 12px leash
+    await dispatchPointer(page, 'pointermove', 1, 80, 212);
+    await expect(circle).toHaveCSS('--x', '80px');
+    await expect(circle).toHaveCSS('--y', '200px');
+  });
+
+  test('first shape stays put when a second finger lands and its touch point wobbles', async ({ page }) => {
+    await dispatchPointer(page, 'pointerdown', 1, 140, 220);
+    const first = circles(page).first();
+    await expect(first).toHaveCSS('--x', '140px');
+    await expect(first).toHaveCSS('--y', '220px');
+
+    // Digitizers report the held finger a few px off when another finger lands
+    await dispatchPointer(page, 'pointerdown', 2, 280, 480);
+    await dispatchPointer(page, 'pointermove', 1, 144, 225);
+    await dispatchPointer(page, 'pointermove', 1, 136, 214);
+    await expect(circles(page)).toHaveCount(2);
+    await expect(first).toHaveCSS('--x', '140px');
+    await expect(first).toHaveCSS('--y', '220px');
   });
 
   test('winner stays highlighted until all fingers lift, then resets for a new round', async ({ page }) => {

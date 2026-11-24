@@ -5164,6 +5164,7 @@ import { log } from "./logger.js";
     // Stay below 60Hz/120Hz wagon-wheel stroboscopic harmonics (e.g. 5x14.4°=72° at 864°/s)
     const ROTATION_MAX_DEG_PER_SEC = 500;
     const ROTATION_SETTLED_DEG_PER_SEC = 24;
+    const PICKER_FOLLOW_SLACK_PX = 12;
     const SWIPE_TRIGGER_PX = 64;
     const SWIPE_FLICK_PX = 36;
     const SWIPE_FLICK_VELOCITY = 0.3; // px/ms
@@ -5397,10 +5398,25 @@ import { log } from "./logger.js";
       return { midi, noteSlot };
     };
 
-    const positionCircle = (entry, clientX, clientY) => {
+    const positionCircle = (entry, clientX, clientY, { follow = false } = {}) => {
       const rect = stage.getBoundingClientRect();
-      entry.x = clientX - rect.left;
-      entry.y = clientY - rect.top;
+      const fingerX = clientX - rect.left;
+      const fingerY = clientY - rect.top;
+      if (follow) {
+        // A held finger's reported point wanders a few px, and jumps when another
+        // finger lands. Keep the shape anchored until the finger pulls it past a
+        // short leash, then drag it along so it never snaps.
+        const dx = fingerX - entry.x;
+        const dy = fingerY - entry.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist <= PICKER_FOLLOW_SLACK_PX) return;
+        const pull = (dist - PICKER_FOLLOW_SLACK_PX) / dist;
+        entry.x += dx * pull;
+        entry.y += dy * pull;
+      } else {
+        entry.x = fingerX;
+        entry.y = fingerY;
+      }
       entry.el.style.setProperty("--x", `${entry.x}px`);
       entry.el.style.setProperty("--y", `${entry.y}px`);
     };
@@ -5835,7 +5851,7 @@ import { log } from "./logger.js";
       if (trySingleFingerSwipe(e, false)) return;
       const entry = touches.get(e.pointerId);
       if (!entry) return;
-      positionCircle(entry, e.clientX, e.clientY);
+      positionCircle(entry, e.clientX, e.clientY, { follow: true });
     };
 
     const removePickerTouch = (e) => {
