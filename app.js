@@ -1143,6 +1143,198 @@ import { log } from "./logger.js";
     }, 200);
   };
 
+  // Curated extended harmonic chords (MIDI 55-88) so every new finger
+  // harmonizes cleanly with previous fingers and rings clearly on phone speakers
+  const PICKER_CHORDS = [
+    { name: "Cmaj9", notes: [60, 64, 67, 71, 74, 76, 79, 83] },
+    { name: "Dmaj9", notes: [62, 66, 69, 73, 76, 78, 81, 85] },
+    { name: "Ebmaj9", notes: [63, 67, 70, 74, 77, 79, 82, 86] },
+    { name: "Fmaj9", notes: [65, 69, 72, 76, 79, 81, 84, 88] },
+    { name: "Gmaj9", notes: [55, 59, 62, 66, 69, 71, 74, 78] },
+    { name: "Am9", notes: [57, 60, 64, 67, 71, 72, 76, 79] },
+    { name: "Bbmaj9", notes: [58, 62, 65, 69, 72, 74, 77, 81] },
+    { name: "Dm9", notes: [62, 65, 69, 72, 76, 77, 81, 84] },
+  ];
+
+  const midiToFreq = (midi) => 440 * Math.pow(2, (midi - 69) / 12);
+
+  let pickerChordBus = null;
+  const getPickerChordBus = () => {
+    const ctx = getAudioContext();
+    if (!pickerChordBus) {
+      const busGain = ctx.createGain();
+      busGain.gain.setValueAtTime(1, ctx.currentTime);
+      if (typeof ctx.createDynamicsCompressor === "function") {
+        const comp = ctx.createDynamicsCompressor();
+        comp.threshold.setValueAtTime(-16, ctx.currentTime);
+        comp.knee.setValueAtTime(18, ctx.currentTime);
+        comp.ratio.setValueAtTime(4, ctx.currentTime);
+        busGain.connect(comp);
+        comp.connect(ctx.destination);
+      } else {
+        busGain.connect(ctx.destination);
+      }
+      pickerChordBus = busGain;
+    }
+    return pickerChordBus;
+  };
+
+  const resetPickerChordSwell = () => {
+    if (!pickerChordBus || !audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      pickerChordBus.gain.cancelScheduledValues(now);
+      pickerChordBus.gain.setValueAtTime(
+        Math.max(0.01, pickerChordBus.gain.value || 1),
+        now,
+      );
+      pickerChordBus.gain.linearRampToValueAtTime(1, now + 0.06);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  // Hold steady for the first part of the countdown, then swell smoothly during the final second
+  const schedulePickerChordSwell = (countdownMs = 3000) => {
+    if (!state.settings.soundEnabled) return;
+    try {
+      const ctx = getAudioContext();
+      const bus = getPickerChordBus();
+      const now = ctx.currentTime;
+      const totalSec = countdownMs / 1000;
+      const swellStart = now + Math.max(0, totalSec - 1);
+      const swellEnd = now + totalSec;
+      bus.gain.cancelScheduledValues(now);
+      bus.gain.setValueAtTime(Math.max(0.01, bus.gain.value || 1), now);
+      bus.gain.linearRampToValueAtTime(1, now + 0.06);
+      bus.gain.setValueAtTime(1, Math.max(now + 0.06, swellStart));
+      bus.gain.exponentialRampToValueAtTime(9.5, swellEnd);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  // Sustained harmonic voice for a held finger: clear pluck dropping to ~10% whisper sustain until swell
+  const startPickerVoice = (midi) => {
+    if (!state.settings.soundEnabled || typeof midi !== "number") return null;
+    try {
+      const ctx = getAudioContext();
+      const bus = getPickerChordBus();
+      const now = ctx.currentTime;
+      const freq = midiToFreq(midi);
+
+      const voiceGain = ctx.createGain();
+      voiceGain.gain.setValueAtTime(0.0008, now);
+      voiceGain.gain.linearRampToValueAtTime(0.08, now + 0.015);
+      voiceGain.gain.exponentialRampToValueAtTime(0.008, now + 0.35);
+      voiceGain.connect(bus);
+
+      const fundOsc = ctx.createOscillator();
+      fundOsc.type = "sine";
+      fundOsc.frequency.setValueAtTime(freq, now);
+      fundOsc.connect(voiceGain);
+      fundOsc.start(now);
+
+      const overGain = ctx.createGain();
+      overGain.gain.setValueAtTime(0.24, now);
+      overGain.gain.exponentialRampToValueAtTime(0.12, now + 0.35);
+      overGain.connect(voiceGain);
+
+      const overOsc = ctx.createOscillator();
+      overOsc.type = "triangle";
+      overOsc.frequency.setValueAtTime(freq * 2, now);
+      overOsc.connect(overGain);
+      overOsc.start(now);
+
+      let stopped = false;
+      return {
+        stop(fadeSec = 0.12) {
+          if (stopped) return;
+          stopped = true;
+          try {
+            const t = ctx.currentTime;
+            voiceGain.gain.cancelScheduledValues(t);
+            voiceGain.gain.setValueAtTime(
+              Math.max(0.0008, voiceGain.gain.value || 0.008),
+              t,
+            );
+            voiceGain.gain.exponentialRampToValueAtTime(0.0005, t + fadeSec);
+            fundOsc.stop(t + fadeSec + 0.02);
+            overOsc.stop(t + fadeSec + 0.02);
+          } catch {
+            /* ignore */
+          }
+        },
+      };
+    } catch (e) {
+      log.warn("Picker voice audio failed", e);
+      return null;
+    }
+  };
+
+  // Warm kalimba/chime pluck with fundamental sine + soft 2nd-harmonic shimmer
+  const playPickerNote = (
+    midi,
+    { duration = 0.55, vol = 0.08, delay = 0 } = {},
+  ) => {
+    if (!state.settings.soundEnabled || typeof midi !== "number") return;
+    try {
+      const ctx = getAudioContext();
+      const startTime = ctx.currentTime + delay;
+      const freq = midiToFreq(midi);
+
+      const fundOsc = ctx.createOscillator();
+      const fundGain = ctx.createGain();
+      fundOsc.type = "sine";
+      fundOsc.frequency.setValueAtTime(freq, startTime);
+      fundGain.gain.setValueAtTime(0.0008, startTime);
+      fundGain.gain.linearRampToValueAtTime(vol, startTime + 0.01);
+      fundGain.gain.exponentialRampToValueAtTime(0.0008, startTime + duration);
+      fundOsc.connect(fundGain);
+      fundGain.connect(ctx.destination);
+      fundOsc.start(startTime);
+      fundOsc.stop(startTime + duration + 0.02);
+
+      const overOsc = ctx.createOscillator();
+      const overGain = ctx.createGain();
+      overOsc.type = "triangle";
+      overOsc.frequency.setValueAtTime(freq * 2, startTime);
+      overGain.gain.setValueAtTime(0.0005, startTime);
+      overGain.gain.linearRampToValueAtTime(vol * 0.22, startTime + 0.008);
+      overGain.gain.exponentialRampToValueAtTime(
+        0.0005,
+        startTime + duration * 0.55,
+      );
+      overOsc.connect(overGain);
+      overGain.connect(ctx.destination);
+      overOsc.start(startTime);
+      overOsc.stop(startTime + duration * 0.55 + 0.02);
+    } catch (e) {
+      log.warn("Picker note audio failed", e);
+    }
+  };
+
+  // Crisp harmonic pop tuned to a defeated pointer's note
+  const playPickerPop = (midi) => {
+    if (!state.settings.soundEnabled || typeof midi !== "number") return;
+    const freq = midiToFreq(midi);
+    playClickSound(freq * 1.15, freq * 0.32, 0.11, 0.15);
+  };
+
+  // Celebratory ascending 4-note chord resolution strum (Root -> 3rd -> 5th -> Octave)
+  const playPickerResolve = (chord) => {
+    if (!state.settings.soundEnabled || !chord?.notes?.length) return;
+    const [root, third, fifth] = chord.notes;
+    const arpeggio = [root, third, fifth, root + 12];
+    arpeggio.forEach((midi, idx) => {
+      playPickerNote(midi, {
+        duration: 0.75,
+        vol: 0.065,
+        delay: idx * 0.045,
+      });
+    });
+  };
+
   // Desktop Chrome/Edge expose navigator.vibrate but have no motor, so on the
   // web only offer haptics when the primary pointer is a finger
   const supportsWebVibrate = () =>
@@ -4723,6 +4915,8 @@ import { log } from "./logger.js";
     let swipeCandidate = null; // { pointerId, startX, startY, startTime }
     let roundColorOrder = [];
     let roundShapeOrder = [];
+    let lastChordIndex = -1;
+    let roundChord = null;
     let fallbackColorIndex = 0;
     let fallbackShapeIndex = 0;
     let nextDirection = 1;
@@ -4770,6 +4964,7 @@ import { log } from "./logger.js";
         countdownTimer = null;
       }
       countdownStartedAt = null;
+      resetPickerChordSwell();
     };
 
     const clearEliminationTimers = () => {
@@ -4869,10 +5064,21 @@ import { log } from "./logger.js";
       }
     };
 
+    const selectRoundChord = () => {
+      const candidates = PICKER_CHORDS.map((_, i) => i).filter(
+        (i) => i !== lastChordIndex,
+      );
+      const nextIdx = candidates[Math.floor(Math.random() * candidates.length)];
+      lastChordIndex = nextIdx;
+      roundChord = PICKER_CHORDS[nextIdx];
+      stage.dataset.chord = roundChord.name;
+    };
+
     const shuffleRoundPools = () => {
       const activePalette = palettes[state.settings.palette] || palettes.bold;
       roundColorOrder = shuffleIndices(activePalette.colors.length);
       roundShapeOrder = shuffleIndices(PICKER_SHAPES.length);
+      selectRoundChord();
       fallbackColorIndex = 0;
       fallbackShapeIndex = 0;
       nextDirection = 1;
@@ -4907,6 +5113,20 @@ import { log } from "./logger.js";
       }
       const fallbackSlot = fallbackShapeIndex++ % PICKER_SHAPES.length;
       return { shape: PICKER_SHAPES[fallbackSlot], shapeSlot: null };
+    };
+
+    const allocateNote = () => {
+      if (!roundChord) selectRoundChord();
+      const usedNoteSlots = new Set();
+      touches.forEach((entry) => {
+        if (typeof entry.noteSlot === "number") usedNoteSlots.add(entry.noteSlot);
+      });
+      let noteSlot = 0;
+      while (usedNoteSlots.has(noteSlot)) noteSlot++;
+      const notes = roundChord.notes;
+      const octaveBoost = Math.floor(noteSlot / notes.length) * 12;
+      const midi = Math.min(96, notes[noteSlot % notes.length] + octaveBoost);
+      return { midi, noteSlot };
     };
 
     const positionCircle = (entry, clientX, clientY) => {
@@ -5001,6 +5221,11 @@ import { log } from "./logger.js";
       }
     };
 
+    const stopAllPickerVoices = (fadeSec = 0.12) => {
+      touches.forEach((entry) => entry.voice?.stop(fadeSec));
+      resetPickerChordSwell();
+    };
+
     const finalizeWinner = (winnerId) => {
       const winner = touches.get(winnerId);
       if (!winner) {
@@ -5020,7 +5245,9 @@ import { log } from "./logger.js";
         winnerBgEl.classList.add("active");
       }
 
+      stopAllPickerVoices(0.22);
       playPickerHaptic("major");
+      playPickerResolve(roundChord);
       if (statusEl) {
         const activePalette = palettes[state.settings.palette] || palettes.bold;
         const colorName = winner.slot !== null ? activePalette.names?.[winner.slot] : null;
@@ -5092,7 +5319,9 @@ import { log } from "./logger.js";
           });
         });
         phase = "selected";
+        stopAllPickerVoices(0.22);
         playPickerHaptic("major");
+        playPickerResolve(roundChord);
         if (statusEl) statusEl.textContent = `${teamCount} teams selected`;
         updatePrompt();
         updateModeUI();
@@ -5110,9 +5339,17 @@ import { log } from "./logger.js";
           });
           if (waveIndex < teams.length - 1) {
             playPickerHaptic("minor");
+            if (roundChord) {
+              playPickerNote(
+                roundChord.notes[waveIndex % roundChord.notes.length],
+                { duration: 0.45, vol: 0.065 },
+              );
+            }
           } else {
             phase = "selected";
+            stopAllPickerVoices(0.22);
             playPickerHaptic("major");
+            playPickerResolve(roundChord);
             if (statusEl) statusEl.textContent = `${teamCount} teams selected`;
             updatePrompt();
             updateModeUI();
@@ -5154,6 +5391,7 @@ import { log } from "./logger.js";
         loserIds.forEach((id) => {
           const entry = touches.get(id);
           if (entry) {
+            entry.voice?.stop(0.05);
             entry.el.remove();
             touches.delete(id);
           }
@@ -5169,9 +5407,11 @@ import { log } from "./logger.js";
         const timerId = setTimeout(() => {
           const entry = touches.get(id);
           if (!entry) return;
+          entry.voice?.stop(0.05);
           entry.el.remove();
           touches.delete(id);
           spawnGeometricExplosion(entry);
+          playPickerPop(entry.midi);
         }, index * PICKER_EXPLOSION_STAGGER_MS);
         eliminationTimers.push(timerId);
       });
@@ -5186,6 +5426,7 @@ import { log } from "./logger.js";
       clearCountdown();
       countdownStartedAt = performance.now();
       countdownTimer = setTimeout(selectPickerWinner, PICKER_COUNTDOWN_MS);
+      schedulePickerChordSwell(PICKER_COUNTDOWN_MS);
       if (!prefersReducedMotion()) {
         stage.dataset.rotationSpeed = ROTATION_MIN_DEG_PER_SEC.toFixed(1);
       }
@@ -5195,10 +5436,13 @@ import { log } from "./logger.js";
       clearCountdown();
       clearEliminationTimers();
       stopRotationLoop();
+      stopAllPickerVoices(0.06);
       touches.forEach((entry) => entry.el.remove());
       touches.clear();
       heldPointers.clear();
       swipeCandidate = null;
+      roundChord = null;
+      delete stage.dataset.chord;
       phase = "idle";
       setSliderLocked(false);
       if (particlesLayer) particlesLayer.innerHTML = "";
@@ -5262,11 +5506,13 @@ import { log } from "./logger.js";
 
       const { color, slot } = allocateColor();
       const { shape, shapeSlot } = allocateShape();
+      const { midi, noteSlot } = allocateNote();
       const el = document.createElement("div");
       el.className = "picker-circle";
       el.dataset.pointerId = String(e.pointerId);
       el.dataset.color = color;
       el.dataset.shape = shape.name;
+      el.dataset.note = String(midi);
       el.style.setProperty("--circle-color", color);
       el.style.setProperty("--rot", "0deg");
       el.innerHTML = `<svg class="picker-shape" aria-hidden="true" viewBox="0 0 100 100">${shape.markup}</svg>`;
@@ -5274,6 +5520,7 @@ import { log } from "./logger.js";
 
       const direction = nextDirection;
       nextDirection = -nextDirection;
+      const voice = startPickerVoice(midi);
       const entry = {
         x: 0,
         y: 0,
@@ -5281,6 +5528,9 @@ import { log } from "./logger.js";
         slot,
         shape: shape.name,
         shapeSlot,
+        midi,
+        noteSlot,
+        voice,
         angle: 0,
         direction,
         el,
@@ -5333,6 +5583,7 @@ import { log } from "./logger.js";
 
       const entry = touches.get(e.pointerId);
       if (!entry) return;
+      entry.voice?.stop(0.12);
       entry.el.remove();
       touches.delete(e.pointerId);
       if (swipeCandidate?.pointerId === e.pointerId) {
