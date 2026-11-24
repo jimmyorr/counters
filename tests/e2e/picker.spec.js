@@ -642,14 +642,14 @@ test('Picker selects a distinct instrument per palette and previews it in Settin
   ];
 
   for (const [paletteKey, instrumentId, primaryWave] of expected) {
-    // Open Settings and select the palette -> should play 2-note preview (4 oscillators)
+    // Open Settings and select the palette -> should play 3-note triad preview (6 oscillators)
     await page.locator('#btn-open-options').click();
     await page.locator('#menu-btn-open-settings').click();
     await expect(page.locator('#settings-dialog')).toBeVisible();
     await page.evaluate(() => { window.__oscTypes = []; });
     await page.locator(`#setting-palette-group [data-palette-opt="${paletteKey}"]`).click();
     const previewTypes = await page.evaluate(() => window.__oscTypes);
-    expect(previewTypes).toHaveLength(4);
+    expect(previewTypes).toHaveLength(6);
     expect(previewTypes).toContain(primaryWave);
 
     // Close Settings and verify data-instrument + live voice wave on Picker
@@ -667,3 +667,34 @@ test('Picker selects a distinct instrument per palette and previews it in Settin
     await expect(page.locator('#picker-stage')).not.toHaveAttribute('data-instrument');
   }
 });
+
+test('Picker uses major chords in light mode and minor chords in dark mode', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/');
+  await page.locator('[data-tab-btn="picker"]').click();
+  await expect(page.locator('#picker-stage')).toBeInViewport({ ratio: 0.99 });
+
+  // Light mode -> bright major triad (interval between root and 3rd = 4 semitones)
+  await dispatchPointer(page, 'pointerdown', 1, 80, 140);
+  await dispatchPointer(page, 'pointerdown', 2, 200, 140);
+  const lightChord = await page.locator('#picker-stage').getAttribute('data-chord');
+  expect(lightChord).toMatch(/^[A-G]b?$/);
+  const lightNotes = await circles(page).evaluateAll((els) => els.map((el) => Number(el.dataset.note)));
+  expect(lightNotes[1] - lightNotes[0]).toBe(4);
+
+  await dispatchPointer(page, 'pointerup', 1, 80, 140);
+  await dispatchPointer(page, 'pointerup', 2, 200, 140);
+  await expect(page.locator('#picker-stage')).not.toHaveAttribute('data-chord');
+
+  // Switch device to dark mode -> deeper minor triad (interval = 3 semitones, lower root)
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await expect(page.locator('html')).toHaveClass(/dark-mode/);
+  await dispatchPointer(page, 'pointerdown', 3, 80, 140);
+  await dispatchPointer(page, 'pointerdown', 4, 200, 140);
+  const darkChord = await page.locator('#picker-stage').getAttribute('data-chord');
+  expect(darkChord).toMatch(/^[A-G]#?m$/);
+  const darkNotes = await circles(page).evaluateAll((els) => els.map((el) => Number(el.dataset.note)));
+  expect(darkNotes[1] - darkNotes[0]).toBe(3);
+  expect(darkNotes[0]).toBeLessThan(lightNotes[0]);
+});
+

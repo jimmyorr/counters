@@ -1143,18 +1143,32 @@ import { log } from "./logger.js";
     }, 200);
   };
 
-  // Curated extended harmonic chords (MIDI 55-88) so every new finger
-  // harmonizes cleanly with previous fingers and rings clearly on phone speakers
-  const PICKER_CHORDS = [
-    { name: "Cmaj9", notes: [60, 64, 67, 71, 74, 76, 79, 83] },
-    { name: "Dmaj9", notes: [62, 66, 69, 73, 76, 78, 81, 85] },
-    { name: "Ebmaj9", notes: [63, 67, 70, 74, 77, 79, 82, 86] },
-    { name: "Fmaj9", notes: [65, 69, 72, 76, 79, 81, 84, 88] },
-    { name: "Gmaj9", notes: [55, 59, 62, 66, 69, 71, 74, 78] },
-    { name: "Am9", notes: [57, 60, 64, 67, 71, 72, 76, 79] },
-    { name: "Bbmaj9", notes: [58, 62, 65, 69, 72, 74, 77, 81] },
-    { name: "Dm9", notes: [62, 65, 69, 72, 76, 77, 81, 84] },
+  // Curated harmonic chords so every new finger harmonizes cleanly and rings clearly
+  // on phone speakers. Light mode uses bright major triads (roots C4-G4); dark mode
+  // uses deeper pure minor triads (roots D3-A3) with no relative-major 7th ambiguity.
+  const PICKER_MAJOR_CHORDS = [
+    { name: "C", notes: [60, 64, 67, 72, 76, 79, 84, 88] },
+    { name: "D", notes: [62, 66, 69, 74, 78, 81, 86, 90] },
+    { name: "Eb", notes: [63, 67, 70, 75, 79, 82, 87, 91] },
+    { name: "E", notes: [64, 68, 71, 76, 80, 83, 88, 92] },
+    { name: "F", notes: [65, 69, 72, 77, 81, 84, 89, 93] },
+    { name: "G", notes: [67, 71, 74, 79, 83, 86, 91, 95] },
   ];
+
+  const PICKER_MINOR_CHORDS = [
+    { name: "Dm", notes: [50, 53, 57, 62, 65, 69, 74, 77] },
+    { name: "Em", notes: [52, 55, 59, 64, 67, 71, 76, 79] },
+    { name: "Fm", notes: [53, 56, 60, 65, 68, 72, 77, 80] },
+    { name: "F#m", notes: [54, 57, 61, 66, 69, 73, 78, 81] },
+    { name: "Gm", notes: [55, 58, 62, 67, 70, 74, 79, 82] },
+    { name: "Am", notes: [57, 60, 64, 69, 72, 76, 81, 84] },
+  ];
+
+  const isPickerDarkMode = () =>
+    document.documentElement.classList.contains("dark-mode");
+
+  const getPickerChordBank = () =>
+    isPickerDarkMode() ? PICKER_MINOR_CHORDS : PICKER_MAJOR_CHORDS;
 
   const midiToFreq = (midi) => 440 * Math.pow(2, (midi - 69) / 12);
 
@@ -1282,8 +1296,16 @@ import { log } from "./logger.js";
     },
   };
 
-  const getActivePickerInstrument = () =>
-    PALETTE_INSTRUMENTS[state.settings.palette] || PALETTE_INSTRUMENTS.bold;
+  const getActivePickerInstrument = () => {
+    const base =
+      PALETTE_INSTRUMENTS[state.settings.palette] || PALETTE_INSTRUMENTS.bold;
+    if (!isPickerDarkMode()) return base;
+    return {
+      ...base,
+      filterHz: Math.round(base.filterHz * 0.75),
+      swellFilterHz: Math.round(base.swellFilterHz * 0.75),
+    };
+  };
 
   let pickerChordBus = null;
   let pickerChordFilter = null;
@@ -1548,25 +1570,38 @@ import { log } from "./logger.js";
     playClickSound(freq * startMult, freq * endMult, dur, vol);
   };
 
-  // Celebratory ascending 4-note chord resolution strum (Root -> 3rd -> 5th -> Octave)
+  // Chord resolution strum: brisk ascending major in light mode, brooding descending minor in dark mode
   const playPickerResolve = (chord) => {
     if (!state.settings.soundEnabled || !chord?.notes?.length) return;
     const [root, third, fifth] = chord.notes;
-    const arpeggio = [root, third, fifth, root + 12];
+    const isDark = isPickerDarkMode();
+    const arpeggio = isDark
+      ? [root + 12, fifth, third, root]
+      : [root, third, fifth, root + 12];
+    const step = isDark ? 0.065 : 0.045;
+    const duration = isDark ? 0.9 : 0.75;
     arpeggio.forEach((midi, idx) => {
       playPickerNote(midi, {
-        duration: 0.75,
+        duration,
         vol: 0.065,
-        delay: idx * 0.045,
+        delay: idx * step,
       });
     });
   };
 
-  // Short 2-note preview chime when selecting a palette in Settings
+  // Short 3-note triad preview when selecting a palette in Settings (major in light, minor in dark)
   const playPickerInstrumentPreview = () => {
     if (!state.settings.soundEnabled) return;
-    playPickerNote(60, { duration: 0.35, vol: 0.065, delay: 0 });
-    playPickerNote(67, { duration: 0.45, vol: 0.065, delay: 0.07 });
+    const isDark = isPickerDarkMode();
+    const notes = isDark ? [57, 60, 64] : [60, 64, 67];
+    const step = isDark ? 0.065 : 0.055;
+    notes.forEach((midi, idx) => {
+      playPickerNote(midi, {
+        duration: idx === notes.length - 1 ? 0.45 : 0.32,
+        vol: 0.065,
+        delay: idx * step,
+      });
+    });
   };
 
   // Desktop Chrome/Edge expose navigator.vibrate but have no motor, so on the
@@ -5149,7 +5184,7 @@ import { log } from "./logger.js";
     let swipeCandidate = null; // { pointerId, startX, startY, startTime }
     let roundColorOrder = [];
     let roundShapeOrder = [];
-    let lastChordIndex = -1;
+    let lastChordName = null;
     let roundChord = null;
     let fallbackColorIndex = 0;
     let fallbackShapeIndex = 0;
@@ -5299,12 +5334,10 @@ import { log } from "./logger.js";
     };
 
     const selectRoundChord = () => {
-      const candidates = PICKER_CHORDS.map((_, i) => i).filter(
-        (i) => i !== lastChordIndex,
-      );
-      const nextIdx = candidates[Math.floor(Math.random() * candidates.length)];
-      lastChordIndex = nextIdx;
-      roundChord = PICKER_CHORDS[nextIdx];
+      const bank = getPickerChordBank();
+      const candidates = bank.filter((chord) => chord.name !== lastChordName);
+      roundChord = candidates[Math.floor(Math.random() * candidates.length)];
+      lastChordName = roundChord.name;
       stage.dataset.chord = roundChord.name;
       stage.dataset.instrument = getActivePickerInstrument().id;
     };
