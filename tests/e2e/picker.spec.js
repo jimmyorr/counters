@@ -491,3 +491,210 @@ test('Picker teams mode with reduced motion reveals all teams immediately withou
   await expect(page.locator('#picker-particles .picker-particle')).toHaveCount(0);
   await expect(page.locator('#picker-status')).toHaveText('2 teams selected');
 });
+
+test('Picker plays ascending harmonizing notes per finger, swells into reveal, and rotates chords on restart', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__oscCount = 0;
+    window.__oscStopCount = 0;
+    window.__swellTargets = [];
+    const OrigCtx = window.AudioContext || window.webkitAudioContext;
+    if (OrigCtx) {
+      const origCreateOsc = OrigCtx.prototype.createOscillator;
+      OrigCtx.prototype.createOscillator = function (...args) {
+        window.__oscCount += 1;
+        return origCreateOsc.apply(this, args);
+      };
+    }
+    if (window.OscillatorNode?.prototype?.stop) {
+      const origStop = window.OscillatorNode.prototype.stop;
+      window.OscillatorNode.prototype.stop = function (...args) {
+        window.__oscStopCount += 1;
+        return origStop.apply(this, args);
+      };
+    }
+    if (window.AudioParam?.prototype?.exponentialRampToValueAtTime) {
+      const origRamp = window.AudioParam.prototype.exponentialRampToValueAtTime;
+      window.AudioParam.prototype.exponentialRampToValueAtTime = function (value, endTime) {
+        if (value > 1.5) window.__swellTargets.push({ value, endTime });
+        return origRamp.call(this, value, endTime);
+      };
+    }
+  });
+  await page.clock.install({ time: T0 });
+  await page.goto('/');
+  await page.locator('[data-tab-btn="picker"]').click();
+  await expect(page.locator('#picker-stage')).toBeInViewport({ ratio: 0.99 });
+  await page.clock.pauseAt(new Date(T0.getTime() + 60_000));
+
+  await page.evaluate(() => {
+    window.__oscCount = 0;
+    window.__oscStopCount = 0;
+    window.__swellTargets = [];
+  });
+  await dispatchPointer(page, 'pointerdown', 1, 80, 120);
+  await dispatchPointer(page, 'pointerdown', 2, 200, 120);
+  await dispatchPointer(page, 'pointerdown', 3, 140, 240);
+
+  const chord1 = await page.locator('#picker-stage').getAttribute('data-chord');
+  expect(chord1).toBeTruthy();
+
+  const notes1 = await circles(page).evaluateAll((els) => els.map((el) => Number(el.dataset.note)));
+  expect(notes1).toHaveLength(3);
+  expect(notes1[0]).toBeLessThan(notes1[1]);
+  expect(notes1[1]).toBeLessThan(notes1[2]);
+
+  // 3 fingers x 2 oscillators per sustained voice (fundamental + overtone) = 6, none stopped while held
+  const touchAudio = await page.evaluate(() => ({
+    oscCount: window.__oscCount,
+    oscStopCount: window.__oscStopCount,
+    swellCount: window.__swellTargets.length,
+  }));
+  expect(touchAudio.oscCount).toBe(6);
+  expect(touchAudio.oscStopCount).toBe(0);
+  expect(touchAudio.swellCount).toBeGreaterThanOrEqual(1);
+
+  // Lifting a finger stops its 2 oscillators cleanly
+  await dispatchPointer(page, 'pointerup', 3, 140, 240);
+  expect(await page.evaluate(() => window.__oscStopCount)).toBe(2);
+
+  // Re-add finger 3 so all 3 are in the round (+2 oscillators = 8 total)
+  await dispatchPointer(page, 'pointerdown', 4, 140, 240);
+  expect(await page.evaluate(() => window.__oscCount)).toBe(8);
+
+  // Run through 3s countdown + 2 staggered explosions + winner resolution arpeggio
+  await page.clock.runFor(3400);
+  await expect(winnerCircle(page)).toHaveCount(1);
+  // 8 (touches) + 2 (explosion pops) + 8 (4-note chord resolution x 2 oscs) = 18; all 18 oscillators stopped
+  const revealAudio = await page.evaluate(() => ({
+    oscCount: window.__oscCount,
+    oscStopCount: window.__oscStopCount,
+  }));
+  expect(revealAudio.oscCount).toBe(18);
+  expect(revealAudio.oscStopCount).toBe(18);
+
+  // Lift all fingers to end the round, then start a new round -> must pick a different chord
+  for (const id of [1, 2, 4]) {
+    await dispatchPointer(page, 'pointerup', id, 100, 100);
+  }
+  await expect(page.locator('#picker-stage')).not.toHaveAttribute('data-chord');
+
+  await dispatchPointer(page, 'pointerdown', 10, 90, 150);
+  const chord2 = await page.locator('#picker-stage').getAttribute('data-chord');
+  expect(chord2).toBeTruthy();
+  expect(chord2).not.toBe(chord1);
+});
+
+test('Picker harmonic audio respects soundEnabled: false', async ({ page }) => {
+  await seed(page, { settings: { soundEnabled: false } });
+  await page.addInitScript(() => {
+    window.__oscCount = 0;
+    const OrigCtx = window.AudioContext || window.webkitAudioContext;
+    if (OrigCtx) {
+      const origCreateOsc = OrigCtx.prototype.createOscillator;
+      OrigCtx.prototype.createOscillator = function (...args) {
+        window.__oscCount += 1;
+        return origCreateOsc.apply(this, args);
+      };
+    }
+  });
+  await page.clock.install({ time: T0 });
+  await page.goto('/');
+  await page.locator('[data-tab-btn="picker"]').click();
+  await expect(page.locator('#picker-stage')).toBeInViewport({ ratio: 0.99 });
+  await page.clock.pauseAt(new Date(T0.getTime() + 60_000));
+
+  await page.evaluate(() => { window.__oscCount = 0; });
+  await dispatchPointer(page, 'pointerdown', 1, 80, 120);
+  await dispatchPointer(page, 'pointerdown', 2, 200, 120);
+  await page.clock.runFor(3300);
+  await expect(winnerCircle(page)).toHaveCount(1);
+  expect(await page.evaluate(() => window.__oscCount)).toBe(0);
+});
+
+test('Picker selects a distinct instrument per palette and previews it in Settings', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__oscTypes = [];
+    const OrigCtx = window.AudioContext || window.webkitAudioContext;
+    if (OrigCtx) {
+      const origCreateOsc = OrigCtx.prototype.createOscillator;
+      OrigCtx.prototype.createOscillator = function (...args) {
+        const osc = origCreateOsc.apply(this, args);
+        const origStart = osc.start.bind(osc);
+        osc.start = (...startArgs) => {
+          window.__oscTypes.push(osc.type);
+          return origStart(...startArgs);
+        };
+        return osc;
+      };
+    }
+  });
+  await page.goto('/');
+  await page.locator('[data-tab-btn="picker"]').click();
+  await expect(page.locator('#picker-stage')).toBeInViewport({ ratio: 0.99 });
+
+  const expected = [
+    ['pastel', 'celesta', 'sine'],
+    ['vintage', 'rhodes', 'sine'],
+    ['nautical', 'brass', 'sawtooth'],
+    ['vaporwave', 'synth', 'sawtooth'],
+    ['colorblind', 'vibraphone', 'sine'],
+    ['bold', 'marimba', 'sine'],
+  ];
+
+  for (const [paletteKey, instrumentId, primaryWave] of expected) {
+    // Open Settings and select the palette -> should play 3-note triad preview (6 oscillators)
+    await page.locator('#btn-open-options').click();
+    await page.locator('#menu-btn-open-settings').click();
+    await expect(page.locator('#settings-dialog')).toBeVisible();
+    await page.evaluate(() => { window.__oscTypes = []; });
+    await page.locator(`#setting-palette-group [data-palette-opt="${paletteKey}"]`).click();
+    const previewTypes = await page.evaluate(() => window.__oscTypes);
+    expect(previewTypes).toHaveLength(6);
+    expect(previewTypes).toContain(primaryWave);
+
+    // Close Settings and verify data-instrument + live voice wave on Picker
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#settings-dialog')).toBeHidden();
+
+    await page.evaluate(() => { window.__oscTypes = []; });
+    await dispatchPointer(page, 'pointerdown', 1, 120, 180);
+    await expect(page.locator('#picker-stage')).toHaveAttribute('data-instrument', instrumentId);
+    const liveTypes = await page.evaluate(() => window.__oscTypes);
+    expect(liveTypes).toHaveLength(2);
+    expect(liveTypes[0]).toBe(primaryWave);
+
+    await dispatchPointer(page, 'pointerup', 1, 120, 180);
+    await expect(page.locator('#picker-stage')).not.toHaveAttribute('data-instrument');
+  }
+});
+
+test('Picker uses major chords in light mode and minor chords in dark mode', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/');
+  await page.locator('[data-tab-btn="picker"]').click();
+  await expect(page.locator('#picker-stage')).toBeInViewport({ ratio: 0.99 });
+
+  // Light mode -> bright major triad (interval between root and 3rd = 4 semitones)
+  await dispatchPointer(page, 'pointerdown', 1, 80, 140);
+  await dispatchPointer(page, 'pointerdown', 2, 200, 140);
+  const lightChord = await page.locator('#picker-stage').getAttribute('data-chord');
+  expect(lightChord).toMatch(/^[A-G]b?$/);
+  const lightNotes = await circles(page).evaluateAll((els) => els.map((el) => Number(el.dataset.note)));
+  expect(lightNotes[1] - lightNotes[0]).toBe(4);
+
+  await dispatchPointer(page, 'pointerup', 1, 80, 140);
+  await dispatchPointer(page, 'pointerup', 2, 200, 140);
+  await expect(page.locator('#picker-stage')).not.toHaveAttribute('data-chord');
+
+  // Switch device to dark mode -> deeper minor triad (interval = 3 semitones, lower root)
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await expect(page.locator('html')).toHaveClass(/dark-mode/);
+  await dispatchPointer(page, 'pointerdown', 3, 80, 140);
+  await dispatchPointer(page, 'pointerdown', 4, 200, 140);
+  const darkChord = await page.locator('#picker-stage').getAttribute('data-chord');
+  expect(darkChord).toMatch(/^[A-G]#?m$/);
+  const darkNotes = await circles(page).evaluateAll((els) => els.map((el) => Number(el.dataset.note)));
+  expect(darkNotes[1] - darkNotes[0]).toBe(3);
+  expect(darkNotes[0]).toBeLessThan(lightNotes[0]);
+});
+
