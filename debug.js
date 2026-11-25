@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PALETTES DEBUG LAB CONTROLLER
+   COUNTERS DEBUG CONTROLLER
    Drives the live ./?lab=1 Counters iframe via window.__countersLab and reuses
    Counters' shared palettes.js & index.css components directly.
    ========================================================================== */
@@ -838,7 +838,7 @@ const waitForIframeBridge = () => {
     if (getLabBridge()) {
       attachIframeStateListener();
       syncIframe({ includeCounters: true });
-      log.info("Palettes lab connected to Counters iframe");
+      log.info("Debug connected to Counters iframe");
       return true;
     }
     return false;

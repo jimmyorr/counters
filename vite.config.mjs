@@ -75,7 +75,7 @@ export default defineConfig({
   optimizeDeps: {
     // Only scan the app entries; otherwise Vite crawls the built copies under
     // ios/ and android/ and fails on their externalized imports
-    entries: ['index.html', 'palettes.html'],
+    entries: ['index.html', 'debug.html'],
   },
   build: {
     outDir: 'docs',
@@ -85,7 +85,7 @@ export default defineConfig({
         ? 'index.html'
         : {
             main: 'index.html',
-            'palettes-lab': 'palettes.html',
+            'debug-workbench': 'debug.html',
           },
       external: ['firebase/analytics'],
     },
@@ -114,11 +114,11 @@ export default defineConfig({
       manifest: manifestData,
       workbox: {
         // Precache the bundled Latin font files so text renders offline, while
-        // keeping the hidden palettes.html debug tool out of user caches and
-        // bypassing the SPA index.html navigation fallback for /palettes.html
+        // keeping the hidden debug.html tool out of user caches and bypassing
+        // the SPA index.html navigation fallback for /debug.html
         globPatterns: ['**/*.{js,css,html}', '**/*latin*-wght-normal-*.woff2'],
-        globIgnores: ['palettes.html', 'assets/palettes-lab*'],
-        navigateFallbackDenylist: [/^\/palettes\.html/],
+        globIgnores: ['debug.html', 'assets/debug-workbench*'],
+        navigateFallbackDenylist: [/^\/debug\.html/],
       },
     })
   ]

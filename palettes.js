@@ -1,6 +1,6 @@
 /* ==========================================================================
    COUNTERS PALETTES, PICKER INSTRUMENTS & SHARED COLOR / ACCENT ENGINE
-   Single source of truth imported by app.js, palettes-lab.js, and tests.
+   Single source of truth imported by app.js, debug.js, and tests.
    ========================================================================== */
 
 // Preset counter palettes. Counters store a slot index (0-7), so switching

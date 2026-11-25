@@ -42,7 +42,7 @@ test('candidate and dynamic palettes meet WCAG AA on card bodies and 12% headers
   expect(exported).toContain('crystal-harp');
 });
 
-test('palettes.html drives the live Counters iframe without touching saved storage', async ({ page }) => {
+test('debug.html drives the live Counters iframe without touching saved storage', async ({ page }) => {
   await page.setViewportSize({ width: 1360, height: 860 });
   await seed(page, {
     counters: [counter('real', 'Saved real counter', 99)],
@@ -65,7 +65,9 @@ test('palettes.html drives the live Counters iframe without touching saved stora
     }
   });
 
-  await page.goto('/palettes.html');
+  await page.goto('/debug.html');
+  await expect(page).toHaveTitle('Debug — Counters');
+  await expect(page.locator('.studio-title')).toHaveText('Debug');
   await expect(page.locator('#palette-catalog-grid [data-palette-id]')).toHaveCount(24);
   await expect(page.locator('#swatch-values-grid [data-swatch-slot]')).toHaveCount(8);
 

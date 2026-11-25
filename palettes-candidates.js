@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PALETTES LAB — CANDIDATE PALETTES & DYNAMIC GENERATORS
+   COUNTERS DEBUG — CANDIDATE PALETTES & DYNAMIC GENERATORS
    Reuses PALETTES, PALETTE_INSTRUMENTS, contrast math, OKLab, and Machado CVD
    simulation directly from ./palettes.js so nothing is duplicated.
    ========================================================================== */

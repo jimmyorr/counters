@@ -1,5 +1,5 @@
 /* ==========================================================================
-   PALETTES DEBUG LAB LAYOUT OVERRIDES
+   COUNTERS DEBUG LAYOUT OVERRIDES
    Inherits fonts, theme variables, .segmented-control, .palette-option-card,
    .hue-slider, .primary-btn, .secondary-btn, and .settings-section directly
    from ./index.css so design tokens and components are never duplicated.
@@ -9,8 +9,8 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-html:has(.palettes-lab-body),
-body.palettes-lab-body {
+html:has(.debug-body),
+body.debug-body {
   display: block;
   overflow-x: hidden;
   overflow-y: auto;
