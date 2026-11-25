@@ -85,7 +85,7 @@ export default defineConfig({
         ? 'index.html'
         : {
             main: 'index.html',
-            palettes: 'palettes.html',
+            'palettes-lab': 'palettes.html',
           },
       external: ['firebase/analytics'],
     },
@@ -116,7 +116,7 @@ export default defineConfig({
         // Precache the bundled Latin font files so text renders offline, while
         // keeping the hidden palettes.html debug tool out of user caches
         globPatterns: ['**/*.{js,css,html}', '**/*latin*-wght-normal-*.woff2'],
-        globIgnores: ['palettes.html', 'assets/palettes*'],
+        globIgnores: ['palettes.html', 'assets/palettes-lab*'],
       },
     })
   ]
