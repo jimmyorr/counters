@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script>window.__APP_VERSION__ = "0.3.2";
-window.__COMMIT_HASH__ = "e88d95f";
-window.__IS_DIRTY__ = true;</script>
+    <script>window.__APP_VERSION__ = "0.3.3";
+window.__COMMIT_HASH__ = "4fb9fb8";
+window.__IS_DIRTY__ = false;</script>
 
     <meta charset="UTF-8" />
     <meta
@@ -72,7 +72,8 @@ window.__IS_DIRTY__ = true;</script>
     <!-- Pre-load script to prevent Flash of Unstyled Content (FOUC) and handle theme -->
     <script>
       (function () {
-        const savedTheme = localStorage.getItem("counters-theme") || "system";
+        const isLab = new URLSearchParams(window.location.search).get("lab") === "1";
+        const savedTheme = isLab ? "dark" : localStorage.getItem("counters-theme") || "system";
         const root = document.documentElement;
 
         const isDark =
@@ -87,18 +88,19 @@ window.__IS_DIRTY__ = true;</script>
           themeMeta.setAttribute("content", isDark ? "#0d0e11" : "#f2f3f7");
         }
 
-        const savedHue = localStorage.getItem("counters-theme-hue");
+        const savedHue = isLab ? null : localStorage.getItem("counters-theme-hue");
         if (savedHue !== null && /^\d+$/.test(savedHue)) {
           root.style.setProperty("--theme-hue", savedHue);
         }
 
         // Load and apply grid layout option beforehand to prevent shifting
-        const savedLayout = localStorage.getItem("counters-layout") || "list";
+        const savedLayout = isLab ? "grid" : localStorage.getItem("counters-layout") || "list";
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
-    <script type="module" crossorigin src="./assets/index-TO-mKwyz.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BpfWPxAJ.css">
+    <script type="module" crossorigin src="./assets/main-RHta2NQb.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/palettes-DcVaoEcq.js">
+    <link rel="stylesheet" crossorigin href="./assets/main-BpfWPxAJ.css">
   <link rel="manifest" href="./manifest.webmanifest"></head>
   <body>
     <!-- Subtle ambient background gradient influenced by the current leader -->

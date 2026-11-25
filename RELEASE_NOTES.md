@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.3.3
+
+* **Palettes:** Added a hidden `palettes.html` debug lab for previewing candidate and dynamic palettes, Picker instruments, and color-vision contrast against the live app.
+
 ## 0.3.2
 
 * **Picker:** Kept held shapes anchored in place when a second finger touches down, only dragging once pulled past a 12px leash.
