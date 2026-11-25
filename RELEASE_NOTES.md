@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.3.2
+
+* **Picker:** Kept held shapes anchored in place when a second finger touches down, only dragging once pulled past a 12px leash.
+
 ## 0.3.1
 
 * **Picker:** Added a 2-teams mode toggle in the header that splits players into balanced teams with shared colors and shapes.
