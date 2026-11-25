@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.3.5
+
+* **Debug:** Renamed the hidden `palettes.html` workbench to `debug.html` and rebranded it as Debug.
+
 ## 0.3.4
 
 * **Palettes:** Added laptop multi-finger Picker controls, a segmented Sound on/off switch, shared app styling and color math, and a service worker bypass so `/palettes.html` loads directly in normal browser tabs.
