@@ -81,15 +81,13 @@
             </div>
           </div>
 
-          <button
-            type="button"
-            class="action-pill-btn"
-            id="btn-sound-toggle"
-            aria-pressed="true"
-            title="Toggle Picker instrument audio"
-          >
-            <span id="sound-toggle-label">Sound on</span>
-          </button>
+          <div class="control-cluster" role="group" aria-label="Sound">
+            <span class="cluster-label">Sound</span>
+            <div class="seg-group" id="sound-mode-group">
+              <button type="button" class="seg-btn active" data-sound-mode="on" aria-pressed="true">On</button>
+              <button type="button" class="seg-btn" data-sound-mode="off" aria-pressed="false">Off</button>
+            </div>
+          </div>
 
           <button type="button" class="action-pill-btn primary" id="btn-copy-code">
             <span>Copy code</span>

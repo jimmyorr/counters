@@ -143,6 +143,14 @@ const applyStudioTheme = (mode) => {
   });
 };
 
+const syncSoundButtons = () => {
+  $$("#sound-mode-group [data-sound-mode]").forEach((btn) => {
+    const active = (btn.dataset.soundMode === "on") === state.soundEnabled;
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-pressed", String(active));
+  });
+};
+
 const getOrderedSlots = (palette) => {
   const indices = [0, 1, 2, 3, 4, 5, 6, 7];
   if (state.boardOrder === "slots" || palette.isRamp) {
@@ -245,6 +253,13 @@ const attachIframeStateListener = () => {
       if (innerState.settings.theme === "dark" || innerState.settings.theme === "light") {
         applyStudioTheme(innerState.settings.theme);
       }
+    }
+    if (
+      typeof innerState.settings?.soundEnabled === "boolean" &&
+      innerState.settings.soundEnabled !== state.soundEnabled
+    ) {
+      state.soundEnabled = innerState.settings.soundEnabled;
+      syncSoundButtons();
     }
     if (
       typeof innerState.settings?.themeHue === "number" &&
@@ -632,12 +647,13 @@ const bindEvents = () => {
     renderAll({ includeCounters: false });
   });
 
-  $("#btn-sound-toggle")?.addEventListener("click", () => {
-    state.soundEnabled = !state.soundEnabled;
-    const btn = $("#btn-sound-toggle");
-    const lbl = $("#sound-toggle-label");
-    if (btn) btn.setAttribute("aria-pressed", String(state.soundEnabled));
-    if (lbl) lbl.textContent = state.soundEnabled ? "Sound on" : "Muted";
+  $("#sound-mode-group")?.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-sound-mode]");
+    if (!btn) return;
+    const nextEnabled = btn.dataset.soundMode === "on";
+    if (nextEnabled === state.soundEnabled) return;
+    state.soundEnabled = nextEnabled;
+    syncSoundButtons();
     syncIframe({ includeCounters: false, previewChime: state.soundEnabled });
   });
 

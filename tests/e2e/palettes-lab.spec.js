@@ -113,6 +113,18 @@ test('palettes.html drives the live Counters iframe without touching saved stora
     .evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(afterCardBg).not.toBe(beforeCardBg);
 
+  // Segmented Sound Off / On control mutes and restores audio unambiguously
+  await page.locator('#sound-mode-group [data-sound-mode="off"]').click();
+  await expect(page.locator('#sound-mode-group [data-sound-mode="off"]')).toHaveAttribute('aria-pressed', 'true');
+  await childFrame().evaluate(() => {
+    window.__oscTypes = [];
+  });
+  await page.locator('#btn-audition-chime').click();
+  expect(await childFrame().evaluate(() => window.__oscTypes)).toHaveLength(0);
+
+  await page.locator('#sound-mode-group [data-sound-mode="on"]').click();
+  expect((await childFrame().evaluate(() => window.__oscTypes)).length).toBe(6);
+
   // User's real saved counter in localStorage was never overwritten by the lab
   const savedCounters = await stored(page, 'counters-list');
   expect(savedCounters).toEqual([expect.objectContaining({ id: 'real', value: 99 })]);
