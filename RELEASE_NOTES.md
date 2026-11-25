@@ -1,5 +1,9 @@
 # Release notes
 
+## 0.3.4
+
+* **Palettes:** Added laptop multi-finger Picker controls, a segmented Sound on/off switch, shared app styling and color math, and a service worker bypass so `/palettes.html` loads directly in normal browser tabs.
+
 ## 0.3.3
 
 * **Palettes:** Added a hidden `palettes.html` debug lab for previewing candidate and dynamic palettes, Picker instruments, and color-vision contrast against the live app.
