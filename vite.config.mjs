@@ -73,14 +73,20 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
   optimizeDeps: {
-    // Only scan the app entry; otherwise Vite crawls the built copies under
+    // Only scan the app entries; otherwise Vite crawls the built copies under
     // ios/ and android/ and fails on their externalized imports
-    entries: ['index.html'],
+    entries: ['index.html', 'palettes.html'],
   },
   build: {
     outDir: 'docs',
     emptyOutDir: true,
     rollupOptions: {
+      input: process.env.CAPACITOR_BUILD
+        ? 'index.html'
+        : {
+            main: 'index.html',
+            palettes: 'palettes.html',
+          },
       external: ['firebase/analytics'],
     },
   },
@@ -107,8 +113,10 @@ export default defineConfig({
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png'],
       manifest: manifestData,
       workbox: {
-        // Precache the bundled Latin font files so text renders offline
+        // Precache the bundled Latin font files so text renders offline, while
+        // keeping the hidden palettes.html debug tool out of user caches
         globPatterns: ['**/*.{js,css,html}', '**/*latin*-wght-normal-*.woff2'],
+        globIgnores: ['palettes.html', 'assets/palettes*'],
       },
     })
   ]

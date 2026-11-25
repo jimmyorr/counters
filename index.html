@@ -69,7 +69,8 @@
     <!-- Pre-load script to prevent Flash of Unstyled Content (FOUC) and handle theme -->
     <script>
       (function () {
-        const savedTheme = localStorage.getItem("counters-theme") || "system";
+        const isLab = new URLSearchParams(window.location.search).get("lab") === "1";
+        const savedTheme = isLab ? "dark" : localStorage.getItem("counters-theme") || "system";
         const root = document.documentElement;
 
         const isDark =
@@ -84,13 +85,13 @@
           themeMeta.setAttribute("content", isDark ? "#0d0e11" : "#f2f3f7");
         }
 
-        const savedHue = localStorage.getItem("counters-theme-hue");
+        const savedHue = isLab ? null : localStorage.getItem("counters-theme-hue");
         if (savedHue !== null && /^\d+$/.test(savedHue)) {
           root.style.setProperty("--theme-hue", savedHue);
         }
 
         // Load and apply grid layout option beforehand to prevent shifting
-        const savedLayout = localStorage.getItem("counters-layout") || "list";
+        const savedLayout = isLab ? "grid" : localStorage.getItem("counters-layout") || "list";
         root.setAttribute("data-layout", savedLayout);
       })();
     </script>
