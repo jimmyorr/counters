@@ -114,9 +114,11 @@ export default defineConfig({
       manifest: manifestData,
       workbox: {
         // Precache the bundled Latin font files so text renders offline, while
-        // keeping the hidden palettes.html debug tool out of user caches
+        // keeping the hidden palettes.html debug tool out of user caches and
+        // bypassing the SPA index.html navigation fallback for /palettes.html
         globPatterns: ['**/*.{js,css,html}', '**/*latin*-wght-normal-*.woff2'],
         globIgnores: ['palettes.html', 'assets/palettes-lab*'],
+        navigateFallbackDenylist: [/^\/palettes\.html/],
       },
     })
   ]

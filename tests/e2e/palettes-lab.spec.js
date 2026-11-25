@@ -125,6 +125,21 @@ test('palettes.html drives the live Counters iframe without touching saved stora
   await page.locator('#sound-mode-group [data-sound-mode="on"]').click();
   expect((await childFrame().evaluate(() => window.__oscTypes)).length).toBe(6);
 
+  // Laptop click-to-pin on #picker-stage: mouse clicks pin/unpin virtual fingers
+  await frame.locator('#calculator-dialog').press('Escape');
+  await frame.locator('[data-tab-btn="picker"]').click();
+  await frame.locator('#picker-stage').click({ position: { x: 90, y: 120 } });
+  await expect(frame.locator('#picker-stage .picker-circle')).toHaveCount(1);
+  await frame.locator('#picker-stage').click({ position: { x: 240, y: 240 } });
+  await expect(frame.locator('#picker-stage .picker-circle')).toHaveCount(2);
+  // Clicking the first circle again lifts that pinned finger
+  await frame.locator('#picker-stage').click({ position: { x: 90, y: 120 } });
+  await expect(frame.locator('#picker-stage .picker-circle')).toHaveCount(1);
+
+  // 1-click "5 fingers" button resets Picker and drops 5 staggered virtual fingers
+  await page.locator('#btn-demo-picker').click();
+  await expect(frame.locator('#picker-stage .picker-circle')).toHaveCount(5, { timeout: 3000 });
+
   // User's real saved counter in localStorage was never overwritten by the lab
   const savedCounters = await stored(page, 'counters-list');
   expect(savedCounters).toEqual([expect.objectContaining({ id: 'real', value: 99 })]);

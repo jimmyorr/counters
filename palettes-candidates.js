@@ -1,7 +1,7 @@
 /* ==========================================================================
-   PALETTES LAB — CANDIDATE PALETTES, DYNAMIC ENGINES & CONTRAST AUDITOR
-   Imports shipped palettes and color helpers directly from ./palettes.js so
-   nothing in production Counters is duplicated.
+   PALETTES LAB — CANDIDATE PALETTES & DYNAMIC GENERATORS
+   Reuses PALETTES, PALETTE_INSTRUMENTS, contrast math, OKLab, and Machado CVD
+   simulation directly from ./palettes.js so nothing is duplicated.
    ========================================================================== */
 
 import {
@@ -10,42 +10,22 @@ import {
   hslToHex,
   hexToHsl,
   contrastRatio,
-  mixHex,
+  getCardHeaderHex,
   getReadableTextColor,
   getHeaderTextColor,
+  linearToSrgb,
+  simulateCvdHex,
+  hexToOklab,
+  oklabDistance,
 } from "./palettes.js";
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-
-const hexToRgb = (hex) => [
-  parseInt(hex.slice(1, 3), 16),
-  parseInt(hex.slice(3, 5), 16),
-  parseInt(hex.slice(5, 7), 16),
-];
 
 const rgbToHex = (r, g, b) =>
   "#" +
   [r, g, b]
     .map((v) => clamp(Math.round(v), 0, 255).toString(16).padStart(2, "0"))
     .join("");
-
-const srgbToLinear = (c) =>
-  c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-
-const linearToSrgb = (c) =>
-  c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055;
-
-export const hexToOklab = (hex) => {
-  const [r, g, b] = hexToRgb(hex).map((v) => srgbToLinear(v / 255));
-  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
-  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
-  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
-  return {
-    L: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
-    a: 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
-    b: 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
-  };
-};
 
 const oklabToLinearRgb = ({ L, a, b }) => {
   const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
@@ -107,14 +87,12 @@ export const hexToOklch = (hex) => {
   return { L, C, h };
 };
 
-const getHeaderHex = (hex) => mixHex(hex, "#000000", 0.12);
-
 export const ensureContrastPolarity = (hex, targetText, minRatio = 4.65) => {
   const check = (candidate) => {
     const chosen = getReadableTextColor(candidate);
     if (chosen !== targetText) return false;
     const bodyRatio = contrastRatio(candidate, targetText);
-    const hdrRatio = contrastRatio(getHeaderHex(candidate), targetText);
+    const hdrRatio = contrastRatio(getCardHeaderHex(candidate), targetText);
     return bodyRatio >= minRatio && hdrRatio >= minRatio;
   };
   if (check(hex)) return hex;
@@ -152,45 +130,6 @@ export const ensureContrastPolarity = (hex, targetText, minRatio = 4.65) => {
   return best;
 };
 
-// Machado et al. (2009) full-severity simulation matrices in linear RGB
-export const CVD_MATRICES = {
-  deuteranopia: [
-    [0.367322, 0.860646, -0.227968],
-    [0.280085, 0.672501, 0.047413],
-    [-0.01182, 0.04294, 0.968881],
-  ],
-  protanopia: [
-    [0.152286, 1.052583, -0.204868],
-    [0.114503, 0.786281, 0.099216],
-    [-0.003882, -0.048116, 1.051998],
-  ],
-  tritanopia: [
-    [1.255528, -0.076749, -0.178779],
-    [-0.078411, 0.930809, 0.147602],
-    [0.004733, 0.691367, 0.3039],
-  ],
-};
-
-export const simulateCvdHex = (hex, visionMode) => {
-  if (!visionMode || visionMode === "normal" || !CVD_MATRICES[visionMode]) {
-    return hex;
-  }
-  const lin = hexToRgb(hex).map((v) => srgbToLinear(v / 255));
-  const m = CVD_MATRICES[visionMode];
-  const out = m.map((row) =>
-    linearToSrgb(
-      clamp(row[0] * lin[0] + row[1] * lin[1] + row[2] * lin[2], 0, 1),
-    ),
-  );
-  return rgbToHex(out[0] * 255, out[1] * 255, out[2] * 255);
-};
-
-export const oklabDistance = (hexA, hexB) => {
-  const a = hexToOklab(hexA);
-  const b = hexToOklab(hexB);
-  return Math.hypot(a.L - b.L, a.a - b.a, a.b - b.b) * 100;
-};
-
 export const auditPalette = (colors, visionMode = "normal") => {
   const effective = colors.map((c) => simulateCvdHex(c, visionMode));
   const polarities = new Set();
@@ -200,7 +139,7 @@ export const auditPalette = (colors, visionMode = "normal") => {
   const swatches = colors.map((hex, slot) => {
     const displayHex = effective[slot];
     const text = getReadableTextColor(hex);
-    const headerHex = getHeaderHex(hex);
+    const headerHex = getCardHeaderHex(hex);
     const headerText = getHeaderTextColor(hex, text);
     const bodyContrast = contrastRatio(hex, text);
     const headerContrast = contrastRatio(headerHex, headerText);
@@ -254,81 +193,12 @@ export const auditPalette = (colors, visionMode = "normal") => {
   };
 };
 
-export const computeStudioAccentTokens = (hue) => {
-  const hNorm = ((Number(hue) % 360) + 360) % 360;
-  const rawLight = hslToHex(hNorm, 94, 60);
-  const accDark = hslToHex(hNorm, 92, 65);
-  let accLight = rawLight;
-  if (hNorm >= 195 && hNorm <= 285) {
-    for (let l = 60; l >= 32; l -= 0.5) {
-      const candidate = hslToHex(hNorm, 94, l);
-      if (
-        contrastRatio(candidate, "#ffffff") >= 4.55 &&
-        contrastRatio(candidate, "#f2f3f7") >= 4.55
-      ) {
-        accLight = candidate;
-        break;
-      }
-    }
-  }
-  const darkenableHue =
-    hNorm > 42 && hNorm < 86
-      ? hNorm -
-        17 * 0.5 * (1 - Math.cos((2 * Math.PI * (hNorm - 42)) / (86 - 42)))
-      : hNorm;
-
-  let inkLight = "#000000";
-  for (let l = 60; l >= 0; l -= 0.5) {
-    const candidate = hslToHex(darkenableHue, 94, l);
-    if (
-      ["#ffffff", "#f2f3f7", "#e9ebee"].every(
-        (s) => contrastRatio(candidate, s) >= 4.6,
-      )
-    ) {
-      inkLight = candidate;
-      break;
-    }
-  }
-  let inkDark = "#ffffff";
-  for (let l = 65; l <= 100; l += 0.5) {
-    const candidate = hslToHex(hNorm, 92, l);
-    if (
-      ["#0d0e11", "#16171d", "#21232c"].every(
-        (s) => contrastRatio(candidate, s) >= 4.6,
-      )
-    ) {
-      inkDark = candidate;
-      break;
-    }
-  }
-  return {
-    hue: hNorm,
-    accLight,
-    accDark,
-    inkLight,
-    inkDark,
-    onFillLight: getReadableTextColor(accLight),
-    onFillDark: getReadableTextColor(accDark),
-  };
-};
-
 export const PALETTE_GROUPS = [
   { id: "current", label: "In Counters", shortLabel: "Current" },
   { id: "clean", label: "Clean & versatile", shortLabel: "Clean" },
   { id: "retro", label: "Retro & design-nerdy", shortLabel: "Retro" },
   { id: "wild", label: "Actually wild", shortLabel: "Wild" },
   { id: "dynamic", label: "Dynamic", shortLabel: "Dynamic" },
-];
-
-export const BIRD_NAMES = [
-  "Wren",
-  "Puffin",
-  "Swift",
-  "Gull",
-  "Tern",
-  "Lark",
-  "Flicker",
-  "Crane",
 ];
 
 export const SLOT_FAMILIES = [
@@ -342,31 +212,13 @@ export const SLOT_FAMILIES = [
   "Purple / deep",
 ];
 
-const SHIPPED_META = {
-  bold: {
-    tagline: "Punchy, high-saturation primaries with crisp white text.",
-    notes: "Default palette in Counters. Balanced saturation across eight distinct hue families.",
-  },
-  pastel: {
-    tagline: "Airy sherbet and chalk tints paired with dark ink.",
-    notes: "Ships in Counters. High lightness keeps black labels above 4.5:1 under the 12% header shade.",
-  },
-  vintage: {
-    tagline: "Sun-faded mid-century tones with warm editorial calm.",
-    notes: "Ships in Counters. Muted chroma makes long scorekeeping sessions gentle on the eyes.",
-  },
-  nautical: {
-    tagline: "Deep sea-chart hull colors, weathered brass, and kelp.",
-    notes: "Ships in Counters. Low-glare maritime hues suited for dim rooms and late-night games.",
-  },
-  vaporwave: {
-    tagline: "Arcade neon cyan, hot pink, lemon, and laser mint.",
-    notes: "Ships in Counters. Electric synthwave chroma with uniform dark text.",
-  },
-  colorblind: {
-    tagline: "Engineered lightness steps that survive color blindness.",
-    notes: "Ships in Counters (key: colorblind). Maintains OKLab ΔE ≥ 9 across deuteranopia, protanopia, and tritanopia.",
-  },
+const SHIPPED_NOTES = {
+  bold: "Default palette in Counters. Balanced saturation across eight distinct hue families.",
+  pastel: "Ships in Counters. High lightness keeps black labels above 4.5:1 under the 12% header shade.",
+  vintage: "Ships in Counters. Muted chroma makes long scorekeeping sessions gentle on the eyes.",
+  nautical: "Ships in Counters. Low-glare maritime hues suited for dim rooms and late-night games.",
+  vaporwave: "Ships in Counters. Electric synthwave chroma with uniform dark text.",
+  colorblind: "Ships in Counters (key: colorblind). Maintains OKLab ΔE ≥ 9 across deuteranopia, protanopia, and tritanopia.",
 };
 
 export const CANDIDATE_PALETTES = {
@@ -374,8 +226,7 @@ export const CANDIDATE_PALETTES = {
     id: "botanical",
     label: "Botanical",
     group: "clean",
-    tagline: "Warm glazed stoneware, dried herbs, canyon clay, and bark.",
-    notes: "Earthy natural pigments tuned for uniform crisp white ink—grounded in both light and dark themes.",
+    notes: "Earthy glazed stoneware, dried herbs, canyon clay, and bark tuned for uniform white ink.",
     colors: ["#266d69", "#b54624", "#a14653", "#85674e", "#25663b", "#945e0d", "#606b14", "#523b2f"],
     names: ["Eucalyptus", "Terracotta", "Clay", "Sandstone", "Moss", "Ochre", "Olive", "Bark"],
   },
@@ -383,7 +234,6 @@ export const CANDIDATE_PALETTES = {
     id: "jewel",
     label: "Jewel",
     group: "clean",
-    tagline: "Faceted ruby, sapphire, emerald, topaz, and deep plum.",
     notes: "Deeper and more velvety than Bold, yet noticeably richer and less muted than Nautical.",
     colors: ["#0f43b8", "#9e231b", "#b8144d", "#652dc1", "#0d6e3f", "#9c5708", "#0b6e69", "#6b186e"],
     names: ["Sapphire", "Garnet", "Ruby", "Amethyst", "Emerald", "Topaz", "Jade", "Deep plum"],
@@ -393,7 +243,6 @@ export const CANDIDATE_PALETTES = {
     label: "Mono",
     group: "clean",
     isRamp: true,
-    tagline: "Eight architectural slate and graphite luminance steps.",
     notes: "Zero-distraction monochrome board: four mist-slate steps (dark ink) and four graphite steps (white ink).",
     colors: ["#e6e9f0", "#cbd1de", "#aeb7c9", "#8f99ae", "#565f73", "#3e4657", "#292f3c", "#171a22"],
     names: ["Mist", "Fog", "Silver slate", "Pewter", "Steel", "Graphite", "Charcoal", "Obsidian"],
@@ -402,8 +251,7 @@ export const CANDIDATE_PALETTES = {
     id: "transit",
     label: "Transit",
     group: "clean",
-    tagline: "NYC, London, and Tokyo subway colors built for instant recognition.",
-    notes: "Wayfinding utility colors engineered to be told apart in half a second with uniform white signage ink.",
+    notes: "NYC, London, and Tokyo subway line colors engineered to be told apart in half a second.",
     colors: ["#004fb6", "#c44900", "#c41e24", "#556270", "#15733b", "#965b00", "#007282", "#7b2cbf"],
     names: ["Express blue", "Sixth ave orange", "Central red", "Jubilee slate", "Lexington green", "Circle amber", "Victoria teal", "Flushing violet"],
   },
@@ -411,8 +259,7 @@ export const CANDIDATE_PALETTES = {
     id: "risograph",
     label: "Risograph",
     group: "retro",
-    tagline: "Soy-based indie printmaking spot inks with key-plate black type.",
-    notes: "Fluorescent pink, sunflower, kelly green, bright teal, cornflower, federal blue, riso red, and metallic gold.",
+    notes: "Soy-based indie printmaking spot inks with overprinted key-plate black type.",
     colors: ["#5ec2ff", "#ff7c6b", "#ff7eb9", "#9899ff", "#6fd96c", "#ffd447", "#48d6cc", "#e0b663"],
     names: ["Cornflower", "Riso red", "Fluorescent pink", "Federal blue", "Kelly green", "Sunflower", "Bright teal", "Metallic gold"],
   },
@@ -420,7 +267,6 @@ export const CANDIDATE_PALETTES = {
     id: "eightBit",
     label: "8-bit",
     group: "retro",
-    tagline: "Fantasy-console pixel colors that click together effortlessly.",
     notes: "Inspired by PICO-8 and classic cartridge sprites—quirky hues with uniform dark pixel ink.",
     colors: ["#59bfff", "#ff9642", "#ff7eb3", "#a89cf7", "#5ce06b", "#ffec3d", "#5ce6e6", "#ffc49b"],
     names: ["Sky byte", "Blaze orange", "Berry sprite", "Dusk indigo", "Slime green", "Coin yellow", "Ice cyan", "Peach pixel"],
@@ -429,8 +275,7 @@ export const CANDIDATE_PALETTES = {
     id: "phosphor",
     label: "Phosphor",
     group: "retro",
-    tagline: "High-voltage ANSI CRT terminal beams glowing against dark glass.",
-    notes: "Eight vector and terminal phosphor emissions tuned to radiate in dark mode with crisp dark text.",
+    notes: "Eight ANSI and vector CRT phosphor emissions tuned to radiate in dark mode with crisp dark text.",
     colors: ["#4deeea", "#ffb638", "#ff77e9", "#7ea8ff", "#4aff6b", "#ffe45e", "#6effc8", "#c490ff"],
     names: ["Cyan beam", "P3 amber", "Magenta trace", "Cobalt ray", "P1 green", "Warm filament", "Vector aqua", "UV phosphor"],
   },
@@ -439,8 +284,7 @@ export const CANDIDATE_PALETTES = {
     label: "Handheld",
     group: "retro",
     isRamp: true,
-    tagline: "Eight dot-matrix olive LCD shades from pea-soup highlight to pixel shadow.",
-    notes: "Classic reflective LCD ramp: four lit pea-soup steps and four deep pixel-ink steps.",
+    notes: "Dot-matrix olive LCD ramp: four lit pea-soup steps and four deep pixel-shadow steps.",
     colors: ["#d9e67e", "#c2d468", "#a8bd56", "#8ea646", "#465e2a", "#354a1f", "#253615", "#17240d"],
     names: ["Pea-soup", "Backlit lime", "LCD olive", "Moss matrix", "Dither shade", "Sprite olive", "Deep pixel", "Dot charcoal"],
   },
@@ -448,8 +292,7 @@ export const CANDIDATE_PALETTES = {
     id: "hazard",
     label: "Hazard",
     group: "retro",
-    tagline: "Swiss industrial brutalism—safety orange, caution yellow, steel, and chalk.",
-    notes: "High-contrast workshop and blueprint materials with razor-sharp stencil contrast on every card.",
+    notes: "Swiss industrial workshop and blueprint materials with razor-sharp stencil contrast.",
     colors: ["#0d4ba6", "#ff7b1c", "#c91c22", "#515c69", "#b8bec6", "#f5c400", "#eef0eb", "#1a1d21"],
     names: ["Blueprint blue", "Safety orange", "Signal red", "Raw steel", "Concrete", "Caution yellow", "Chalk", "Matte black"],
   },
@@ -458,8 +301,7 @@ export const CANDIDATE_PALETTES = {
     label: "Thermal",
     group: "wild",
     isRamp: true,
-    tagline: "Full FLIR infrared heat-map spectrum from cold indigo to white-hot.",
-    notes: "Try the Heat 1–8 score preset to watch counters visually heat up across the 2×4 grid.",
+    notes: "Full FLIR infrared spectrum—try the Heat 1–8 score preset to watch counters heat up across the grid.",
     colors: ["#1b114a", "#53157d", "#991470", "#c42136", "#fc8428", "#ffd026", "#ffe875", "#fff9db"],
     names: ["Deep indigo", "Thermal violet", "IR magenta", "Crimson core", "Blazing orange", "Bright yellow", "Pale gold", "White-hot"],
   },
@@ -467,8 +309,7 @@ export const CANDIDATE_PALETTES = {
     id: "bioluminescent",
     label: "Bioluminescent",
     group: "wild",
-    tagline: "Abyssal jellyfish blue, dinoflagellate cyan, and anglerfish chartreuse.",
-    notes: "Built to shine against Counters’ #0d0e11 dark mode backdrop with 100% uniform dark ink.",
+    notes: "Abyssal neon built to shine against Counters’ #0d0e11 dark mode backdrop with uniform dark ink.",
     colors: ["#52c4ff", "#ff877a", "#ff70d9", "#d9f7ff", "#9eff47", "#6bffb8", "#3ef5e0", "#b68cff"],
     names: ["Jellyfish blue", "Coral glow", "Anemone magenta", "Ghostly ice", "Anglerfish chartreuse", "Seafoam", "Dinoflagellate cyan", "Abyssal violet"],
   },
@@ -476,8 +317,7 @@ export const CANDIDATE_PALETTES = {
     id: "plumage",
     label: "Plumage",
     group: "wild",
-    tagline: "Field-guide bird feathers—cardinal red, goldfinch yellow, jay blue, and buff.",
-    notes: "Natural companion to Counters’ bird placeholder names (Swift, Puffin, Crane, Wren, Flicker, Tern, Gull, Lark).",
+    notes: "Wild bird feathers paired naturally with Counters’ bird placeholder names.",
     colors: ["#1956b8", "#c41926", "#e3bf8e", "#4f5d73", "#0e6b45", "#f7cf1d", "#0a7285", "#5e329e"],
     names: ["Jay blue", "Cardinal red", "Waxwing buff", "Slate", "Mallard emerald", "Goldfinch yellow", "Kingfisher cyan", "Iridescent violet"],
   },
@@ -485,8 +325,7 @@ export const CANDIDATE_PALETTES = {
     id: "highlighter",
     label: "Highlighter",
     group: "wild",
-    tagline: "Pure 1990s textbook chaos—radioactive yellow, acid green, and hot pink.",
-    notes: "Unapologetically fluorescent study-guide markers with crisp black textbook ink across all eight slots.",
+    notes: "Pure 1990s fluorescent textbook markers with crisp black ink across all eight slots.",
     colors: ["#33f0ff", "#ff912b", "#ff73cb", "#be9eff", "#50ff80", "#f8ff33", "#bdff33", "#ff8282"],
     names: ["Electric cyan", "Safety orange", "Hot pink", "Neon lavender", "Acid green", "Radioactive yellow", "Blinding lime", "Laser coral"],
   },
@@ -494,8 +333,7 @@ export const CANDIDATE_PALETTES = {
     id: "meeple",
     label: "Meeple",
     group: "wild",
-    tagline: "Classic painted-wood tabletop player tokens plus natural birch.",
-    notes: "Matches physical board-game player pieces on the table so nobody forgets which score card is theirs.",
+    notes: "Painted-wood tabletop player pieces plus natural birch so cards match tokens on the table.",
     colors: ["#1452bd", "#bd2424", "#f58529", "#343942", "#1e783c", "#f5ce24", "#e3caa1", "#6e2ca8"],
     names: ["Royal blue", "Wood-stain red", "Orange", "Charcoal", "Meadow green", "Sunny yellow", "Natural birch", "Purple"],
   },
@@ -504,8 +342,7 @@ export const CANDIDATE_PALETTES = {
     label: "Ember",
     group: "wild",
     isRamp: true,
-    tagline: "Single-temperature campfire story from spark gold down to midnight smoke.",
-    notes: "Warmth cools steadily across slots 0–7: glowing gold and flame fade into sienna, plum ash, and smoke.",
+    notes: "Single-temperature campfire story cooling from spark gold and flame down to midnight smoke.",
     colors: ["#ffd647", "#ff882e", "#b8251e", "#9c3b1c", "#7d3522", "#59384a", "#36333b", "#1c1a21"],
     names: ["Spark gold", "Flame orange", "Coal red", "Burnt sienna", "Rust", "Ash plum", "Charcoal", "Midnight smoke"],
   },
@@ -866,7 +703,6 @@ export const generateTonalPalette = ({ hue = 205, mode = "analogous" } = {}) => 
       isDynamic: true,
       isRamp: true,
       dynamicParams: { hue: baseHue, mode },
-      tagline: "Derives all eight slots live from the Theme color slider.",
       notes: `Monochromatic ${baseHue}° scale: four luminous tints and four deep shades sculpted in OKLCH.`,
       colors,
       names: steps.map((s) => s.name),
@@ -895,7 +731,6 @@ export const generateTonalPalette = ({ hue = 205, mode = "analogous" } = {}) => 
     isDynamic: true,
     isRamp: false,
     dynamicParams: { hue: baseHue, mode: "analogous" },
-    tagline: "Derives all eight slots live from the Theme color slider.",
     notes: `Analogous ±55° neighborhood centered on ${baseHue}°—keeps uniform white text at every hue angle.`,
     colors,
     names: offsets.map((o) => o.name),
@@ -1007,7 +842,6 @@ export const generateShufflePalette = ({
     isDynamic: true,
     isRamp: false,
     dynamicParams: { seed: cleanSeed, style },
-    tagline: "Golden-angle OKLCH color roller—tap to roll fresh harmonious sets.",
     notes: `Seed #${cleanSeed} (${isLight ? "luminous dark-ink" : "vivid white-ink"} mode) spaced by the 137.5° golden angle.`,
     colors: ordered.map((x) => x.hex),
     names,
@@ -1149,7 +983,6 @@ export const generateSkyPalette = ({ minutes = 780 } = {}) => {
       phase: nearest.phase,
       timeLabel: formatMinutesAsTime(mins),
     },
-    tagline: "Shifts slowly through dawn pastels, bright midday, golden hour, and twilight.",
     notes: `${nearest.phase} (${formatMinutesAsTime(mins)}) — OKLab atmospheric interpolation with guaranteed ${targetPolarity === "#ffffff" ? "white" : "dark"} card ink.`,
     colors,
     names: nearest.names,
@@ -1157,28 +990,10 @@ export const generateSkyPalette = ({ minutes = 780 } = {}) => {
   };
 };
 
+// Derived directly from PALETTES + CANDIDATE_PALETTES so new shipped palettes appear automatically
 export const PALETTE_ORDER = [
-  "bold",
-  "pastel",
-  "vintage",
-  "nautical",
-  "vaporwave",
-  "colorblind",
-  "botanical",
-  "jewel",
-  "mono",
-  "transit",
-  "risograph",
-  "eightBit",
-  "phosphor",
-  "handheld",
-  "hazard",
-  "thermal",
-  "bioluminescent",
-  "plumage",
-  "highlighter",
-  "meeple",
-  "ember",
+  ...Object.keys(PALETTES),
+  ...Object.keys(CANDIDATE_PALETTES),
   "tonal",
   "shuffle",
   "sky",
@@ -1187,14 +1002,12 @@ export const PALETTE_ORDER = [
 export const resolveLabPalette = (id, dynamicState = {}) => {
   if (PALETTES[id]) {
     const shipped = PALETTES[id];
-    const meta = SHIPPED_META[id] || { tagline: "", notes: "" };
     return {
       id,
       label: shipped.label,
       group: "current",
       shipped: true,
-      tagline: meta.tagline,
-      notes: meta.notes,
+      notes: SHIPPED_NOTES[id] || `Ships in Counters (${shipped.label}).`,
       colors: shipped.colors,
       names: shipped.names,
       instrument: PALETTE_INSTRUMENTS[id] || PALETTE_INSTRUMENTS.bold,

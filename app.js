@@ -22,17 +22,17 @@ import { log } from "./logger.js";
 import {
   PALETTES,
   PALETTE_INSTRUMENTS as SHIPPED_PALETTE_INSTRUMENTS,
+  COUNTER_PLACEHOLDER_LABELS,
   hueOf,
   sortColorsByHue,
   hslToHex,
-  contrastRatio,
-  mixHex,
   getReadableTextColor,
   hexToHsl,
   getHeaderTextColor,
   getReadableInk,
   getInkOnLightTint,
   getInkOnDarkTint,
+  applyAccentTokens as applySharedAccentTokens,
 } from "./palettes.js";
 
 (function () {
@@ -424,184 +424,8 @@ import {
     }
   };
 
-  // Update --theme-hue plus readable accent tokens across all light and dark
-  // surfaces so text meets WCAG 1.4.3 (4.5:1) and icons/marks meet 1.4.11 (3:1).
   const applyAccentTokens = (hue) => {
-    const root = document.documentElement;
-    root.style.setProperty("--theme-hue", hue);
-    const rawLight = hslToHex(hue, 94, 60);
-    const accDark = hslToHex(hue, 92, 65);
-
-    const hNorm = ((Number(hue) % 360) + 360) % 360;
-
-    // On blues/purples (195°–285°, including default 205°), reach 4.55:1 in light
-    // mode so primary buttons get crisp white text instead of hard-to-read black on blue;
-    // elsewhere gently nudge mid-tones (L >= 44%) when 3.05:1 is within reach so red (0°)
-    // stays bright #f93939 and yellow stays sunny.
-    let accLight = rawLight;
-    if (hNorm >= 195 && hNorm <= 285) {
-      for (let l = 60; l >= 32; l -= 0.5) {
-        const candidate = hslToHex(hue, 94, l);
-        if (
-          contrastRatio(candidate, "#ffffff") >= 4.55 &&
-          contrastRatio(candidate, "#f2f3f7") >= 4.55
-        ) {
-          accLight = candidate;
-          break;
-        }
-      }
-    } else {
-      for (let l = 60; l >= 44; l -= 0.5) {
-        const candidate = hslToHex(hue, 94, l);
-        if (
-          contrastRatio(candidate, "#ffffff") >= 3.05 &&
-          contrastRatio(candidate, "#f2f3f7") >= 3.05
-        ) {
-          accLight = candidate;
-          break;
-        }
-      }
-    }
-
-    // Darkening yellow (42°–86°) at fixed HSL hue turns it swamp olive; smoothly
-    // warm that band toward golden amber so darkened light-mode tokens read as gold.
-    const darkenableHue =
-      hNorm > 42 && hNorm < 86
-        ? hNorm - 17 * 0.5 * (1 - Math.cos((2 * Math.PI * (hNorm - 42)) / (86 - 42)))
-        : hNorm;
-
-    const lightSurfaces = [
-      "#ffffff",
-      "#f2f3f7",
-      "#e9ebee",
-      mixHex("#e9ebee", rawLight, 0.1),
-      mixHex("#ffffff", rawLight, 0.1),
-      mixHex("#e9ebee", accLight, 0.1),
-      mixHex("#ffffff", accLight, 0.1),
-    ];
-    let inkLight = "#000000";
-    for (let l = 60; l >= 0; l -= 0.5) {
-      const candidate = hslToHex(darkenableHue, 94, l);
-      if (lightSurfaces.every((s) => contrastRatio(candidate, s) >= 4.6)) {
-        inkLight = candidate;
-        break;
-      }
-    }
-    const darkSurfaces = [
-      "#0d0e11",
-      "#16171d",
-      "#21232c",
-      mixHex("#21232c", accDark, 0.15),
-      mixHex("#16171d", accDark, 0.15),
-    ];
-    let inkDark = "#ffffff";
-    for (let l = 65; l <= 100; l += 0.5) {
-      const candidate = hslToHex(hue, 92, l);
-      if (darkSurfaces.every((s) => contrastRatio(candidate, s) >= 4.6)) {
-        inkDark = candidate;
-        break;
-      }
-    }
-    let graphicLight = "#000000";
-    for (let l = 60; l >= 0; l -= 0.5) {
-      const candidate = hslToHex(darkenableHue, 94, l);
-      if (
-        ["#ffffff", "#f2f3f7", "#e9ebee"].every(
-          (s) => contrastRatio(candidate, s) >= 3.15,
-        )
-      ) {
-        graphicLight = candidate;
-        break;
-      }
-    }
-    let graphicDark = "#ffffff";
-    for (let l = 65; l <= 100; l += 0.5) {
-      const candidate = hslToHex(hue, 92, l);
-      if (
-        ["#0d0e11", "#16171d", "#21232c"].every(
-          (s) => contrastRatio(candidate, s) >= 3.15,
-        )
-      ) {
-        graphicDark = candidate;
-        break;
-      }
-    }
-
-    const lightFillContrasts =
-      contrastRatio(accLight, "#ffffff") >= 3 &&
-      contrastRatio(accLight, "#f2f3f7") >= 3;
-    const darkFillContrasts =
-      contrastRatio(accDark, "#16171d") >= 3 &&
-      contrastRatio(accDark, "#0d0e11") >= 3;
-
-    let navTextLight = "#000000";
-    for (let l = 60; l >= 0; l -= 0.5) {
-      const candidate = hslToHex(darkenableHue, 94, l);
-      if (contrastRatio(candidate, "#f2f3f7") >= 4.55) {
-        navTextLight = candidate;
-        break;
-      }
-    }
-    let navTextDark = "#ffffff";
-    for (let l = 65; l <= 100; l += 0.5) {
-      const candidate = hslToHex(hue, 92, l);
-      if (contrastRatio(candidate, "#0d0e11") >= 4.55) {
-        navTextDark = candidate;
-        break;
-      }
-    }
-
-    root.style.setProperty("--accent-fill-light", accLight);
-    root.style.setProperty("--accent-ink-light", inkLight);
-    root.style.setProperty("--accent-ink-dark", inkDark);
-    root.style.setProperty("--accent-graphic-light", graphicLight);
-    root.style.setProperty("--accent-graphic-dark", graphicDark);
-    root.style.setProperty(
-      "--accent-large-text-light",
-      contrastRatio(accLight, "#ffffff") >= 3 ? accLight : graphicLight,
-    );
-    root.style.setProperty(
-      "--accent-large-text-dark",
-      contrastRatio(accDark, "#16171d") >= 3 ? accDark : graphicDark,
-    );
-    root.style.setProperty(
-      "--accent-nav-icon-light",
-      contrastRatio(accLight, "#f2f3f7") >= 3 ? accLight : graphicLight,
-    );
-    root.style.setProperty(
-      "--accent-nav-icon-dark",
-      contrastRatio(accDark, "#0d0e11") >= 3 ? accDark : graphicDark,
-    );
-    root.style.setProperty("--accent-nav-text-light", navTextLight);
-    root.style.setProperty("--accent-nav-text-dark", navTextDark);
-    root.style.setProperty(
-      "--accent-badge-rim-light",
-      lightFillContrasts ? "none" : graphicLight,
-    );
-    root.style.setProperty(
-      "--accent-badge-rim-dark",
-      darkFillContrasts ? "none" : graphicDark,
-    );
-    root.style.setProperty(
-      "--accent-badge-radius-light",
-      lightFillContrasts ? "11.25px" : "10.75px",
-    );
-    root.style.setProperty(
-      "--accent-badge-radius-dark",
-      darkFillContrasts ? "11.25px" : "10.75px",
-    );
-    root.style.setProperty(
-      "--accent-badge-mark-light",
-      contrastRatio(accLight, "#ffffff") >= 3 ? "#ffffff" : "#000000",
-    );
-    root.style.setProperty(
-      "--accent-fill-border-light",
-      lightFillContrasts
-        ? "transparent"
-        : `color-mix(in srgb, ${graphicLight} 45%, transparent)`,
-    );
-    root.style.setProperty("--accent-on-fill-light", getReadableTextColor(accLight));
-    root.style.setProperty("--accent-on-fill-dark", getReadableTextColor(accDark));
+    applySharedAccentTokens(hue);
     if (ambientInitialized && currentAmbientLeaderHex === null) {
       updateAmbientBackdrop(null, { immediate: true });
     }
@@ -3388,30 +3212,7 @@ import {
     const colorId = selectedSwatch.id;
 
     // Pick an unused placeholder label if possible
-    const labelChoices = [
-      "Crane",
-      "Egret",
-      "Finch",
-      "Flicker",
-      "Gull",
-      "Heron",
-      "Jay",
-      "Junco",
-      "Kite",
-      "Lark",
-      "Magpie",
-      "Merlin",
-      "Piper",
-      "Plover",
-      "Puffin",
-      "Robin",
-      "Sparrow",
-      "Starling",
-      "Swift",
-      "Tern",
-      "Vesper",
-      "Wren",
-    ];
+    const labelChoices = COUNTER_PLACEHOLDER_LABELS;
     const usedLabels = state.counters.map((c) => c.label);
     const unusedLabels = labelChoices.filter(
       (label) => !usedLabels.includes(label),
@@ -5405,16 +5206,49 @@ import {
       return true;
     };
 
+    let nextLabVirtualId = -1;
+    let labDemoTimers = [];
+    const clearLabDemoTimers = () => {
+      labDemoTimers.forEach((t) => clearTimeout(t));
+      labDemoTimers = [];
+    };
+
     const addPickerTouch = (e) => {
       if (state.currentTab !== "picker") return;
       if (e.pointerType === "mouse" && e.button !== 0) return;
-      if (phase === "eliminating" || phase === "selected" || touches.has(e.pointerId)) return;
-      e.stopPropagation();
 
-      try {
-        stage.setPointerCapture(e.pointerId);
-      } catch {
-        /* ignore */
+      // In ?lab=1 mode on a laptop, mouse clicks pin/unpin virtual touch points
+      // so multi-finger Picker rounds can be played with a single mouse/trackpad
+      let pointerId = e.pointerId;
+      const isPinnedLabClick = isLabMode && e.pointerType === "mouse";
+      if (isPinnedLabClick) {
+        clearLabDemoTimers();
+        if (phase === "selected") {
+          resetPicker();
+          return;
+        }
+        if (phase === "eliminating") return;
+        const rect = stage.getBoundingClientRect();
+        const relX = e.clientX - rect.left;
+        const relY = e.clientY - rect.top;
+        for (const [id, existing] of touches.entries()) {
+          if (id < 0 && Math.hypot(existing.x - relX, existing.y - relY) <= 56) {
+            removePickerTouch({ pointerId: id, type: "pointercancel" });
+            return;
+          }
+        }
+        pointerId = nextLabVirtualId--;
+      }
+
+      if (phase === "eliminating" || phase === "selected" || touches.has(pointerId)) return;
+      e.stopPropagation?.();
+
+      if (pointerId >= 0) {
+        try {
+          stage.setPointerCapture(pointerId);
+        } catch {
+          /* ignore */
+        }
       }
 
       const wasIdle = phase === "idle";
@@ -5428,7 +5262,7 @@ import {
       const { midi, noteSlot } = allocateNote();
       const el = document.createElement("div");
       el.className = "picker-circle";
-      el.dataset.pointerId = String(e.pointerId);
+      el.dataset.pointerId = String(pointerId);
       el.dataset.color = color;
       el.dataset.shape = shape.name;
       el.dataset.note = String(midi);
@@ -5455,7 +5289,7 @@ import {
         el,
       };
       positionCircle(entry, e.clientX, e.clientY);
-      touches.set(e.pointerId, entry);
+      touches.set(pointerId, entry);
 
       playPickerHaptic("minor");
 
@@ -5465,9 +5299,9 @@ import {
         schedulePickerSelection();
       } else {
         phase = "waiting";
-        if (wasIdle) {
+        if (wasIdle && !isPinnedLabClick) {
           swipeCandidate = {
-            pointerId: e.pointerId,
+            pointerId,
             startX: e.clientX,
             startY: e.clientY,
             startTime: performance.now(),
@@ -5549,11 +5383,38 @@ import {
         resetPicker({ immediate: true });
       }
     });
-    window.addEventListener("blur", () => {
-      if (phase !== "idle") {
+    if (!isLabMode) {
+      window.addEventListener("blur", () => {
+        if (phase !== "idle") {
+          resetPicker({ immediate: true });
+        }
+      });
+    }
+    if (isLabMode) {
+      stage.__simulateLabFingers = (count = 5) => {
+        clearLabDemoTimers();
         resetPicker({ immediate: true });
-      }
-    });
+        const rect = stage.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const rx = Math.max(70, Math.min(rect.width * 0.3, 130));
+        const ry = Math.max(80, Math.min(rect.height * 0.3, 165));
+        const total = Math.max(2, Math.min(8, count));
+        for (let i = 0; i < total; i++) {
+          const angle = -Math.PI / 2 + (i * 2 * Math.PI) / total;
+          const tId = setTimeout(() => {
+            addPickerTouch({
+              pointerId: nextLabVirtualId--,
+              pointerType: "touch",
+              button: 0,
+              clientX: Math.round(cx + Math.cos(angle) * rx),
+              clientY: Math.round(cy + Math.sin(angle) * ry),
+            });
+          }, i * 130);
+          labDemoTimers.push(tId);
+        }
+      };
+    }
     updatePrompt();
   };
 
@@ -5737,6 +5598,12 @@ import {
           } else if (kind === "pop") {
             playPickerPop(64);
           }
+        },
+        simulatePicker(count = 5) {
+          switchTab("picker");
+          requestAnimationFrame(() => {
+            $("#picker-stage")?.__simulateLabFingers?.(count);
+          });
         },
       };
     }

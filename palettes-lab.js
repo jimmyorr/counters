@@ -1,19 +1,23 @@
 /* ==========================================================================
    PALETTES DEBUG LAB CONTROLLER
-   Drives the live ./?lab=1 Counters iframe via window.__countersLab so all
-   cards, dialogs, Picker instruments, and contrast tokens run through the
-   real Counters app with zero duplicated UI or audio code.
+   Drives the live ./?lab=1 Counters iframe via window.__countersLab and reuses
+   Counters' shared palettes.js & index.css components directly.
    ========================================================================== */
 
-import { PALETTES, hueOf, sortColorsByHue } from "./palettes.js";
+import {
+  PALETTES,
+  COUNTER_PLACEHOLDER_LABELS,
+  CVD_MATRICES,
+  hueOf,
+  sortColorsByHue,
+  applyAccentTokens,
+  simulateCvdHex,
+} from "./palettes.js";
 import {
   PALETTE_GROUPS,
   PALETTE_ORDER,
-  BIRD_NAMES,
   SLOT_FAMILIES,
-  simulateCvdHex,
   auditPalette,
-  computeStudioAccentTokens,
   resolveLabPalette,
   getAllLabPalettes,
   formatPaletteForCounters,
@@ -22,6 +26,14 @@ import { log } from "./logger.js";
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
+
+// Pick 8 crisp bird names from Counters' shared COUNTER_PLACEHOLDER_LABELS
+const DEMO_BIRDS = ["Wren", "Puffin", "Swift", "Gull", "Tern", "Lark", "Flicker", "Crane"].map(
+  (name, i) =>
+    COUNTER_PLACEHOLDER_LABELS.includes(name)
+      ? name
+      : COUNTER_PLACEHOLDER_LABELS[i],
+);
 
 const escapeHtml = (str) =>
   String(str ?? "").replace(
@@ -35,6 +47,23 @@ const escapeHtml = (str) =>
         "'": "&#39;",
       })[ch],
   );
+
+// Populate SVG <feColorMatrix> filters dynamically from shared CVD_MATRICES
+const initCvdFilterDefs = () => {
+  const defs = $("#cvd-filter-defs");
+  if (!defs) return;
+  defs.innerHTML = Object.entries(CVD_MATRICES)
+    .map(([mode, m]) => {
+      const values = [
+        `${m[0][0]} ${m[0][1]} ${m[0][2]} 0 0`,
+        `${m[1][0]} ${m[1][1]} ${m[1][2]} 0 0`,
+        `${m[2][0]} ${m[2][1]} ${m[2][2]} 0 0`,
+        "0 0 0 1 0",
+      ].join("  ");
+      return `<filter id="cvd-${mode}" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="${values}" /></filter>`;
+    })
+    .join("");
+};
 
 const nowLocalMinutes = () => {
   const d = new Date();
@@ -117,20 +146,6 @@ const getDynamicParams = () => ({
 const getActivePalette = () =>
   resolveLabPalette(state.paletteId, getDynamicParams());
 
-const applyStudioAccent = () => {
-  const tokens = computeStudioAccentTokens(state.themeHue);
-  const root = document.documentElement;
-  root.style.setProperty("--theme-hue", String(tokens.hue));
-  root.style.setProperty("--accent-fill-light", tokens.accLight);
-  root.style.setProperty("--accent-fill-dark", tokens.accDark);
-  root.style.setProperty("--accent-ink-light", tokens.inkLight);
-  root.style.setProperty("--accent-ink-dark", tokens.inkDark);
-  root.style.setProperty("--accent-on-fill-light", tokens.onFillLight);
-  root.style.setProperty("--accent-on-fill-dark", tokens.onFillDark);
-  const readout = $("#theme-hue-readout");
-  if (readout) readout.textContent = `${Math.round(tokens.hue)}°`;
-};
-
 const applyStudioTheme = (mode) => {
   state.theme = mode === "light" ? "light" : "dark";
   const isDark = state.theme === "dark";
@@ -168,7 +183,7 @@ const getCardLabel = (palette, slotIdx) => {
   if (state.labelMode === "hex") {
     return palette.colors[slotIdx].toUpperCase();
   }
-  return BIRD_NAMES[slotIdx] || `Slot ${slotIdx}`;
+  return DEMO_BIRDS[slotIdx] || `Slot ${slotIdx}`;
 };
 
 const applyValuePreset = (preset) => {
@@ -235,7 +250,6 @@ const syncIframe = ({ includeCounters = true, previewChime = false } = {}) => {
   }
 };
 
-// Mirror edits made directly inside the real Counters iframe back to lab state
 const attachIframeStateListener = () => {
   const iframe = $("#counters-iframe");
   const win = iframe?.contentWindow;
@@ -304,6 +318,7 @@ const renderCategoryTabs = () => {
     .join("");
 };
 
+// Reuses Counters' .palette-option-card, .palette-option-name & .palette-preview from index.css
 const renderPaletteCatalog = () => {
   const grid = $("#palette-catalog-grid");
   if (!grid) return;
@@ -326,19 +341,18 @@ const renderPaletteCatalog = () => {
       return `
         <button
           type="button"
-          class="palette-card-btn${isActive ? " active" : ""}"
+          class="palette-option-card${isActive ? " active" : ""}"
           role="radio"
           aria-checked="${isActive}"
           data-palette-id="${p.id}"
         >
           <span class="palette-card-top">
-            <span class="palette-card-name">${escapeHtml(p.label)}</span>
+            <span class="palette-option-name">${escapeHtml(p.label)}</span>
             ${badge ? `<span class="palette-mini-tag">${escapeHtml(badge)}</span>` : ""}
           </span>
-          <span class="palette-dots-row" aria-hidden="true">
+          <span class="palette-preview" aria-hidden="true">
             ${simDots.map((hex) => `<span style="background-color: ${hex}"></span>`).join("")}
           </span>
-          <span class="palette-card-sub">${escapeHtml(p.tagline)}</span>
         </button>
       `;
     })
@@ -355,10 +369,10 @@ const renderDynamicControls = (palette) => {
     extra.hidden = false;
     extra.innerHTML = `
       <div class="dyn-row">
-        <span class="dock-label">Tonal harmony</span>
-        <div class="mini-seg" id="tonal-mode-seg">
-          <button type="button" class="mini-seg-btn${state.tonalMode === "analogous" ? " active" : ""}" data-tonal-mode="analogous">Analogous</button>
-          <button type="button" class="mini-seg-btn${state.tonalMode === "monochromatic" ? " active" : ""}" data-tonal-mode="monochromatic">Monochromatic</button>
+        <span class="setting-title">Tonal harmony</span>
+        <div class="segmented-control lab-mini-seg" id="tonal-mode-seg">
+          <button type="button" class="segment-btn${state.tonalMode === "analogous" ? " active" : ""}" data-tonal-mode="analogous">Analogous</button>
+          <button type="button" class="segment-btn${state.tonalMode === "monochromatic" ? " active" : ""}" data-tonal-mode="monochromatic">Monochromatic</button>
         </div>
       </div>
     `;
@@ -371,10 +385,10 @@ const renderDynamicControls = (palette) => {
     extra.hidden = false;
     extra.innerHTML = `
       <div class="dyn-row">
-        <button type="button" class="action-pill-btn primary" id="btn-roll-shuffle">Roll 8 colors</button>
-        <div class="mini-seg" id="shuffle-style-seg">
-          <button type="button" class="mini-seg-btn${state.shuffleStyle === "vivid" ? " active" : ""}" data-shuffle-style="vivid">Vivid</button>
-          <button type="button" class="mini-seg-btn${state.shuffleStyle === "luminous" ? " active" : ""}" data-shuffle-style="luminous">Luminous</button>
+        <button type="button" class="primary-btn lab-compact-btn" id="btn-roll-shuffle">Roll 8 colors</button>
+        <div class="segmented-control lab-mini-seg" id="shuffle-style-seg">
+          <button type="button" class="segment-btn${state.shuffleStyle === "vivid" ? " active" : ""}" data-shuffle-style="vivid">Vivid</button>
+          <button type="button" class="segment-btn${state.shuffleStyle === "luminous" ? " active" : ""}" data-shuffle-style="luminous">Luminous</button>
         </div>
       </div>
       <div class="dyn-chip-row" aria-label="Recent shuffle seeds">
@@ -394,7 +408,7 @@ const renderDynamicControls = (palette) => {
     extra.hidden = false;
     extra.innerHTML = `
       <div class="dyn-row">
-        <span class="dock-label">Sky time <span class="dock-sub" id="sky-time-readout">${escapeHtml(phase)} · ${escapeHtml(timeLabel)}</span></span>
+        <span class="setting-title">Sky time <span class="dock-sub" id="sky-time-readout">${escapeHtml(phase)} · ${escapeHtml(timeLabel)}</span></span>
         <button type="button" class="dyn-chip${state.skyPlaying ? " active" : ""}" id="btn-sky-play">${state.skyPlaying ? "Pause 24h" : "Timelapse"}</button>
       </div>
       <input type="range" id="sky-time-slider" class="sky-slider" min="0" max="1439" value="${Math.round(state.skyMinutes)}" aria-label="Time of day in minutes" />
@@ -507,7 +521,9 @@ const renderInspector = (palette, audit) => {
 const renderStudioUI = () => {
   const palette = getActivePalette();
   const audit = auditPalette(palette.colors, state.visionMode);
-  applyStudioAccent();
+  applyAccentTokens(state.themeHue);
+  const readout = $("#theme-hue-readout");
+  if (readout) readout.textContent = `${Math.round(state.themeHue)}°`;
   $("#counters-device")?.setAttribute("data-vision", state.visionMode);
   renderCategoryTabs();
   renderPaletteCatalog();
@@ -551,7 +567,7 @@ const startSkyTimelapse = () => {
       }
       renderPaletteCatalog();
       renderInspector(palette, audit);
-      syncIframe({ includeCounters: state.labelMode === "colors" || state.labelMode === "hex" });
+      syncIframe({ includeCounters: state.labelMode !== "birds" });
     }
     lastTs = ts;
     state.skyRafId = requestAnimationFrame(step);
@@ -667,6 +683,10 @@ const bindEvents = () => {
 
   $("#btn-audition-pop")?.addEventListener("click", () => {
     getLabBridge()?.audition("pop");
+  });
+
+  $("#btn-demo-picker")?.addEventListener("click", () => {
+    getLabBridge()?.simulatePicker(5);
   });
 
   $("#btn-copy-code")?.addEventListener("click", () => {
@@ -810,7 +830,6 @@ const bindEvents = () => {
   });
 };
 
-// Connect to the sandboxed Counters iframe as soon as its DOMContentLoaded init finishes
 const waitForIframeBridge = () => {
   const iframe = $("#counters-iframe");
   if (!iframe) return;
@@ -834,6 +853,7 @@ const waitForIframeBridge = () => {
   });
 };
 
+initCvdFilterDefs();
 readHashPalette();
 applyStudioTheme(state.theme);
 applyValuePreset("demo");

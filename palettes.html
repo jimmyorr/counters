@@ -7,54 +7,23 @@
     <title>Palettes — Counters</title>
     <link rel="icon" type="image/png" href="./favicon.png" />
     <meta name="theme-color" content="#0d0e11" />
+    <link rel="stylesheet" href="./index.css" />
     <link rel="stylesheet" href="./palettes-lab.css" />
   </head>
 
-  <body>
-    <!-- Hardware-accelerated linear-RGB Machado (2009) CVD filters for the live Counters iframe -->
+  <body class="palettes-lab-body">
+    <div id="ambient-backdrop" class="ambient-backdrop" aria-hidden="true"></div>
+
+    <!-- Populated dynamically from CVD_MATRICES in palettes.js -->
     <svg width="0" height="0" style="position: absolute" aria-hidden="true">
-      <defs>
-        <filter id="cvd-deuteranopia" color-interpolation-filters="linearRGB">
-          <feColorMatrix
-            type="matrix"
-            values="0.367322 0.860646 -0.227968 0 0  0.280085 0.672501 0.047413 0 0  -0.01182 0.04294 0.968881 0 0  0 0 0 1 0"
-          />
-        </filter>
-        <filter id="cvd-protanopia" color-interpolation-filters="linearRGB">
-          <feColorMatrix
-            type="matrix"
-            values="0.152286 1.052583 -0.204868 0 0  0.114503 0.786281 0.099216 0 0  -0.003882 -0.048116 1.051998 0 0  0 0 0 1 0"
-          />
-        </filter>
-        <filter id="cvd-tritanopia" color-interpolation-filters="linearRGB">
-          <feColorMatrix
-            type="matrix"
-            values="1.255528 -0.076749 -0.178779 0 0  -0.078411 0.930809 0.147602 0 0  0.004733 0.691367 0.3039 0 0  0 0 0 1 0"
-          />
-        </filter>
-      </defs>
+      <defs id="cvd-filter-defs"></defs>
     </svg>
 
     <div class="studio-shell">
       <header class="studio-topbar">
         <div class="topbar-brand">
-          <a href="./" class="back-pill" id="btn-back-counters">
-            <svg
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <line x1="19" y1="12" x2="5" y2="12"></line>
-              <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            <span>Counters</span>
+          <a href="./" class="secondary-btn lab-back-btn" id="btn-back-counters">
+            ← Counters
           </a>
 
           <div class="brand-heading">
@@ -66,45 +35,45 @@
         <div class="topbar-controls">
           <div class="control-cluster" role="group" aria-label="Color vision simulation">
             <span class="cluster-label">Vision</span>
-            <div class="seg-group" id="vision-mode-group">
-              <button type="button" class="seg-btn active" data-vision="normal" aria-pressed="true">Normal</button>
-              <button type="button" class="seg-btn" data-vision="deuteranopia" aria-pressed="false" title="Simulate deuteranopia">Deutan</button>
-              <button type="button" class="seg-btn" data-vision="protanopia" aria-pressed="false" title="Simulate protanopia">Protan</button>
-              <button type="button" class="seg-btn" data-vision="tritanopia" aria-pressed="false" title="Simulate tritanopia">Tritan</button>
+            <div class="segmented-control" id="vision-mode-group">
+              <button type="button" class="segment-btn active" data-vision="normal" aria-pressed="true">Normal</button>
+              <button type="button" class="segment-btn" data-vision="deuteranopia" aria-pressed="false" title="Simulate deuteranopia">Deutan</button>
+              <button type="button" class="segment-btn" data-vision="protanopia" aria-pressed="false" title="Simulate protanopia">Protan</button>
+              <button type="button" class="segment-btn" data-vision="tritanopia" aria-pressed="false" title="Simulate tritanopia">Tritan</button>
             </div>
           </div>
 
           <div class="control-cluster" role="group" aria-label="Appearance">
-            <div class="seg-group" id="theme-mode-group">
-              <button type="button" class="seg-btn active" data-theme-mode="dark" aria-pressed="true">Dark</button>
-              <button type="button" class="seg-btn" data-theme-mode="light" aria-pressed="false">Light</button>
+            <div class="segmented-control" id="theme-mode-group">
+              <button type="button" class="segment-btn active" data-theme-mode="dark" aria-pressed="true">Dark</button>
+              <button type="button" class="segment-btn" data-theme-mode="light" aria-pressed="false">Light</button>
             </div>
           </div>
 
           <div class="control-cluster" role="group" aria-label="Sound">
             <span class="cluster-label">Sound</span>
-            <div class="seg-group" id="sound-mode-group">
-              <button type="button" class="seg-btn active" data-sound-mode="on" aria-pressed="true">On</button>
-              <button type="button" class="seg-btn" data-sound-mode="off" aria-pressed="false">Off</button>
+            <div class="segmented-control" id="sound-mode-group">
+              <button type="button" class="segment-btn active" data-sound-mode="on" aria-pressed="true">On</button>
+              <button type="button" class="segment-btn" data-sound-mode="off" aria-pressed="false">Off</button>
             </div>
           </div>
 
-          <button type="button" class="action-pill-btn primary" id="btn-copy-code">
-            <span>Copy code</span>
+          <button type="button" class="primary-btn lab-compact-btn" id="btn-copy-code">
+            Copy code
           </button>
         </div>
       </header>
 
       <main class="studio-workspace">
-        <!-- Left column: 24-palette catalog + dynamic controls -->
+        <!-- Left column: 24-palette catalog using Counters' .palette-picker-grid & .palette-option-card -->
         <aside class="catalog-column" aria-label="Palette catalog">
-          <div class="panel-card catalog-panel">
+          <div class="settings-section catalog-panel">
             <div class="catalog-header">
               <div class="category-tabs" id="category-tabs" role="tablist" aria-label="Palette categories"></div>
             </div>
 
             <div
-              class="palette-catalog-scroll"
+              class="palette-picker-grid palette-catalog-scroll"
               id="palette-catalog-grid"
               role="radiogroup"
               aria-label="Palettes"
@@ -113,11 +82,11 @@
             <div class="dynamic-dock" id="dynamic-dock">
               <div class="hue-row">
                 <div class="hue-row-top">
-                  <label for="studio-theme-hue" class="dock-label">
+                  <label for="studio-theme-hue" class="setting-title">
                     Theme color
                     <span class="dock-sub" id="theme-hue-readout">205°</span>
                   </label>
-                  <span class="dock-hint" id="theme-hue-hint">Drives accents &amp; Tonal</span>
+                  <span class="setting-desc" id="theme-hue-hint">Drives accents &amp; Tonal</span>
                 </div>
                 <input
                   type="range"
@@ -137,37 +106,37 @@
 
         <!-- Center column: Real live Counters app in sandboxed ?lab=1 iframe -->
         <section class="simulator-column" aria-label="Live Counters app">
-          <div class="sim-toolbar" role="toolbar" aria-label="Board preset controls">
+          <div class="settings-section sim-toolbar" role="toolbar" aria-label="Board preset controls">
             <div class="sim-tool-group" title="Card ordering on the board">
               <span class="sim-tool-label">Order</span>
-              <div class="mini-seg" id="board-order-group">
-                <button type="button" class="mini-seg-btn active" data-order="rainbow" aria-pressed="true">Rainbow</button>
-                <button type="button" class="mini-seg-btn" data-order="slots" aria-pressed="false">Slots 0–7</button>
+              <div class="segmented-control lab-mini-seg" id="board-order-group">
+                <button type="button" class="segment-btn active" data-order="rainbow" aria-pressed="true">Rainbow</button>
+                <button type="button" class="segment-btn" data-order="slots" aria-pressed="false">Slots 0–7</button>
               </div>
             </div>
 
             <div class="sim-tool-group" title="Counter labels">
               <span class="sim-tool-label">Labels</span>
-              <div class="mini-seg" id="board-label-group">
-                <button type="button" class="mini-seg-btn active" data-label-mode="birds" aria-pressed="true">Birds</button>
-                <button type="button" class="mini-seg-btn" data-label-mode="colors" aria-pressed="false">Names</button>
-                <button type="button" class="mini-seg-btn" data-label-mode="hex" aria-pressed="false">Hex</button>
+              <div class="segmented-control lab-mini-seg" id="board-label-group">
+                <button type="button" class="segment-btn active" data-label-mode="birds" aria-pressed="true">Birds</button>
+                <button type="button" class="segment-btn" data-label-mode="colors" aria-pressed="false">Names</button>
+                <button type="button" class="segment-btn" data-label-mode="hex" aria-pressed="false">Hex</button>
               </div>
             </div>
 
             <div class="sim-tool-group" title="Counter values">
               <span class="sim-tool-label">Values</span>
-              <div class="mini-seg" id="board-preset-group">
-                <button type="button" class="mini-seg-btn active" data-preset="demo" aria-pressed="true">Demo</button>
-                <button type="button" class="mini-seg-btn" data-preset="heat" aria-pressed="false">Heat 1–8</button>
-                <button type="button" class="mini-seg-btn" data-preset="scores" aria-pressed="false">Game</button>
+              <div class="segmented-control lab-mini-seg" id="board-preset-group">
+                <button type="button" class="segment-btn active" data-preset="demo" aria-pressed="true">Demo</button>
+                <button type="button" class="segment-btn" data-preset="heat" aria-pressed="false">Heat 1–8</button>
+                <button type="button" class="segment-btn" data-preset="scores" aria-pressed="false">Game</button>
               </div>
             </div>
 
             <div class="sim-tool-group" title="Grid or list layout">
-              <div class="mini-seg" id="board-layout-group">
-                <button type="button" class="mini-seg-btn active" data-layout-mode="grid" aria-pressed="true">Grid</button>
-                <button type="button" class="mini-seg-btn" data-layout-mode="list" aria-pressed="false">List</button>
+              <div class="segmented-control lab-mini-seg" id="board-layout-group">
+                <button type="button" class="segment-btn active" data-layout-mode="grid" aria-pressed="true">Grid</button>
+                <button type="button" class="segment-btn" data-layout-mode="list" aria-pressed="false">List</button>
               </div>
             </div>
           </div>
@@ -184,40 +153,32 @@
 
         <!-- Right column: 8-slot values, contrast audit & Picker instrument -->
         <section class="inspector-column" aria-label="Palette details">
-          <div class="panel-card inspector-panel">
+          <div class="settings-section inspector-panel">
             <div class="inspector-header">
               <div class="inspector-title-row">
                 <div class="inspector-title-wrap">
                   <h2 class="inspector-title" id="inspector-palette-name">Bold</h2>
-                  <span class="group-badge" id="inspector-group-badge">In Counters</span>
+                  <span class="debug-badge" id="inspector-group-badge">In Counters</span>
                 </div>
                 <div class="step-arrows">
-                  <button type="button" class="step-arrow-btn" id="btn-prev-palette" aria-label="Previous palette" title="Previous palette ([)">
-                    <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                  </button>
-                  <button type="button" class="step-arrow-btn" id="btn-next-palette" aria-label="Next palette" title="Next palette (])">
-                    <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                  </button>
+                  <button type="button" class="secondary-btn step-arrow-btn" id="btn-prev-palette" aria-label="Previous palette" title="Previous palette ([)">‹</button>
+                  <button type="button" class="secondary-btn step-arrow-btn" id="btn-next-palette" aria-label="Next palette" title="Next palette (])">›</button>
                 </div>
               </div>
-              <p class="inspector-notes" id="inspector-palette-notes"></p>
+              <p class="setting-desc inspector-notes" id="inspector-palette-notes"></p>
             </div>
 
             <div class="audit-metrics">
               <div class="metric-tile">
-                <span class="metric-label">Card text</span>
+                <span class="setting-desc">Card text</span>
                 <span class="metric-value" id="metric-polarity">Uniform white</span>
               </div>
               <div class="metric-tile">
-                <span class="metric-label">Min contrast</span>
+                <span class="setting-desc">Min contrast</span>
                 <span class="metric-value" id="metric-contrast">4.63:1 AA</span>
               </div>
               <div class="metric-tile">
-                <span class="metric-label" id="metric-delta-label">Min OKLab ΔE</span>
+                <span class="setting-desc" id="metric-delta-label">Min OKLab ΔE</span>
                 <span class="metric-value" id="metric-delta">10.0</span>
               </div>
             </div>
@@ -225,8 +186,8 @@
             <div class="instrument-strip" id="instrument-strip">
               <div class="instrument-info">
                 <span class="instrument-title-row">
-                  <span class="section-caption">Picker instrument</span>
-                  <span class="instrument-badge" id="instrument-name">Marimba</span>
+                  <span class="setting-title">Picker instrument</span>
+                  <span class="debug-badge" id="instrument-name">Marimba</span>
                 </span>
                 <span class="instrument-recipe" id="instrument-recipe">sine + 4× triangle · 3200 Hz LP</span>
               </div>
@@ -234,20 +195,21 @@
                 <button type="button" class="dyn-chip" id="btn-audition-chime" title="Play settings preview chime">Chime</button>
                 <button type="button" class="dyn-chip" id="btn-audition-chord" title="Play Picker chord resolution">Chord</button>
                 <button type="button" class="dyn-chip" id="btn-audition-pop" title="Play defeated pointer pop">Pop</button>
+                <button type="button" class="dyn-chip accent-chip" id="btn-demo-picker" title="Switch to Picker and drop 5 virtual fingers (or click spots directly on the Picker tab)">5 fingers</button>
               </div>
             </div>
 
             <div class="swatches-section">
               <div class="section-caption-row">
-                <span class="section-caption">All 8 slot values</span>
-                <span class="section-hint">Click a swatch to copy hex</span>
+                <span class="setting-title">All 8 slot values</span>
+                <span class="setting-desc">Click a swatch to copy hex</span>
               </div>
               <div class="swatch-values-grid" id="swatch-values-grid"></div>
             </div>
 
             <div class="migration-section">
               <div class="section-caption-row">
-                <span class="section-caption">Slot mapping from Bold</span>
+                <span class="setting-title">Slot mapping from Bold</span>
                 <button type="button" class="text-link-btn" id="btn-toggle-code">Show code</button>
               </div>
               <div class="slot-migration-strip" id="slot-migration-strip" aria-label="Slot color mapping from Bold"></div>
